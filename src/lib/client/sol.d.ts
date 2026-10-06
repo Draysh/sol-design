@@ -100,6 +100,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sol/housekeeping": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Runs the daily chores now: writes down when devices were last seen,
+         *     clears what has run its course, and makes a backup copy if one is set up.
+         */
+        post: operations["housekeep"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sol/login": {
         parameters: {
             query?: never;
@@ -564,6 +584,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["check"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/update/download/{asset}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["download_update"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/widgets/{id}": {
         parameters: {
             query?: never;
@@ -615,6 +667,17 @@ export interface components {
              * @description Send as `after` next time.
              */
             next: number;
+        };
+        /** @description Sol's answer to an app asking for updates. */
+        Check: {
+            /** @description The newest version released, when Sol could find out. */
+            latest?: string | null;
+            /**
+             * @description Why there is no offer, for people (no release yet, GitHub unreachable,
+             *     no file for this platform, …); `None` when the app is up to date.
+             */
+            message?: string | null;
+            offer?: null | components["schemas"]["Offer"];
         };
         Collection: {
             id: string;
@@ -677,6 +740,8 @@ export interface components {
             last_seen?: string | null;
             name: string;
             platform?: string | null;
+            /** @description The version of the app it last ran, e.g. `0.2.0`. */
+            version?: string | null;
             world: string;
         };
         /** @description `GET /api/v1/me`: who this device is. */
@@ -782,6 +847,16 @@ export interface components {
             /** @description CPU architecture the binary was built for, e.g. `aarch64`. */
             arch: string;
             db: string;
+            /**
+             * Format: int32
+             * @description The oldest protocol Sol still speaks with apps.
+             */
+            min_protocol: number;
+            /**
+             * Format: int32
+             * @description The newest protocol Sol speaks with apps.
+             */
+            protocol: number;
             status: string;
             /** Format: int64 */
             uptime_s: number;
@@ -807,6 +882,11 @@ export interface components {
              */
             toggle?: boolean;
         };
+        /**
+         * @description How a copy of an app was installed, which decides how it updates.
+         * @enum {string}
+         */
+        Kind: "portable" | "setup" | "deb" | "rpm";
         LoginRequest: {
             password: string;
             username: string;
@@ -826,6 +906,22 @@ export interface components {
             then_world: string;
             /** @description An event type an installed world emits, e.g. `mercury.review.finished`. */
             when: string;
+        };
+        /** @description A newer version, ready to download through Sol. */
+        Offer: {
+            /** @description Path on Sol to download it from, with the device's token. */
+            download: string;
+            /** @description The release file's name. */
+            file: string;
+            /** @description The release notes, in Markdown. */
+            notes?: string | null;
+            /** Format: date-time */
+            published_at?: string | null;
+            /** @description The file's minisign signature, base64 as `tauri signer sign` writes it. */
+            signature: string;
+            /** Format: int64 */
+            size: number;
+            version: string;
         };
         PairClaim: {
             id: string;
@@ -901,6 +997,8 @@ export interface components {
             checked_at: string;
             /** @description Why there are no downloads, for people. */
             message?: string | null;
+            /** @description The release notes, in Markdown. */
+            notes?: string | null;
             /** Format: date-time */
             published_at?: string | null;
             status: components["schemas"]["ReleaseStatus"];
@@ -954,9 +1052,20 @@ export interface components {
             /** @description True until the first account exists. */
             needed: boolean;
         };
+        /** @description A newer Sol than the one running. */
+        SolUpdate: {
+            notes?: string | null;
+            /** Format: date-time */
+            published_at?: string | null;
+            /** @description The release page. */
+            url: string;
+            version: string;
+        };
         SystemInfo: {
             /** @description CPU architecture, e.g. `aarch64` on the NAS. */
             arch: string;
+            /** @description Where the daily copies of the databases go, if anywhere. */
+            backup_dir?: string | null;
             /**
              * Format: int64
              * @description Bytes on disk: Sol's database and every world's.
@@ -973,9 +1082,20 @@ export interface components {
             devices_online: number;
             /** @description A GitHub token is set (the token itself is never shown). */
             github_token: boolean;
+            /**
+             * Format: int32
+             * @description Events older than this many days are cleared; 0 keeps them all.
+             */
+            keep_events_days: number;
             /** Format: int64 */
             pending_pairings: number;
+            /**
+             * Format: int32
+             * @description The newest protocol Sol speaks with apps.
+             */
+            protocol: number;
             public_url?: string | null;
+            update?: null | components["schemas"]["SolUpdate"];
             /** Format: int64 */
             uptime_s: number;
             version: string;
@@ -1289,6 +1409,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Envelope"][];
+                };
+            };
+        };
+    };
+    housekeep: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
                 };
             };
         };
@@ -2232,6 +2377,67 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    check: {
+        parameters: {
+            query: {
+                /** @description The version running now, e.g. `0.1.0`. */
+                version: string;
+                /** @description See [`target`]. */
+                target: string;
+                kind: components["schemas"]["Kind"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Check"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    download_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The file, streamed from GitHub */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
                 };
             };
         };

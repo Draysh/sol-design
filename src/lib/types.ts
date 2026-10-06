@@ -29,3 +29,32 @@ export interface Option {
 	value: string;
 	label: string;
 }
+
+/** How a world's app was installed (orbit's `install::Here`). */
+export type AppHere =
+	| { state: 'dev' }
+	| { state: 'loose'; path: string }
+	| { state: 'installed'; kind: 'portable' | 'setup' | 'deb' | 'rpm'; path: string }
+	| { state: 'unsupported' };
+
+/** A newer version of a world's app, offered by Sol. */
+export interface AppOffer {
+	version: string;
+	notes: string | null;
+	published_at: string | null;
+	file: string;
+	size: number;
+	download: string;
+	signature: string;
+}
+
+/** Where a world's app stands with its updates (orbit's `updates::Status`). */
+export type AppUpdateStatus = { current: string; here: AppHere; auto: boolean } & (
+	| { state: 'unknown' }
+	| { state: 'checking' }
+	| { state: 'current'; latest: string | null; message: string | null; checked_at: string }
+	| { state: 'available'; offer: AppOffer; installs_itself: boolean; checked_at: string }
+	| { state: 'downloading'; version: string; done: number; total: number }
+	| { state: 'ready'; version: string }
+	| { state: 'failed'; error: string }
+);

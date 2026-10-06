@@ -120,6 +120,7 @@ glow. A 9 % film grain covers everything.
 | `Notices` / `notices.show()` | Short in-app messages at the top edge |
 | `Loader` | The moment before data arrives |
 | `WorldGlyph` | A world's crescent icon in lists and navigation |
+| `AppUpdates` | A world app's Settings: installing itself, and its updates through Sol |
 
 Focus is visible everywhere: buttons lock two corner ticks on; other controls
 get a 1 px white outline 4 px out.
@@ -164,6 +165,8 @@ world's app is built the same way, starting from `sol-planet-template`:
 6. Every event the app posts carries a `summary` sentence.
 7. Widgets for Sol's overview are `WidgetView`s the app pushes; items with
    `toggle` can be ticked from the overview and arrive in the app's inbox.
+8. The app's Settings page has an `<AppUpdates>` card: the app installs
+   itself from there and takes its updates through Sol (`orbit::updates`).
 
 Sol's own web app follows the same rules, with `world="sol"`.
 

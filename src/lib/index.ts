@@ -1,4 +1,5 @@
 // The Sol design language. DESIGN.md has the rules; the components keep them.
+export { default as AppUpdates } from './components/AppUpdates.svelte';
 export { default as Body } from './components/Body.svelte';
 export { default as Button } from './components/Button.svelte';
 export { default as Callout } from './components/Callout.svelte';
@@ -23,4 +24,4 @@ export { default as Widget } from './components/Widget.svelte';
 export { default as WorldGlyph } from './components/WorldGlyph.svelte';
 
 export { worlds, world, moonsOf, type World, type Placement, type Companion } from './worlds.js';
-export type { Row, Moon, ShellLink, Option } from './types.js';
+export type { Row, Moon, ShellLink, Option, AppHere, AppOffer, AppUpdateStatus } from './types.js';
