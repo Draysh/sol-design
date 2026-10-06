@@ -42,6 +42,12 @@ export interface World {
 	render: 'star' | 'disc' | 'photo';
 	/** Effects particular to one world. */
 	effect?: 'haze' | 'split-rim';
+	/**
+	 * Drawn as photographed: no shadow added and no glow on the limb. For a
+	 * photo that already has its own dark side, which added light would only
+	 * contradict.
+	 */
+	asShot?: boolean;
 	hero: Placement;
 	portrait: Placement;
 	/** Where the callout's text block starts, in the landscape frame. */
@@ -50,14 +56,6 @@ export interface World {
 }
 
 /** Rising from the bottom of a phone screen, lit from above. */
-/**
- * Triton's light, wherever it is drawn. Its photo is the Voyager mosaic:
- * Voyager saw only the southern half, so the bottom of the picture is black.
- * Lit from just left of the top and a little less than half lit, that part
- * falls in the shadow and only photographed ground shows.
- */
-const TRITON = { light: 345, phase: 0.45 };
-
 const rising: Placement = { cx: 195, cy: 600, r: 470, light: 0, phase: 0.08 };
 
 export const worlds: Record<string, World> = {
@@ -156,7 +154,7 @@ export const worlds: Record<string, World> = {
 		hero: { cx: 520, cy: 1010, r: 790, light: 315, phase: 0.15 },
 		portrait: rising,
 		callout: { x: 1000, y: 236 },
-		companions: [{ world: 'triton', cx: 1080, cy: 610, r: 86, light: TRITON.light, phase: TRITON.phase }]
+		companions: [{ world: 'triton', cx: 1080, cy: 610, r: 86, light: 330, phase: 1 }]
 	},
 	triton: {
 		id: 'triton',
@@ -168,7 +166,11 @@ export const worlds: Record<string, World> = {
 		tilt: 157,
 		image: triton,
 		render: 'disc',
-		hero: { cx: 1080, cy: 560, r: 300, ...TRITON },
+		// The Voyager mosaic: Voyager saw only part of Triton, and the rest of
+		// the picture is black. That already reads as the night side; added
+		// shadow or a limb glow would outline it as a hole.
+		asShot: true,
+		hero: { cx: 1080, cy: 560, r: 300, light: 330, phase: 1 },
 		portrait: rising,
 		callout: { x: 640, y: 230, flip: true }
 	}

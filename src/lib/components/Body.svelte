@@ -21,7 +21,7 @@
 	const uid = $props.id();
 	const w = $derived(worldFor(id));
 	const lit = $derived(light ?? w.hero.light);
-	const amount = $derived(Math.min(1, Math.max(0, phase ?? w.hero.phase)));
+	const amount = $derived(w.asShot ? 1 : Math.min(1, Math.max(0, phase ?? w.hero.phase)));
 
 	// The shadow sits opposite the light; the further it slides, the more is lit.
 	const away = $derived({
@@ -107,7 +107,7 @@
 			{/if}
 		</g>
 	{:else}
-		<g mask="url(#{uid}-lit)">
+		{#if !w.asShot}<g mask="url(#{uid}-lit)">
 			{#if w.effect === 'haze'}
 				<circle r="104" fill="none" stroke={w.color} stroke-width="5" opacity="0.7" filter="url(#{uid}-halo)"></circle>
 				<circle r="104" fill="none" stroke="#e8a060" stroke-width="1.5" opacity="0.3"></circle>
@@ -118,7 +118,7 @@
 				<circle cx="-1.6" cy="1" r="101" fill="none" stroke="#ff4a3a" stroke-width="1.4" opacity="0.8" filter="url(#{uid}-rim)"></circle>
 				<circle cx="1.6" cy="-1" r="101" fill="none" stroke="#3a7bff" stroke-width="1.4" opacity="0.8" filter="url(#{uid}-rim)"></circle>
 			{/if}
-		</g>
+		</g>{/if}
 		<g clip-path="url(#{uid}-disc)">
 			{#if w.image}
 				<image href={w.image} x="-100" y="-100" width="200" height="200"></image>
