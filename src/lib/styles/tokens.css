@@ -1,0 +1,79 @@
+/*
+ * Sol · Observatory tokens. Every Sol app uses these and nothing else:
+ * black space, one type family, hairlines, and colour that only comes from
+ * the worlds themselves. DESIGN.md explains each rule.
+ */
+:root {
+	color-scheme: dark;
+
+	/* Space and light */
+	--space: #000000;
+	--surface: rgb(255 255 255 / 0.03);
+	--surface-hover: rgb(255 255 255 / 0.06);
+	--line: rgb(255 255 255 / 0.08);
+	--line-mid: rgb(255 255 255 / 0.14);
+	--line-strong: rgb(255 255 255 / 0.45);
+	--tick: rgb(255 255 255 / 0.7);
+
+	--text: #f2f2f2;
+	--text-bright: #ffffff;
+	--text-value: #bdbdbd;
+	--text-quiet: #a8a8a8;
+	--text-faint: #5a5a5a;
+
+	--danger: #ff6b5a;
+	--danger-text: #ff8a7a;
+	--ok: #8ee6b0;
+
+	/* The current world's colour, set by <Shell world="…">. Glow and icons only. */
+	--world: #f2f2f2;
+
+	/* Type: one family, weight does the work */
+	--font: 'Outfit Variable', 'Outfit', 'Helvetica Neue', Arial, sans-serif;
+	--font-jp: 'Shippori Mincho', 'Hiragino Mincho ProN', 'Noto Serif JP', serif;
+
+	--weight-display: 200;
+	--weight-value: 300;
+	--weight-name: 400;
+	--weight-label: 600;
+
+	--text-xs: 11px;
+	--text-s: 13px;
+	--text-m: 15px;
+	--text-l: 19px;
+	--text-xl: 34px;
+	--text-2xl: 56px;
+	--text-3xl: clamp(56px, 8vw, 120px);
+
+	--track-rows: 0.05em;
+	--track-name: 0.08em;
+	--track-display: 0.1em;
+	--track-caps: 0.12em;
+	--track-label: 0.14em;
+
+	/* Spacing steps */
+	--s-1: 4px;
+	--s-2: 8px;
+	--s-3: 16px;
+	--s-4: 24px;
+	--s-5: 40px;
+	--s-6: 64px;
+	--s-7: 112px;
+
+	--margin: clamp(16px, 6.6vw, 96px);
+	--target: 44px;
+	--nav-height: 64px;
+
+	/* Motion */
+	--fade: 240ms;
+	--lock: 120ms;
+	--drift: 12s;
+	--ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:root {
+		--fade: 0ms;
+		--lock: 0ms;
+	}
+}

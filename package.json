@@ -1,0 +1,52 @@
+{
+	"name": "@sol/design",
+	"version": "0.1.0",
+	"description": "The Sol design language: tokens, components and the app shell every Sol app is built from",
+	"license": "MIT",
+	"repository": "github:Draysh/sol-design",
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"package": "svelte-kit sync && svelte-package",
+		"prepare": "svelte-kit sync && svelte-package",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
+	},
+	"files": ["dist", "DESIGN.md", "CREDITS.md", "!dist/**/*.test.*"],
+	"sideEffects": ["**/*.css"],
+	"svelte": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js",
+			"default": "./dist/index.js"
+		},
+		"./client": {
+			"types": "./dist/client/index.d.ts",
+			"default": "./dist/client/index.js"
+		},
+		"./styles.css": "./dist/styles/index.css"
+	},
+	"peerDependencies": {
+		"svelte": "^5.57.0"
+	},
+	"dependencies": {
+		"@fontsource-variable/outfit": "^5.3.0",
+		"openapi-fetch": "^0.17.0"
+	},
+	"optionalDependencies": {
+		"@tauri-apps/plugin-notification": "^2.5.1"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-static": "^4.0.0",
+		"@sveltejs/kit": "^3.0.0",
+		"@sveltejs/package": "^3.0.0",
+		"@sveltejs/vite-plugin-svelte": "^7.2.0",
+		"@types/node": "^24.19.1",
+		"svelte": "^5.57.1",
+		"svelte-check": "^4.6.0",
+		"typescript": "^6.0.3",
+		"vite": "^8.3.0"
+	}
+}

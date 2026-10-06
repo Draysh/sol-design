@@ -1,0 +1,395 @@
+<!--
+	The living brand book: every rule in DESIGN.md, drawn with the real
+	components. `npm run dev` to browse it.
+-->
+<script lang="ts">
+	import {
+		Body,
+		Button,
+		Callout,
+		Card,
+		Check,
+		DataRows,
+		Field,
+		MoonLink,
+		Progress,
+		RingGauge,
+		Sheet,
+		Widget,
+		WorldGlyph,
+		moonsOf,
+		worlds,
+		type Row
+	} from '../lib/index.js';
+	import { notices } from '../lib/client/notices.svelte.js';
+
+	const order = Object.keys(worlds);
+	let current = $state('neptune');
+	const w = $derived(worlds[current]);
+
+	const sheetRows: Record<string, Row[][]> = {
+		sol: [
+			[
+				{ label: 'Server', value: 'NAS · arm64' },
+				{ label: 'Uptime', value: '12 days' }
+			],
+			[
+				{ label: 'Worlds online', value: '4 of 4' },
+				{ label: 'Notices', value: '2 unread' }
+			],
+			[
+				{ label: 'Local time', value: '21:48' },
+				{ label: 'Desktop AI', value: 'idle' }
+			]
+		],
+		terra: [
+			[
+				{ label: 'Habits today', value: '2 of 3' },
+				{ label: 'Streak', value: '12 days' }
+			],
+			[{ label: 'Diary', value: '4 entries this week' }],
+			[
+				{ label: 'Next', value: 'journal before bed' },
+				{ label: 'Reminder', value: '22:30' }
+			]
+		],
+		neptune: [
+			[
+				{ label: 'Now playing', value: 'Tears in Rain' },
+				{ label: 'Artist', value: 'Vangelis' }
+			],
+			[
+				{ label: 'Position', value: '2:14 of 5:06' },
+				{ label: 'Room', value: 'living room' }
+			],
+			[
+				{ label: 'Source', value: 'Navidrome' },
+				{ label: 'Format', value: 'FLAC 24/96' }
+			]
+		]
+	};
+	const callouts: Record<string, string[]> = {
+		sol: ['Terra = 2 of 3', 'Mercury = 42 due', 'Neptune = playing'],
+		terra: ['Japanese = done', 'Walk = done', 'Journal = open'],
+		luna: ['Evening entry = open', 'Mood = 4 of 7'],
+		saturn: ['Season 2 = now', 'Films = 3 queued'],
+		titan: ['Because = Arrival', 'Suggestions = 3'],
+		mercury: ['New = 10', 'Learning = 6', 'Review = 26'],
+		neptune: ['Next = Blade Runner Blues', 'Then = Memories of Green', 'Queue = 14 tracks'],
+		triton: ['Station = Drift 01', 'Tracks = 50']
+	};
+	const fallbackRows = (id: string): Row[][] => [
+		[
+			{ label: 'World', value: worlds[id].name },
+			{ label: 'Kind', value: worlds[id].kind }
+		],
+		[{ label: 'Axial tilt', value: `${worlds[id].tilt}°` }],
+		[{ label: 'Glow', value: worlds[id].color }]
+	];
+
+	let habit = $state('15 minutes of Japanese');
+	let server = $state('sol.local');
+	let checks = $state([
+		{ label: '15 minutes of Japanese', meta: '12 d', done: true },
+		{ label: 'Walk outside', meta: '3 d', done: false },
+		{ label: 'Journal before bed', meta: '22:30', done: false }
+	]);
+
+	const principles = [
+		['One light', 'Every body is lit from one side. Darkness is the default; light means attention.'],
+		['Black is space', 'The ground is pure black. Groups get corner ticks, not boxes; nothing is filled unless it is the action.'],
+		['Name in the reticle', 'Every world names itself inside a reticle whose axis leans at that world’s real tilt.'],
+		['Label: value', 'Facts read as label and value. Semibold says what it is; light says what it is now.']
+	];
+</script>
+
+<header class="top">
+	<span class="sol-label">Sol · Design language</span>
+	<span class="sol-quiet">Observatory · v0.1</span>
+</header>
+
+<Sheet
+	world={current}
+	callout={callouts[current]}
+	rows={sheetRows[current] ?? fallbackRows(current)}
+	moons={moonsOf(current).map((m) => ({ id: m.id, label: m.name, href: `#${m.id}` }))}
+/>
+
+<nav class="picker" aria-label="Worlds">
+	{#each order as id (id)}
+		<button aria-pressed={current === id} onclick={() => (current = id)}>
+			<WorldGlyph world={id} size={10} />
+			{worlds[id].name}
+		</button>
+	{/each}
+</nav>
+
+<section>
+	<h2 class="head"><span class="num">01</span><span class="sol-label">Principles</span></h2>
+	<div class="grid four">
+		{#each principles as [title, text] (title)}
+			<div class="principle">
+				<span class="sol-label">{title}</span>
+				<p class="sol-prose">{text}</p>
+			</div>
+		{/each}
+	</div>
+</section>
+
+<section>
+	<h2 class="head"><span class="num">02</span><span class="sol-label">Light</span></h2>
+	<p class="sol-prose lead">Colour comes only from the bodies. Each world’s glow is sampled from its own photograph and used for glow and icons, never for text or fills.</p>
+	<div class="grid eight">
+		{#each order as id (id)}
+			<div class="swatch" id={id}>
+				<div class="disc"><Body world={id} phase={worlds[id].render === 'disc' ? 0.45 : 1} /></div>
+				<span class="sol-label">{worlds[id].name}</span>
+				<span class="sol-quiet">{worlds[id].color} · {worlds[id].tilt}°</span>
+			</div>
+		{/each}
+	</div>
+	<div class="grid three facts">
+		<DataRows rows={[{ label: 'Key light', value: 'one side only' }, { label: 'Terminator', value: 'blur 4.5 % of radius' }, { label: 'Limb glow', value: 'world colour, 2.4 % stroke' }]} />
+		<DataRows rows={[{ label: 'Space', value: '#000000' }, { label: 'Text', value: '#F2F2F2' }, { label: 'Value · quiet', value: '#BDBDBD · #A8A8A8' }]} />
+		<DataRows rows={[{ label: 'Lines', value: 'white at 8 % and 45 %' }, { label: 'Grain', value: '9 % overlay' }, { label: 'This world', value: w.tagline }]} />
+	</div>
+</section>
+
+<section>
+	<h2 class="head"><span class="num">03</span><span class="sol-label">Typography</span></h2>
+	<p class="sol-prose lead">One family, Outfit. Weight does the work other systems give to separate fonts.</p>
+	<div class="type">
+		<div class="spec"><DataRows rows={[{ label: 'Display', value: 'Outfit 200' }, { label: 'Tracking', value: '+10 %' }]} /></div>
+		<span class="display">Eight worlds</span>
+		<div class="spec"><DataRows rows={[{ label: 'Name', value: 'Outfit 400' }, { label: 'Tracking', value: '+8 %' }]} /></div>
+		<span class="name">Neptune</span>
+		<div class="spec"><DataRows rows={[{ label: 'Label · value', value: '600 · 300' }, { label: 'Size', value: '11.5 caps' }]} /></div>
+		<DataRows size="m" rows={[{ label: 'Orbital period', value: '164.8 years' }]} />
+		<div class="spec"><DataRows rows={[{ label: 'Reading', value: 'Outfit 300' }, { label: 'Case', value: 'sentence' }]} /></div>
+		<p class="sol-prose">Lists, messages and anything read in full stay in sentence case. Capitals are for names and labels, never for paragraphs.</p>
+	</div>
+</section>
+
+<section>
+	<h2 class="head"><span class="num">04</span><span class="sol-label">Components</span></h2>
+	<div class="grid three">
+		<Card title="Actions">
+			<div class="row">
+				<Button variant="primary">Start session</Button>
+				<Button>Later</Button>
+				<Button variant="quiet">Skip</Button>
+			</div>
+			<div class="row">
+				<Button disabled>Unavailable</Button>
+				<Button variant="round" aria-label="Next track">
+					<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M11 2v10M2 2l7 5-7 5z" fill="none" stroke="currentColor" stroke-width="1.1"></path></svg>
+				</Button>
+			</div>
+			<p class="note">One filled button per screen. Tab to a button to see the focus ticks lock on.</p>
+		</Card>
+
+		<Card title="Fields">
+			<Field label="New habit" bind:value={habit} />
+			<Field label="Server address" bind:value={server} error="Use an address that starts with https://" />
+		</Card>
+
+		<Card title="Checklist" world="terra">
+			<div>
+				{#each checks as item, i (item.label)}
+					<Check label={item.label} meta={item.meta} checked={item.done} onchange={(done) => (checks[i].done = done)} />
+				{/each}
+			</div>
+		</Card>
+
+		<Card title="Callout and moon link" world="saturn">
+			<Callout lines={['New = 10', 'Learning = 6', 'Review = 26']} />
+			<MoonLink href="#titan">Titan · 3 like Arrival</MoonLink>
+			<p class="note">Callouts summarise; moon links open another world.</p>
+		</Card>
+
+		<Card title="Progress" world="neptune">
+			<Progress value={134} max={306} label="Position" start="2:14" end="5:06" />
+			<div class="row">
+				<RingGauge outer={{ value: 3, max: 12 }} inner={{ value: 1, max: 2 }} center="E03" label="Episode 3 of 12, season 1 of 2" />
+				<DataRows rows={[{ label: 'Ring', value: 'season' }, { label: 'Inner', value: 'show' }, { label: 'Centre', value: 'next episode' }]} />
+			</div>
+		</Card>
+
+		<Card title="Notice and widget" world="terra">
+			<Widget
+				app="terra"
+				view={{ figure: '2 / 3', caption: 'habits today', progress: { value: 2, max: 3 }, rows: [{ label: 'Streak', value: '12 days' }] }}
+			/>
+			<Button onclick={() => notices.show({ world: 'terra', title: 'Terra · walk outside', body: 'Logged. Four days in a row.' })}>Show a notice</Button>
+		</Card>
+	</div>
+	<div class="grid three facts">
+		<DataRows rows={[{ label: 'Fade', value: '240 ms · text, notices' }, { label: 'Lock', value: '120 ms · focus ticks' }, { label: 'Reduced motion', value: 'respected' }]} />
+		<DataRows rows={[{ label: 'Steps', value: '8 · 16 · 24 · 40 · 64 · 112' }, { label: 'Margin', value: '16 to 96, fluid' }, { label: 'Targets', value: '44 px or more' }]} />
+		<DataRows rows={[{ label: 'Corners', value: 'square; round only for discs' }, { label: 'Lines', value: '1 px, never thicker' }, { label: 'Shadows', value: 'none; light comes from bodies' }]} />
+	</div>
+</section>
+
+<style>
+	.top {
+		display: flex;
+		justify-content: space-between;
+		padding: var(--s-4) var(--margin);
+	}
+
+	.picker {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--s-2);
+		padding: var(--s-4) var(--margin);
+	}
+
+	.picker button {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		min-height: var(--target);
+		padding: 0 14px;
+		border: 1px solid var(--line-mid);
+		background: transparent;
+		font-size: var(--text-xs);
+		letter-spacing: var(--track-caps);
+		text-transform: uppercase;
+		color: var(--text-quiet);
+		cursor: pointer;
+	}
+
+	.picker button[aria-pressed='true'] {
+		border-color: var(--text);
+		color: var(--text-bright);
+	}
+
+	section {
+		padding: var(--s-7) var(--margin) 0;
+		border-top: 1px solid var(--line);
+		margin-top: var(--s-6);
+	}
+
+	section:last-of-type {
+		padding-bottom: var(--s-7);
+	}
+
+	.head {
+		display: flex;
+		align-items: baseline;
+		gap: 28px;
+		margin-bottom: var(--s-5);
+		text-transform: none;
+		letter-spacing: 0;
+	}
+
+	.num {
+		font-weight: var(--weight-display);
+		font-size: 72px;
+		line-height: 1;
+		letter-spacing: 0.06em;
+	}
+
+	.lead {
+		margin-bottom: var(--s-5);
+	}
+
+	.grid {
+		display: grid;
+		gap: var(--s-4);
+	}
+
+	.four {
+		grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+		gap: var(--s-5);
+	}
+
+	.three {
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+	}
+
+	.eight {
+		grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+	}
+
+	.facts {
+		margin-top: var(--s-6);
+		padding-top: var(--s-4);
+		border-top: 1px solid var(--line-mid);
+	}
+
+	.principle {
+		display: flex;
+		flex-direction: column;
+		gap: 14px;
+		padding-top: 18px;
+		border-top: 1px solid rgb(255 255 255 / 0.3);
+	}
+
+	.swatch {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 10px;
+		text-align: center;
+	}
+
+	.disc {
+		width: 96px;
+		margin: 24px 0 14px;
+	}
+
+	.type {
+		display: grid;
+		grid-template-columns: 260px 1fr;
+		align-items: center;
+		row-gap: 0;
+	}
+
+	.type > * {
+		padding: var(--s-4) 0;
+		border-top: 1px solid var(--line-mid);
+	}
+
+	.display {
+		font-weight: var(--weight-display);
+		font-size: var(--text-3xl);
+		line-height: 1;
+		letter-spacing: var(--track-display);
+		text-transform: uppercase;
+	}
+
+	.name {
+		font-weight: var(--weight-name);
+		font-size: var(--text-xl);
+		letter-spacing: var(--track-name);
+		text-transform: uppercase;
+	}
+
+	.row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--s-3);
+	}
+
+	.note {
+		font-size: var(--text-s);
+		color: var(--text-quiet);
+	}
+
+	@media (max-width: 720px) {
+		.type {
+			grid-template-columns: 1fr;
+		}
+
+		.spec {
+			border-top: 1px solid var(--line-mid);
+			padding-bottom: 0;
+		}
+
+		.spec + * {
+			border-top: 0;
+		}
+	}
+</style>

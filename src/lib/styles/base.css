@@ -1,0 +1,126 @@
+/* Sol · Observatory base: reset, type and the few global utilities. */
+
+@view-transition {
+	navigation: auto;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	background: var(--space);
+	color: var(--text);
+	font-family: var(--font);
+	font-weight: var(--weight-value);
+	font-size: var(--text-m);
+	line-height: 1.6;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
+}
+
+body {
+	margin: 0;
+	min-height: 100dvh;
+	background: var(--space);
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+ol,
+ul,
+figure {
+	margin: 0;
+}
+
+h1,
+h2,
+h3 {
+	font-weight: var(--weight-name);
+	letter-spacing: var(--track-name);
+	text-transform: uppercase;
+	line-height: 1.1;
+}
+
+h1 {
+	font-size: var(--text-xl);
+}
+
+h2 {
+	font-size: var(--text-l);
+}
+
+h3 {
+	font-size: var(--text-m);
+}
+
+a {
+	color: inherit;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 4px;
+}
+
+button,
+input,
+select,
+textarea {
+	font: inherit;
+	color: inherit;
+}
+
+img,
+svg {
+	display: block;
+	max-width: 100%;
+}
+
+::selection {
+	background: var(--text);
+	color: var(--space);
+}
+
+:focus-visible {
+	outline: 1px solid var(--text);
+	outline-offset: 4px;
+}
+
+/* A label: what something is. Semibold capitals. */
+.sol-label {
+	font-size: var(--text-xs);
+	font-weight: var(--weight-label);
+	letter-spacing: var(--track-label);
+	text-transform: uppercase;
+	color: var(--text-bright);
+}
+
+/* Quiet capitals: dates, units, secondary facts. */
+.sol-quiet {
+	font-size: var(--text-xs);
+	font-weight: var(--weight-value);
+	letter-spacing: var(--track-caps);
+	text-transform: uppercase;
+	color: var(--text-quiet);
+}
+
+/* Reading text stays in sentence case. */
+.sol-prose {
+	max-width: 62ch;
+	font-weight: var(--weight-value);
+	color: var(--text-value);
+}
+
+.sol-visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
