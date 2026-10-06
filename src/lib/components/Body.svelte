@@ -37,7 +37,7 @@
 
 <svg
 	class="body {className}"
-	viewBox="-100 -100 200 200"
+	viewBox="-170 -170 340 340"
 	role={name ? 'img' : undefined}
 	aria-label={name || undefined}
 	aria-hidden={name ? undefined : 'true'}
@@ -133,12 +133,17 @@
 </svg>
 
 <style>
+	/* The drawing reaches past the disc (the glow, to r = 170 of the disc's
+	   100), and WebKitGTK clips an SVG to its box whatever its overflow says.
+	   So the box holds all of it, and negative margins keep the element's
+	   layout size equal to the disc. */
 	.body {
 		display: block;
-		width: 100%;
+		width: 170%;
+		max-width: none;
 		height: auto;
+		margin: -35%;
 		aspect-ratio: 1;
-		overflow: visible;
 		animation: rise var(--fade, 240ms) var(--ease, ease) both;
 		animation-duration: calc(var(--fade, 240ms) * 4);
 	}
