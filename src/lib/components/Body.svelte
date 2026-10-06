@@ -108,6 +108,10 @@
 		</g>
 	{:else}
 		<g mask="url(#{uid}-lit)">
+			<!-- Invisible, but it widens the group's outline: WebKitGTK clips masked
+			     content to its outline *before* the blur, which cut the glow off
+			     in a straight line just outside the limb. -->
+			<rect x="-130" y="-130" width="260" height="260" fill="none"></rect>
 			{#if w.effect === 'haze'}
 				<circle r="104" fill="none" stroke={w.color} stroke-width="5" opacity="0.7" filter="url(#{uid}-halo)"></circle>
 				<circle r="104" fill="none" stroke="#e8a060" stroke-width="1.5" opacity="0.3"></circle>
