@@ -4,17 +4,81 @@
  */
 
 export interface paths {
-    "/api/sol/apps": {
+    "/api/sol/catalog": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["list"];
+        get?: never;
+        put?: never;
+        post: operations["add_from_github"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sol/connections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_connections"];
+        put?: never;
+        post: operations["create_connection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sol/connections/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete_connection"];
+        options?: never;
+        head?: never;
+        patch: operations["update_connection"];
+        trace?: never;
+    };
+    "/api/sol/devices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_devices"];
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sol/devices/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["revoke"];
         options?: never;
         head?: never;
         patch?: never;
@@ -84,6 +148,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sol/pairings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pending"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sol/pairings/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sol/pairings/{id}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["decline"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sol/settings/github": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["set_github_token"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sol/setup": {
         parameters: {
             query?: never;
@@ -100,45 +228,500 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sol/system": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["info"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sol/widgets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_widgets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sol/widgets/{world}/{id}/items/{item}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["toggle"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sol/worlds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_worlds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sol/worlds/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sol/worlds/{id}/download/{asset}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["download"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sol/worlds/{id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["export"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sol/worlds/{id}/install": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["install"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sol/worlds/{id}/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["release"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sol/worlds/{id}/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["remove"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sol/worlds/{id}/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["settings"];
+        put: operations["update_settings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["changes_since"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/docs/{collection}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_docs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/docs/{collection}/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_doc"];
+        put: operations["put_doc"];
+        post?: never;
+        delete: operations["delete_doc"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["emit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["inbox"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["device_me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pair": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pair/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["claim"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["device_settings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/widgets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["push"];
+        post?: never;
+        delete: operations["remove_widget"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** @description One app as the dashboard sees it. */
-        AppInfo: {
-            /** Format: date-time */
-            checked_at?: string | null;
+        Action: {
             id: string;
-            manifest?: null | components["schemas"]["Manifest"];
-            status: components["schemas"]["Status"];
+            /** @description How the connection builder says it: `Tick a habit`. */
+            label: string;
+            params?: components["schemas"]["Field"][];
         };
-        /** @description The envelope every event travels in, from app outbox to Sol to the browser. */
+        AddRequest: {
+            /** @description `owner/name`, or the repository's GitHub address. */
+            repo: string;
+        };
+        Asset: {
+            /** @description Download through Sol: `/api/sol/worlds/<id>/download/<asset id>`. */
+            download: string;
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** @description `linux`, `windows`, `macos` or `android`; `None` for other files. */
+            platform?: string | null;
+            /** Format: int64 */
+            size: number;
+        };
+        /** @description `GET /api/v1/changes?after=N`: every write after version `N`, oldest first. */
+        ChangePage: {
+            changes: components["schemas"]["Doc"][];
+            /** @description More changes are waiting; ask again straight away. */
+            more: boolean;
+            /**
+             * Format: int64
+             * @description Send as `after` next time.
+             */
+            next: number;
+        };
+        Collection: {
+            id: string;
+            label: string;
+        };
+        CollectionCount: {
+            /** Format: int64 */
+            count: number;
+            id: string;
+            label: string;
+        };
+        /** @description The `409` body when `if_version` didn't match. */
+        Conflict: {
+            current?: null | components["schemas"]["Doc"];
+            error: string;
+            message: string;
+        };
+        Connection: {
+            /** Format: date-time */
+            created_at: string;
+            enabled: boolean;
+            /**
+             * Format: int64
+             * @description How many times it has run.
+             */
+            fired: number;
+            id: string;
+            /** Format: date-time */
+            last_fired?: string | null;
+            params: {
+                [key: string]: unknown;
+            };
+            then: components["schemas"]["Then"];
+            when: components["schemas"]["When"];
+        };
+        ConnectionUpdate: {
+            enabled: boolean;
+        };
+        /** @description Something another world asked this one to do, through a connection. */
+        Delivery: {
+            /** @description One of the world's `actions`, or `widget.toggle` from Sol's dashboard. */
+            action: string;
+            connection?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            event?: null | components["schemas"]["Envelope"];
+            /**
+             * Format: int64
+             * @description Inbox cursor.
+             */
+            n: number;
+            params: unknown;
+        };
+        /** @description A paired app, as Sol's UI shows it. */
+        DeviceInfo: {
+            /** Format: date-time */
+            created_at: string;
+            id: string;
+            /** Format: date-time */
+            last_seen?: string | null;
+            name: string;
+            platform?: string | null;
+            world: string;
+        };
+        /** @description `GET /api/v1/me`: who this device is. */
+        DeviceMe: {
+            device_id: string;
+            user: components["schemas"]["Person"];
+            world: string;
+        };
+        Doc: {
+            collection: string;
+            /** @description `null` for tombstones. */
+            data: unknown;
+            /** @description A tombstone: the document was deleted at `version`. */
+            deleted?: boolean;
+            id: string;
+            /** Format: date-time */
+            updated_at: string;
+            /**
+             * Format: int64
+             * @description Increases with every write in this world; the sync cursor.
+             */
+            version: number;
+        };
+        /** @description What a world app posts to `POST /api/v1/events`. */
+        Emit: {
+            data?: unknown;
+            /**
+             * Format: uuid
+             * @description Optional UUIDv7, so a retried post is stored once.
+             */
+            id?: string | null;
+            subject?: string | null;
+            summary?: string | null;
+            type: string;
+            /** Format: int32 */
+            v?: number;
+        };
+        /** @description An event as Sol stored it. */
         Envelope: {
             data: unknown;
             /**
              * Format: uuid
-             * @description UUIDv7 chosen by the producing app; consumers deduplicate on it.
+             * @description UUIDv7; the same id posted twice is stored once.
              */
             id: string;
             /**
              * Format: int64
-             * @description Position in the producing app's outbox.
+             * @description Position in Sol's event log.
              */
             seq: number;
-            /** @description The app that produced it. */
+            /** @description The world it came from; Sol sets it from the device's pairing. */
             source: string;
-            /** @description What it is about, as `<entity>/<id>`. */
+            /** @description What it is about, as `<thing>/<id>`. */
             subject?: string | null;
-            /**
-             * @description One sentence for people, written by the app: `Did “Walk outside”, 4 days in a row`.
-             *     Sol's activity feed and notifications show it as is.
-             */
+            /** @description One sentence for people: `Did “Walk outside”, 4 days in a row`. */
             summary?: string | null;
             /** Format: date-time */
             time: string;
-            /** @description `<app>.<entity>.<past-tense verb>`, for example `terra.habit.checked`. */
+            /** @description `<world>.<thing>.<past-tense verb>`, for example `terra.habit.checked`. */
             type: string;
-            /** @description The user the event belongs to; `None` for system-wide events. */
+            /** @description The person it belongs to; `None` for events about Sol itself. */
             user?: string | null;
             /**
              * Format: int32
@@ -146,22 +729,53 @@ export interface components {
              */
             v: number;
         };
-        /** @description The JSON error body every Sol service returns. */
+        /** @description The JSON body of every error Sol returns. */
         ErrorBody: {
-            /** @description Stable machine-readable code, e.g. `unauthorized`. */
+            /** @description Stable machine-readable code, e.g. `unauthorized` or `conflict`. */
             error: string;
+            /** @description A sentence for people. */
             message: string;
         };
-        EventType: {
-            /** @description Sol raises a system notification for it while Sol isn't in front. */
-            notify?: boolean;
+        EventKind: {
+            /** @description How the connection builder says it: `A habit is ticked`. */
+            label: string;
             type: string;
-            /** Format: int32 */
-            v: number;
         };
-        Events: {
-            consumes?: string[];
-            emits?: components["schemas"]["EventType"][];
+        Export: {
+            docs: components["schemas"]["Doc"][];
+            /** Format: date-time */
+            exported_at: string;
+            world: string;
+        };
+        /** @description A parameter of an action. */
+        Field: {
+            hint?: string | null;
+            key: string;
+            kind: components["schemas"]["FieldKind"];
+            label: string;
+            required?: boolean;
+        };
+        /** @enum {string} */
+        FieldKind: "text" | "url" | "secret" | "number" | "toggle" | "time";
+        GithubToken: {
+            /** @description A token that can read the worlds' repositories; empty or null removes it. */
+            token?: string | null;
+        };
+        /** @description `GET /_sol/health`. */
+        Health: {
+            /** @description CPU architecture the binary was built for, e.g. `aarch64`. */
+            arch: string;
+            db: string;
+            status: string;
+            /** Format: int64 */
+            uptime_s: number;
+            version: string;
+        };
+        /** @description `GET /api/v1/inbox?after=N`. */
+        InboxPage: {
+            deliveries: components["schemas"]["Delivery"][];
+            /** Format: int64 */
+            next: number;
         };
         Item: {
             /** @description Draws a checkbox when set. */
@@ -170,29 +784,82 @@ export interface components {
             label: string;
             /** @description A short note on the right, e.g. a streak or a time. */
             meta?: string | null;
-            toggle?: null | components["schemas"]["Toggle"];
+            /**
+             * @description The box can be ticked from the dashboard. Sol then shows the new state
+             *     at once and puts a `widget.toggle` delivery in the world's inbox with
+             *     `{ "widget", "item", "done" }`, for the app to apply.
+             */
+            toggle?: boolean;
         };
         LoginRequest: {
             password: string;
             username: string;
         };
-        /** @description What an app tells Sol about itself at `GET /_sol/manifest`. */
-        Manifest: {
-            /** Format: int32 */
-            contract: number;
-            description?: string;
-            events?: components["schemas"]["Events"];
-            id: string;
-            name: string;
-            /** @description Serves a web UI at `/ui/`, which Sol shows at `/<id>/`. */
-            ui?: boolean;
-            version: string;
-            widgets?: components["schemas"]["Widget"][];
-        };
         /** @description The signed-in person, as the browser sees them. */
         Me: {
             id: string;
             /** @description IANA time zone, e.g. `Europe/Copenhagen`. */
+            tz: string;
+            username: string;
+        };
+        NewConnection: {
+            params?: {
+                [key: string]: unknown;
+            };
+            then_action: string;
+            then_world: string;
+            /** @description An event type an installed world emits, e.g. `mercury.review.finished`. */
+            when: string;
+        };
+        PairClaim: {
+            id: string;
+            secret: string;
+        };
+        PairRequest: {
+            /** @description How the device appears in Sol, e.g. `Desktop` or `Lukas's phone`. */
+            device: string;
+            /** @description `linux`, `windows`, `macos`, `android` or `ios`. */
+            platform?: string | null;
+            /** @description The world the app is, e.g. `terra`. */
+            world: string;
+        };
+        PairStarted: {
+            /** @description Show this; the person approves the request that carries it. */
+            code: string;
+            /** Format: date-time */
+            expires_at: string;
+            id: string;
+            /** @description Proves the claim comes from the app that started the pairing. */
+            secret: string;
+        };
+        /** @description Answer to a claim once the person has approved it. */
+        Paired: {
+            device_id: string;
+            /** @description Keep it safe, e.g. in the system keyring; it is shown only once. */
+            token: string;
+            user: components["schemas"]["Person"];
+            world: string;
+        };
+        /** @description Answer to a claim that is still waiting for the person. */
+        Pending: {
+            status: string;
+        };
+        /** @description A request to pair, as Sol's UI shows it. */
+        PendingPairing: {
+            /** @description The app shows the same code; approve only if they match. */
+            code: string;
+            /** Format: date-time */
+            created_at: string;
+            device: string;
+            /** Format: date-time */
+            expires_at: string;
+            id: string;
+            platform?: string | null;
+            world: string;
+        };
+        Person: {
+            id: string;
+            /** @description IANA time zone; "today" in a world means today here. */
             tz: string;
             username: string;
         };
@@ -202,9 +869,63 @@ export interface components {
             /** Format: double */
             value: number;
         };
+        /** @description `PUT /api/v1/docs/{collection}/{id}`. */
+        Put: {
+            data: unknown;
+            /**
+             * Format: int64
+             * @description Write only if the document is still at this version (`0`: only if it
+             *     doesn't exist yet). Leave out to always write.
+             */
+            if_version?: number | null;
+        };
+        Release: {
+            assets: components["schemas"]["Asset"][];
+            /** Format: date-time */
+            checked_at: string;
+            /** @description Why there are no downloads, for people. */
+            message?: string | null;
+            /** Format: date-time */
+            published_at?: string | null;
+            status: components["schemas"]["ReleaseStatus"];
+            /** @description The release page on GitHub. */
+            url: string;
+            version?: string | null;
+        };
+        /** @enum {string} */
+        ReleaseStatus: "ok" | "none" | "unreachable";
+        RemoveRequest: {
+            /** @description Also delete everything the world keeps in Sol. Can't be undone. */
+            delete_data?: boolean;
+        };
         Row: {
             label: string;
             value: string;
+        };
+        Setting: {
+            default?: unknown;
+            hint?: string | null;
+            key: string;
+            kind: components["schemas"]["FieldKind"];
+            label: string;
+        };
+        /** @description A world's setting, as the settings form shows it. */
+        SettingView: {
+            default?: unknown;
+            hint?: string | null;
+            key: string;
+            kind: components["schemas"]["FieldKind"];
+            label: string;
+            /** @description A value is stored (the only thing shown for secrets). */
+            set: boolean;
+            /** @description The stored value; never sent for secrets. */
+            value?: unknown;
+        };
+        /** @description New values by key; `null` goes back to the default. */
+        SettingsUpdate: {
+            values: {
+                [key: string]: unknown;
+            };
         };
         SetupRequest: {
             /** @description The one-time code Sol printed to its log on first start. */
@@ -217,28 +938,65 @@ export interface components {
             /** @description True until the first account exists. */
             needed: boolean;
         };
-        /** @enum {string} */
-        Status: "unknown" | "up" | "down";
-        /**
-         * @description Ticking a checklist item sends `{ "<field>": <new state> }` with `method`
-         *     to `path` under the app's API, e.g. `PUT /api/terra/habits/1/today`.
-         */
-        Toggle: {
-            field: string;
-            method: string;
-            path: string;
+        SystemInfo: {
+            /** @description CPU architecture, e.g. `aarch64` on the NAS. */
+            arch: string;
+            /**
+             * Format: int64
+             * @description Bytes on disk: Sol's database and every world's.
+             */
+            data_bytes: number;
+            /** @description Where Sol keeps its data and every world's. */
+            data_dir: string;
+            /** Format: int64 */
+            devices: number;
+            /**
+             * Format: int64
+             * @description Devices seen in the last five minutes.
+             */
+            devices_online: number;
+            /** @description A GitHub token is set (the token itself is never shown). */
+            github_token: boolean;
+            /** Format: int64 */
+            pending_pairings: number;
+            public_url?: string | null;
+            /** Format: int64 */
+            uptime_s: number;
+            version: string;
+            /** Format: int64 */
+            worlds: number;
+        };
+        Then: {
+            action: string;
+            label: string;
+            world: string;
+        };
+        Tick: {
+            done: boolean;
         };
         UpdateMe: {
             tz: string;
         };
-        /** @description A dashboard widget: an API route that returns a `WidgetView`. */
+        When: {
+            label: string;
+            type: string;
+            world: string;
+        };
         Widget: {
             id: string;
-            /** @description Path under the app's API, e.g. `/widgets/today` (Sol serves it at `/api/<app>/widgets/today`). */
-            path: string;
-            /** @description Event types (`*` allowed at the end) that should refresh it. */
-            refresh_on?: string[];
             title: string;
+            /** Format: date-time */
+            updated_at: string;
+            view: components["schemas"]["WidgetView"];
+            world: string;
+        };
+        /**
+         * @description `PUT /api/v1/widgets/{id}`: the latest look of one of the world's widgets
+         *     on Sol's dashboard.
+         */
+        WidgetPush: {
+            title: string;
+            view: components["schemas"]["WidgetView"];
         };
         WidgetView: {
             /** @description What the figure counts, e.g. `habits done today`. */
@@ -253,6 +1011,53 @@ export interface components {
             /** @description `Label: value` rows. */
             rows?: components["schemas"]["Row"][];
         };
+        WorldDetail: {
+            /**
+             * Format: int64
+             * @description The world's database on disk.
+             */
+            bytes: number;
+            collections: components["schemas"]["CollectionCount"][];
+            world: components["schemas"]["WorldSummary"];
+        };
+        WorldManifest: {
+            /** @description Things it can do when another world's event arrives. */
+            actions?: components["schemas"]["Action"][];
+            /** @description What it keeps in Sol, for the data overview. */
+            collections?: components["schemas"]["Collection"][];
+            /** @description Events it posts, which connections can listen for. */
+            emits?: components["schemas"]["EventKind"][];
+            /** @description Lowercase letters, digits and dashes; also the world's namespace. */
+            id: string;
+            name: string;
+            /** @description The planet a moon belongs to, e.g. `neptune` for Triton. */
+            parent?: string | null;
+            /** @description `owner/name` on GitHub, where releases and the app downloads live. */
+            repo: string;
+            /** @description Settings people set once in Sol; every paired device reads them. */
+            settings?: components["schemas"]["Setting"][];
+            /** @description One line about what it is for. */
+            tagline: string;
+        };
+        /** @description One world as the Worlds page shows it. */
+        WorldSummary: {
+            /** @description Part of Sol's own catalog, rather than added from GitHub. */
+            builtin: boolean;
+            /**
+             * Format: int64
+             * @description Paired devices.
+             */
+            devices: number;
+            installed: boolean;
+            /** Format: date-time */
+            installed_at?: string | null;
+            /**
+             * Format: date-time
+             * @description When one of its devices last talked to Sol.
+             */
+            last_seen?: string | null;
+            manifest: components["schemas"]["WorldManifest"];
+        };
     };
     responses: never;
     parameters: never;
@@ -262,7 +1067,38 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    list: {
+    add_from_github: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorldSummary"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    list_connections: {
         parameters: {
             query?: never;
             header?: never;
@@ -276,7 +1112,144 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AppInfo"][];
+                    "application/json": components["schemas"]["Connection"][];
+                };
+            };
+        };
+    };
+    create_connection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewConnection"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Connection"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    delete_connection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    update_connection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConnectionUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Connection"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    list_devices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceInfo"][];
+                };
+            };
+        };
+    };
+    revoke: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
                 };
             };
         };
@@ -410,6 +1383,100 @@ export interface operations {
             };
         };
     };
+    pending: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingPairing"][];
+                };
+            };
+        };
+    };
+    approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    decline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    set_github_token: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GithubToken"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     setup_status: {
         parameters: {
             query?: never;
@@ -465,6 +1532,695 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
+            };
+        };
+    };
+    info: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemInfo"];
+                };
+            };
+        };
+    };
+    list_widgets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Widget"][];
+                };
+            };
+        };
+    };
+    toggle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                world: string;
+                id: string;
+                item: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Tick"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Widget"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    list_worlds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorldSummary"][];
+                };
+            };
+        };
+    };
+    detail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorldDetail"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    download: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                asset: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The file, streamed from GitHub */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    export: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A JSON download of everything the world keeps for you */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Export"];
+                };
+            };
+        };
+    };
+    install: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorldSummary"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    release: {
+        parameters: {
+            query?: {
+                /** @description Ask GitHub now instead of using the copy from the last hour. */
+                refresh?: boolean;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Release"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RemoveRequest"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    settings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingView"][];
+                };
+            };
+        };
+    };
+    update_settings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettingsUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingView"][];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    changes_since: {
+        parameters: {
+            query?: {
+                /** @description The `next` of the previous page; 0 for everything. */
+                after?: number;
+                /** @description Seconds to wait when nothing has changed yet (at most 25). */
+                wait?: number;
+                /** @description At most this many changes (default and maximum 500). */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangePage"];
+                };
+            };
+        };
+    };
+    list_docs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                collection: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Doc"][];
+                };
+            };
+        };
+    };
+    get_doc: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                collection: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Doc"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    put_doc: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                collection: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Put"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Doc"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Conflict"];
+                };
+            };
+        };
+    };
+    delete_doc: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                collection: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The tombstone */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Doc"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    emit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Emit"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    inbox: {
+        parameters: {
+            query?: {
+                /** @description The `next` of the previous page; 0 for everything. */
+                after?: number;
+                /** @description Seconds to wait when nothing is waiting yet (at most 25). */
+                wait?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InboxPage"];
+                };
+            };
+        };
+    };
+    device_me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceMe"];
+                };
+            };
+        };
+    };
+    start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PairRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PairStarted"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    claim: {
+        parameters: {
+            query?: {
+                /** @description Seconds to wait for the person to approve (at most 25). */
+                wait?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PairClaim"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Paired"];
+                };
+            };
+            /** @description Not approved yet; ask again */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Pending"];
+                };
+            };
+            /** @description Expired, declined or unknown; start again */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    device_settings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Values with defaults filled in, secrets included */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    push: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WidgetPush"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    remove_widget: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

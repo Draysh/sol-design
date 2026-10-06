@@ -6,19 +6,24 @@ from this package, so they all look and behave the same.
 
 - **[DESIGN.md](DESIGN.md)**: the rules (principles, anatomy of a screen, type,
   light, layout, components, motion, writing).
-- **Components** (Svelte 5): `Shell`, `Sheet`, `Body`, `Reticle`, `Card`,
-  `Button`, `Field`, `Check`, `Progress`, `RingGauge`, `DataRows`, `Callout`,
-  `MoonLink`, `Widget`, `Notices`, `Loader`, `WorldGlyph`.
+- **Components** (Svelte 5): `Shell`, `Sheet`, `PageHead`, `Body`, `Reticle`,
+  `Card`, `Button`, `Field`, `Select`, `Toggle`, `Check`, `Progress`,
+  `RingGauge`, `DataRows`, `Callout`, `MoonLink`, `Widget`, `Notices`,
+  `Loader`, `WorldGlyph`.
 - **Worlds** (`worlds.ts`): each world's colour, real axial tilt, photo and
   composition.
-- **Client** (`@sol/design/client`): the session, Sol's live event stream,
-  notifications and typed API clients that every app shares.
+- **Client** (`@sol/design/client`): Sol's typed API, session and live event
+  stream, for Sol's own web app; notices and system notifications for any app.
 
 ## Use it in an app
 
 ```sh
-npm install git+https://github.com/Draysh/sol-design.git#v0.1.0
+npm install git+https://github.com/Draysh/sol-design.git#v0.2.0
 ```
+
+npm 12 installs git dependencies only when the project allows it: add
+`allow-git=root` to `.npmrc` and `"allowScripts": { "@sol/design": true }` to
+`package.json` (the package builds itself on install).
 
 ```svelte
 <!-- src/routes/+layout.svelte -->
@@ -27,7 +32,9 @@ npm install git+https://github.com/Draysh/sol-design.git#v0.1.0
 	let { children } = $props();
 </script>
 
-<Shell world="terra">{@render children()}</Shell>
+<Shell world="terra" links={[{ href: '/', label: 'Today', current: true }]}>
+	{@render children()}
+</Shell>
 ```
 
 ```svelte

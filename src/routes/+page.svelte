@@ -15,6 +15,8 @@
 		Progress,
 		RingGauge,
 		Sheet,
+		Select,
+		Toggle,
 		Widget,
 		WorldGlyph,
 		moonsOf,
@@ -88,6 +90,18 @@
 	];
 
 	let habit = $state('15 minutes of Japanese');
+	let scrobble = $state(true);
+	let furigana = $state(false);
+	let room = $state('living');
+	let widget = $state({
+		figure: '2 / 3',
+		caption: 'habits today',
+		progress: { value: 2, max: 3 },
+		items: [
+			{ id: 'jp', label: '15 minutes of Japanese', meta: '12 d', done: true, toggle: true },
+			{ id: 'walk', label: 'Walk outside', meta: '3 d', done: false, toggle: true }
+		]
+	});
 	let server = $state('sol.local');
 	let checks = $state([
 		{ label: '15 minutes of Japanese', meta: '12 d', done: true },
@@ -193,6 +207,19 @@
 			<Field label="Server address" bind:value={server} error="Use an address that starts with https://" />
 		</Card>
 
+		<Card title="Choices" world="neptune">
+			<Select
+				label="Room"
+				bind:value={room}
+				options={[
+					{ value: 'living', label: 'Living room' },
+					{ value: 'office', label: 'Office' }
+				]}
+			/>
+			<Toggle label="Scrobble plays" bind:checked={scrobble} hint="Navidrome forwards them to ListenBrainz." />
+			<Toggle label="Show furigana" bind:checked={furigana} />
+		</Card>
+
 		<Card title="Checklist" world="terra">
 			<div>
 				{#each checks as item, i (item.label)}
@@ -217,8 +244,11 @@
 
 		<Card title="Notice and widget" world="terra">
 			<Widget
-				app="terra"
-				view={{ figure: '2 / 3', caption: 'habits today', progress: { value: 2, max: 3 }, rows: [{ label: 'Streak', value: '12 days' }] }}
+				world="terra"
+				view={widget}
+				ontoggle={(item, done) => {
+					widget.items = widget.items?.map((i) => (i.id === item ? { ...i, done } : i));
+				}}
 			/>
 			<Button onclick={() => notices.show({ world: 'terra', title: 'Terra · walk outside', body: 'Logged. Four days in a row.' })}>Show a notice</Button>
 		</Card>

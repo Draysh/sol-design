@@ -1,41 +1,33 @@
 <!--
-	Draws a dashboard widget from the `WidgetView` an app returns, so Sol never
-	needs app-specific widget code. Ticking a checklist item calls the route the
-	app named, then asks for fresh data.
+	Draws a widget from a `WidgetView`, so Sol's dashboard needs no code from
+	the worlds. Items marked `toggle` get a working checkbox; `ontoggle` decides
+	what ticking does (Sol passes it to the world's app).
 -->
 <script lang="ts">
-	import { errorMessage, type WidgetView } from '../client/api.js';
+	import type { WidgetView } from '../client/api.js';
 	import { notices } from '../client/notices.svelte.js';
 	import Check from './Check.svelte';
 	import DataRows from './DataRows.svelte';
 	import Progress from './Progress.svelte';
 
 	interface Props {
-		app: string;
+		/** The world it belongs to, for messages. */
+		world: string;
 		view: WidgetView;
-		/** Called after an item changed, to load the widget again. */
-		onchange?: () => void;
+		/** Called when a box is ticked or unticked; throw to show it failed. */
+		ontoggle?: (item: string, done: boolean) => Promise<void> | void;
 	}
 
-	let { app, view, onchange }: Props = $props();
+	let { world, view, ontoggle }: Props = $props();
 	let busy = $state<string | null>(null);
 
 	async function toggle(item: NonNullable<WidgetView['items']>[number], done: boolean) {
-		if (!item.toggle) return;
+		if (!item.toggle || !ontoggle) return;
 		busy = item.id;
 		try {
-			const res = await fetch(`/api/${app}${item.toggle.path}`, {
-				method: item.toggle.method,
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({ [item.toggle.field]: done })
-			});
-			if (!res.ok) {
-				const body = await res.json().catch(() => null);
-				throw new Error(errorMessage(body, `Couldn’t update “${item.label}”`));
-			}
-			onchange?.();
+			await ontoggle(item.id, done);
 		} catch (err) {
-			notices.show({ world: app, title: 'Not saved', body: (err as Error).message, tone: 'error' });
+			notices.show({ world, title: 'Not saved', body: (err as Error).message, tone: 'error' });
 		} finally {
 			busy = null;
 		}
@@ -61,7 +53,7 @@
 						meta={item.meta ?? undefined}
 						checked={item.done}
 						busy={busy === item.id}
-						disabled={!item.toggle}
+						disabled={!item.toggle || !ontoggle}
 						onchange={(done) => toggle(item, done)}
 					/>
 				{:else}

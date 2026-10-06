@@ -13,7 +13,7 @@
 
 <dl class="rows {size}" style:text-align={align}>
 	{#each rows as row, i (i)}
-		<div><dt>{row.label}:</dt> <dd>{row.value}</dd></div>
+		<div><dt>{row.label}:</dt> <dd class:keep={row.keepCase}>{row.value}</dd></div>
 	{/each}
 </dl>
 
@@ -44,5 +44,11 @@
 	dd {
 		font-weight: var(--weight-value);
 		color: var(--text-value);
+	}
+
+	dd.keep {
+		text-transform: none;
+		letter-spacing: 0.02em;
+		overflow-wrap: anywhere;
 	}
 </style>

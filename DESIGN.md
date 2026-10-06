@@ -99,20 +99,23 @@ glow. A 9 % film grain covers everything.
 
 | Component | Use it for |
 | --- | --- |
-| `Shell` | The root layout of every app: sign-in check, bar of worlds, events, notifications, grain |
+| `Shell` | The root layout of every app: the bar (its sections, status on the right), notices and grain |
 | `Sheet` | A world's first screen (anatomy above) |
+| `PageHead` | The top of a working page: title, one line of lead, the page's action |
 | `Body` | A lit world anywhere else, e.g. the dashboard's corner sun |
 | `Reticle` | Framing a name or one key figure |
 | `Card` | A group of related things, marked by corner ticks |
 | `Button` | `primary` once per screen for the main action; `ghost` otherwise; `quiet` for low-stakes actions; `round` for icon-only controls (always with `aria-label`) |
 | `Field` | Text input with label; errors say what to do |
+| `Select` | A choice from a short list, underlined like a field |
+| `Toggle` | An on/off setting that applies at once or with its form |
 | `Check` | One checklist row |
 | `Progress` | A position in something (track, episode, deck) |
 | `RingGauge` | Part of a whole of a whole (episode of season of show) |
 | `DataRows` | `Label: value` facts |
 | `Callout` | A short list leading from a body |
 | `MoonLink` | A link to a moon's app |
-| `Widget` | Drawing a `WidgetView` (Sol's dashboard does this for every app) |
+| `Widget` | Drawing a `WidgetView` (Sol's overview does this for every world) |
 | `Notices` / `notices.show()` | Short in-app messages at the top edge |
 | `Loader` | The moment before data arrives |
 | `WorldGlyph` | A world's crescent icon in lists and navigation |
@@ -144,17 +147,24 @@ transition. Respect `prefers-reduced-motion`: the tokens drop to zero.
 
 ## Building an app the same way
 
-Start from the planet template (`sol-planet-template`), which already does all
-of this:
+Sol is the one server; each world is an app of its own (a Tauri desktop app
+now, a phone app later) that pairs with Sol and keeps its data there. Every
+world's app is built the same way, starting from `sol-planet-template`:
 
-1. The root layout is `<Shell world="<id>">`.
+1. The root layout is `<Shell world="<id>" links={…}>`, with the app's own
+   sections in the bar and its connection status in `actions`.
 2. The first screen is a `<Sheet>` with the world's callout and data rows.
-3. Everything else is `Card`s in the standard grid, built from these
-   components. No custom colours, fonts, shadows or rounded boxes.
+3. Other pages start with a `<PageHead>`; everything else is `Card`s in the
+   standard grid, built from these components. No custom colours, fonts,
+   shadows or rounded boxes.
 4. One `primary` button per screen at most.
-5. Dashboard widgets return a `WidgetView` from the API; Sol draws them.
-6. Every event the app emits carries a `summary` sentence.
-7. API calls go through `appClient<Paths>('<id>')`; Sol's own API through `sol`.
+5. Data comes from Sol through `orbit::client` on the app's Rust side; the UI
+   never talks to Sol directly.
+6. Every event the app posts carries a `summary` sentence.
+7. Widgets for Sol's overview are `WidgetView`s the app pushes; items with
+   `toggle` can be ticked from the overview and arrive in the app's inbox.
+
+Sol's own web app follows the same rules, with `world="sol"`.
 
 ## Adding a world
 

@@ -5,9 +5,8 @@
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { session } from '../client/session.svelte.js';
 	import type { Moon, Row } from '../types.js';
-	import { moonsOf, world as worldFor, type Placement } from '../worlds.js';
+	import { world as worldFor, type Placement } from '../worlds.js';
 	import Body from './Body.svelte';
 	import Callout from './Callout.svelte';
 	import DataRows from './DataRows.svelte';
@@ -21,21 +20,15 @@
 		callout?: string[];
 		/** Up to three blocks: left, centre and right. */
 		rows?: Row[][];
-		/** Defaults to the world's moons that Sol reports as up. */
+		/** Links to the world's moons, shown under the name. */
 		moons?: Moon[];
 		/** Extra content under the name, such as the screen's main action. */
 		children?: Snippet;
 	}
 
-	let { world: id, name, callout = [], rows = [], moons, children }: Props = $props();
+	let { world: id, name, callout = [], rows = [], moons = [], children }: Props = $props();
 
 	const w = $derived(worldFor(id));
-	const links = $derived(
-		moons ??
-			moonsOf(id)
-				.filter((moon) => session.apps.length === 0 || session.isUp(moon.id))
-				.map((moon) => ({ id: moon.id, label: moon.name, href: `/${moon.id}/` }))
-	);
 	const blocks = $derived.by(() => {
 		const kept = rows.slice(0, 3);
 		const at = kept.length === 3 ? (['left', 'center', 'right'] as const) : (['left', 'right'] as const);
@@ -68,9 +61,9 @@
 			<Reticle tilt={w.tilt} size="var(--reticle)">
 				<h1 class="name">{name ?? w.name}</h1>
 			</Reticle>
-			{#if links.length || children}
+			{#if moons.length || children}
 				<div class="under">
-					{#each links as moon (moon.id)}
+					{#each moons as moon (moon.id)}
 						<MoonLink href={moon.href}>{moon.label}</MoonLink>
 					{/each}
 					{@render children?.()}

@@ -1,128 +1,61 @@
 <!--
-	The frame around every Sol app: sign-in check, the bar of worlds, live
-	events, notifications and the film grain. An app's root layout is just
-	`<Shell world="terra">{@render children()}</Shell>`.
+	The frame around every screen: the bar (brand, the app's sections, its
+	status on the right), notices at the top edge and the film grain. It knows
+	nothing about sign-in or data; the app passes in what to show.
+
+	<Shell world="sol" links={[{ href: '/', label: 'Home', current: true }]}>
+		{#snippet actions()}<Button variant="quiet">Sign out</Button>{/snippet}
+		…
+	</Shell>
 -->
 <script lang="ts">
-	import { onMount, type Snippet } from 'svelte';
+	import type { Snippet } from 'svelte';
 	import '../styles/index.css';
-	import { describe, events } from '../client/events.svelte.js';
-	import { notify } from '../client/platform.js';
-	import { session } from '../client/session.svelte.js';
-	import { world as worldFor, worlds } from '../worlds.js';
-	import Button from './Button.svelte';
+	import type { ShellLink } from '../types.js';
+	import { world as worldFor } from '../worlds.js';
 	import Grain from './Grain.svelte';
-	import Loader from './Loader.svelte';
 	import Notices from './Notices.svelte';
 	import WorldGlyph from './WorldGlyph.svelte';
 
 	interface Props {
-		/** The app this page belongs to. */
+		/** The world this app is; its colour becomes `--world`. */
 		world: string;
+		links?: ShellLink[];
+		/** Where the wordmark leads. */
+		home?: string;
+		/** The right end of the bar: status, the time, sign out. */
+		actions?: Snippet;
 		children: Snippet;
 	}
 
-	let { world: id, children }: Props = $props();
-
+	let { world: id, links = [], home = '/', actions, children }: Props = $props();
 	const w = $derived(worldFor(id));
-	const order = Object.keys(worlds);
-	const open = $derived(
-		[...session.open].sort(
-			(a, b) => (order.indexOf(a.id) + 1 || 99) - (order.indexOf(b.id) + 1 || 99)
-		)
-	);
-	let status = $state<'loading' | 'ready' | 'unreachable'>('loading');
-	let now = $state(new Date());
-	const time = $derived(
-		new Intl.DateTimeFormat('en-GB', {
-			hour: '2-digit',
-			minute: '2-digit',
-			timeZone: session.me?.tz ?? undefined
-		}).format(now)
-	);
-
-	function load() {
-		status = 'loading';
-		session
-			.load()
-			.then((where) => {
-				if (where === 'ok') {
-					status = 'ready';
-					return;
-				}
-				const next = encodeURIComponent(location.pathname + location.search);
-				location.assign(`/${where}?next=${next}`);
-			})
-			.catch(() => (status = 'unreachable'));
-	}
-
-	onMount(load);
-
-	// While signed in: live events, notifications, a fresh list of worlds, a ticking clock.
-	$effect(() => {
-		if (status !== 'ready') return;
-		events.start();
-		const off = events.on('*', (event) => {
-			if (!session.notifying.has(event.type)) return;
-			if (document.hidden || !document.hasFocus()) {
-				notify(worldFor(event.source).name, describe(event));
-			}
-		});
-		const apps = setInterval(() => session.refreshApps(), 30_000);
-		const clock = setInterval(() => (now = new Date()), 15_000);
-		return () => {
-			off();
-			clearInterval(apps);
-			clearInterval(clock);
-			events.stop();
-		};
-	});
-
-	async function signOut() {
-		await session.signOut();
-		location.assign('/login');
-	}
-
-	// Links within the same app stay client-side; links to other worlds load their app.
-	const reload = (target: string) => (target === id ? undefined : '');
 </script>
 
 <div class="shell" style:--world={w.color}>
-	{#if status === 'ready'}
-		<nav class="bar" aria-label="Worlds">
-			<a class="brand" href="/" data-sveltekit-reload={reload('sol')} aria-current={id === 'sol' ? 'page' : undefined}>
-				<WorldGlyph world="sol" size={9} />
-				<span>Sol</span>
-			</a>
+	<nav class="bar" aria-label="Main">
+		<a class="brand" href={home}>
+			<WorldGlyph world={id} size={9} />
+			<span>{w.name}</span>
+		</a>
+		{#if links.length}
 			<ul>
-				{#each open as app (app.id)}
+				{#each links as link (link.href)}
 					<li>
-						<a href="/{app.id}/" data-sveltekit-reload={reload(app.id)} aria-current={app.id === id ? 'page' : undefined}>
-							<WorldGlyph world={app.id} size={9} />
-							<span>{worldFor(app.id).name}</span>
+						<a href={link.href} aria-current={link.current ? 'page' : undefined}>
+							{#if link.world}<WorldGlyph world={link.world} size={9} />{/if}
+							<span class="label">{link.label}</span>
+							{#if link.badge}<span class="badge" aria-label="{link.badge} waiting">{link.badge}</span>{/if}
 						</a>
 					</li>
 				{/each}
 			</ul>
-			<div class="meta">
-				<span class="live" class:on={events.connected}>{events.connected ? 'Live' : 'Offline'}</span>
-				<time class="sol-quiet">{time}</time>
-				<Button variant="quiet" onclick={signOut}>Sign out</Button>
-			</div>
-		</nav>
-		<main>
-			{@render children()}
-		</main>
-	{:else if status === 'unreachable'}
-		<main class="center">
-			<p>Can’t reach Sol. Is it running?</p>
-			<Button onclick={load}>Try again</Button>
-		</main>
-	{:else}
-		<main class="center" aria-busy="true">
-			<Loader />
-		</main>
-	{/if}
+		{/if}
+		{#if actions}<div class="actions">{@render actions()}</div>{/if}
+	</nav>
+	<main>
+		{@render children()}
+	</main>
 	<Notices />
 	<Grain />
 </div>
@@ -159,6 +92,7 @@
 	}
 
 	.brand {
+		flex: none;
 		font-size: var(--text-s);
 		font-weight: var(--weight-label);
 		letter-spacing: 0.32em;
@@ -181,54 +115,32 @@
 		color: var(--text-bright);
 	}
 
-	ul a[aria-current='page'] span {
+	ul a[aria-current='page'] .label {
 		text-decoration: underline;
 		text-decoration-thickness: 1px;
 		text-underline-offset: 6px;
 	}
 
-	.meta {
+	.badge {
+		display: inline-grid;
+		place-items: center;
+		min-width: 18px;
+		height: 18px;
+		padding: 0 5px;
+		border-radius: 9px;
+		background: var(--world);
+		color: var(--space);
+		font-size: 10px;
+		font-weight: var(--weight-label);
+		letter-spacing: 0;
+	}
+
+	.actions {
 		display: flex;
 		align-items: center;
 		gap: var(--s-3);
 		margin-left: auto;
 		flex: none;
-	}
-
-	.live {
-		display: inline-flex;
-		align-items: center;
-		gap: 6px;
-		font-size: var(--text-xs);
-		letter-spacing: var(--track-caps);
-		text-transform: uppercase;
-		color: var(--text-faint);
-	}
-
-	.live::before {
-		content: '';
-		width: 5px;
-		height: 5px;
-		border-radius: 50%;
-		background: var(--text-faint);
-	}
-
-	.live.on {
-		color: var(--text-quiet);
-	}
-
-	.live.on::before {
-		background: var(--ok);
-		box-shadow: 0 0 8px var(--ok);
-	}
-
-	.center {
-		display: grid;
-		place-content: center;
-		justify-items: center;
-		gap: var(--s-4);
-		min-height: 100dvh;
-		color: var(--text-value);
 	}
 
 	@media (max-width: 720px) {
@@ -237,9 +149,7 @@
 			padding: 0 var(--s-3);
 		}
 
-		.brand span,
-		.live,
-		time {
+		.brand span {
 			display: none;
 		}
 	}
