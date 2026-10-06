@@ -17,6 +17,7 @@ export { default as RingGauge } from './components/RingGauge.svelte';
 export { default as Select } from './components/Select.svelte';
 export { default as Sheet } from './components/Sheet.svelte';
 export { default as Shell } from './components/Shell.svelte';
+export { default as TextArea } from './components/TextArea.svelte';
 export { default as Toggle } from './components/Toggle.svelte';
 export { default as Widget } from './components/Widget.svelte';
 export { default as WorldGlyph } from './components/WorldGlyph.svelte';

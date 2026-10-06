@@ -7,7 +7,7 @@ from this package, so they all look and behave the same.
 - **[DESIGN.md](DESIGN.md)**: the rules (principles, anatomy of a screen, type,
   light, layout, components, motion, writing).
 - **Components** (Svelte 5): `Shell`, `Sheet`, `PageHead`, `Body`, `Reticle`,
-  `Card`, `Button`, `Field`, `Select`, `Toggle`, `Check`, `Progress`,
+  `Card`, `Button`, `Field`, `TextArea`, `Select`, `Toggle`, `Check`, `Progress`,
   `RingGauge`, `DataRows`, `Callout`, `MoonLink`, `Widget`, `Notices`,
   `Loader`, `WorldGlyph`.
 - **Worlds** (`worlds.ts`): each world's colour, real axial tilt, photo and

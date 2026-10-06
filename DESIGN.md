@@ -108,6 +108,7 @@ glow. A 9 % film grain covers everything.
 | `Button` | `primary` once per screen for the main action; `ghost` otherwise; `quiet` for low-stakes actions; `round` for icon-only controls (always with `aria-label`) |
 | `Field` | Text input with label; errors say what to do |
 | `Select` | A choice from a short list, underlined like a field |
+| `TextArea` | Writing more than a line, e.g. a diary; grows as you type |
 | `Toggle` | An on/off setting that applies at once or with its form |
 | `Check` | One checklist row |
 | `Progress` | A position in something (track, episode, deck) |
