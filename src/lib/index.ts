@@ -1,5 +1,6 @@
 // The Sol design language. DESIGN.md has the rules; the components keep them.
 export { default as AppUpdates } from './components/AppUpdates.svelte';
+export { default as Back } from './components/Back.svelte';
 export { default as Body } from './components/Body.svelte';
 export { default as Button } from './components/Button.svelte';
 export { default as Callout } from './components/Callout.svelte';
@@ -21,8 +22,11 @@ export { default as Shell } from './components/Shell.svelte';
 export { default as TextArea } from './components/TextArea.svelte';
 export { default as Toggle } from './components/Toggle.svelte';
 export { default as Widget } from './components/Widget.svelte';
+export { default as WayBack } from './components/WayBack.svelte';
+export { default as WithPlanet } from './components/WithPlanet.svelte';
 export { default as WorldGlyph } from './components/WorldGlyph.svelte';
 
 export { count, type Count } from './actions/count.js';
 export { worlds, world, moonsOf, type World, type Placement, type Companion } from './worlds.js';
+export { BACK, type BackContext, type BackTarget } from './back.js';
 export type { Row, Moon, ShellLink, Option, AppHere, AppOffer, AppUpdateStatus } from './types.js';

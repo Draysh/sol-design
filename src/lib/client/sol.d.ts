@@ -1022,6 +1022,11 @@ export interface components {
             key: string;
             kind: components["schemas"]["FieldKind"];
             label: string;
+            /**
+             * @description One value for every world that names the same thing (`navidrome-url`):
+             *     set in any of them, Sol keeps it once and hands it to all of them.
+             */
+            shared?: string | null;
         };
         /** @description A world's setting, as the settings form shows it. */
         SettingView: {
@@ -1032,6 +1037,8 @@ export interface components {
             label: string;
             /** @description A value is stored (the only thing shown for secrets). */
             set: boolean;
+            /** @description Other installed worlds that use the same value (a shared setting). */
+            shared_with: string[];
             /** @description The stored value; never sent for secrets. */
             value?: unknown;
         };

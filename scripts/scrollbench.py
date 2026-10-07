@@ -35,10 +35,11 @@ screen's rate, not near 60), so a change to that is measured here first:
     WEBKIT_DISABLE_DMABUF_RENDERER=1
                        software rendering, for comparison; never ship it
 
-Where the driver has no drmWaitVBlank (NVIDIA), WebKit paints 60 frames a
-second whatever the page does, and so does this bench: the apps get past it
-with their own drmWaitVBlank (orbit's `frames` module), which the bench can
-only borrow by preloading it:
+Without orbit's `frames` module the window paints 60 frames a second
+whatever the page does: GTK 3 spaces its paints by a built-in 60 Hz when
+WebKit draws with GL, and where the driver has no drmWaitVBlank (NVIDIA)
+WebKit's own clock is 60 Hz too. The apps get past both with `frames`, which
+the bench borrows by preloading it (and then calls as the apps do):
 
     (cd ../kit/orbit && cargo build --release --features app --example frames)
     LD_PRELOAD=../kit/orbit/target/release/examples/libframes.so scripts/scrollbench.py …
@@ -79,13 +80,28 @@ if os.environ.get('BENCH_SMOOTH') == '0':
 win.add(view)
 win.show_all()
 
+# With orbit's `frames` preloaded, do what the apps do once their web view
+# exists: page updates and GTK's paints at the screen's rate.
+if os.environ.get('BENCH_NEAR60') != '1':
+	import ctypes
+	try:
+		_frames = ctypes.CDLL(None).orbit_frames_full_rate
+	except AttributeError:
+		_frames = None
+	if _frames:
+		ctypes.pythonapi.PyCapsule_GetPointer.restype = ctypes.c_void_p
+		ctypes.pythonapi.PyCapsule_GetPointer.argtypes = [ctypes.py_object, ctypes.c_char_p]
+		_frames.argtypes = [ctypes.c_void_p]
+		_frames(ctypes.pythonapi.PyCapsule_GetPointer(view.__gpointer__, None))
+
 painted = []
 measuring = False
 
 
 def after_paint(clock):
 	if measuring:
-		painted.append(clock.get_frame_time() / 1000.0)
+		# When it really painted, not the clock's smoothed frame time.
+		painted.append(GLib.get_monotonic_time() / 1000.0)
 
 
 def pointer():

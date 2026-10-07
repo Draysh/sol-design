@@ -30,9 +30,30 @@ Every app is a window, not a page. `<Shell>` draws the frame:
 | Pane | The app's screens | Scrolls on its own; the window and the chrome never scroll |
 | Footer | A bar along the bottom of the pane | For what is always there, e.g. a player's transport |
 
-`Ctrl` (or `⌘`) + `1`…`9` jumps to a section. The pane scrolls back to the
-top when `path` changes, and the new screen settles into it, so give the
-Shell the current path. The light glides from the old section to the new.
+`Ctrl` (or `⌘`) + `1`…`9` jumps to a section. A new page starts at the top
+of the pane and settles into it, so give the Shell the current path. The
+light glides from the old section to the new.
+
+### Going back
+
+A page whose path isn't a section's (a title from the library, an album)
+was opened from somewhere, and the Shell offers the way back by name:
+`← Library`. The `PageHead` shows it first in its bar; a page whose top is
+a picture (a backdrop, a hero) gets it floating over the pane's corner; a
+page with a header of its own places a `<WayBack />` there. `Alt` + `←` /
+`→` and the mouse's back and forward buttons go back and forth on every
+page (on Linux the app passes the buttons on: `orbit::mouse`).
+
+Going back lands where you left off: the Shell keeps the pane's scroll for
+every step of the history and returns to it once the page is tall enough.
+So a page must come back the same height it was left at:
+
+- what someone typed or chose that shapes the page (a filter, a search, a
+  sort) is kept with SvelteKit's `snapshot()` from `$app/navigation`;
+- what was loaded bit by bit ("Show more", "Earlier") is kept in the
+  page's `<script module>` and shown again, not fetched from the start;
+- a change that only marks things (now tracked, now a favourite) marks
+  them in place and keeps what's loaded.
 
 ## The band
 
@@ -130,7 +151,8 @@ no blend mode, so scrolling under it is free.
 | --- | --- |
 | `Shell` | The frame of every app: the sidebar (sections, status at the bottom), the pane, an optional footer bar, notices and grain |
 | `Sheet` | The band at the top of a world's first screen, and its strip of facts |
-| `PageHead` | A page's toolbar: title, a quiet line, the page's action; stays put while the page scrolls |
+| `PageHead` | A page's toolbar: the way back on an opened page, title, a quiet line, the page's action; stays put while the page scrolls |
+| `WayBack` | The way back, on an opened page with a header of its own (`PageHead` has it already) |
 | `Body` | A lit world anywhere else, e.g. the dashboard's corner sun |
 | `Reticle` | Framing a name or one key figure |
 | `Card` | A group of related things, marked by corner ticks |
@@ -150,6 +172,7 @@ no blend mode, so scrolling under it is free.
 | `Loader` | The moment before data arrives |
 | `WorldGlyph` | A world's crescent icon in lists and navigation |
 | `AppUpdates` | A world app's Settings: installing itself, and its updates through Sol |
+| `WithPlanet` | A moon's Settings: running with its planet, without a window (`orbit::moons`) |
 
 Focus is visible everywhere: buttons lock two corner ticks on; other controls
 get a 1 px white outline 4 px out.
@@ -221,6 +244,9 @@ world's app is built the same way, starting from `sol-planet-template`:
    `toggle` can be ticked from the overview and arrive in the app's inbox.
 8. The app's Settings page has an `<AppUpdates>` card: the app installs
    itself from there and takes its updates through Sol (`orbit::updates`).
+9. A moon runs by itself whenever its planet runs (`orbit::moons`): nobody
+   has to open it for its work to happen. Its Settings page has a
+   `<WithPlanet>` card to turn that off on a computer.
 
 Sol's own web app follows the same rules, with `world="sol"`.
 

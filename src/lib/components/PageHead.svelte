@@ -2,10 +2,13 @@
 	The top of a working page: a slim toolbar that stays put while the page
 	scrolls under it. The title in the name style, a quiet line beside it,
 	and the page's main action on the right. Solid black, with a short fade
-	below it, so what scrolls under it is composited, never blurred.
+	below it, so what scrolls under it is composited, never blurred. On a
+	page opened from another, the way back comes first (the Shell's).
 -->
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import { getContext, onMount, type Snippet } from 'svelte';
+	import { BACK, type BackContext } from '../back.js';
+	import Back from './Back.svelte';
 
 	interface Props {
 		title: string;
@@ -16,10 +19,14 @@
 	}
 
 	let { title, eyebrow, lead, actions }: Props = $props();
+
+	const nav = getContext<BackContext | undefined>(BACK);
+	onMount(() => nav?.claim());
 </script>
 
 <header class="head sol-chrome">
-	<div class="text">
+	<div class="text" class:back-first={!!nav?.back}>
+		{#if nav?.back}<span class="back"><Back {...nav.back} /></span>{/if}
 		{#if eyebrow}<span class="sol-quiet">{eyebrow}</span>{/if}
 		<h1>{title}</h1>
 		{#if lead}
@@ -63,6 +70,15 @@
 		align-items: baseline;
 		gap: var(--s-2) var(--s-3);
 		min-width: 0;
+	}
+
+	/* With the way back first, the line centres on it. */
+	.back-first {
+		align-items: center;
+	}
+
+	.back {
+		margin-right: var(--s-1);
 	}
 
 	h1 {

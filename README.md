@@ -18,7 +18,7 @@ from this package, so they all look and behave the same.
 ## Use it in an app
 
 ```sh
-npm install git+https://github.com/Draysh/sol-design.git#v0.2.0
+npm install git+https://github.com/Draysh/sol-design.git#v0.7.0
 ```
 
 npm 12 installs git dependencies only when the project allows it: add

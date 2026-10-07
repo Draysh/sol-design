@@ -1,6 +1,6 @@
 {
 	"name": "@sol/design",
-	"version": "0.6.2",
+	"version": "0.7.0",
 	"description": "The Sol design language: tokens, components and the app shell every Sol app is built from",
 	"license": "MIT",
 	"repository": "github:Draysh/sol-design",
@@ -29,6 +29,7 @@
 		"./styles.css": "./dist/styles/index.css"
 	},
 	"peerDependencies": {
+		"@sveltejs/kit": "^3.0.0",
 		"svelte": "^5.57.0"
 	},
 	"dependencies": {

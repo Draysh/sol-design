@@ -7,6 +7,12 @@
 	The world's light marks the current section and glides to the next one
 	when it changes; each screen settles into the pane as it opens.
 
+	A page opened from another (a title from the library) offers the way
+	back by name, in its PageHead or over the pane's corner; Alt+← and the
+	mouse's back button go back too (on Linux the app passes the button on
+	as a `sol:navigate` event: orbit::mouse). Going back lands where you left off:
+	the pane's scroll is kept for every step of the history.
+
 	<Shell world="sol" path={page.url.pathname} links={[{ href: '/', label: 'Overview', current: true }]}>
 		{#snippet actions()}<Button variant="quiet">Sign out</Button>{/snippet}
 		{#snippet footer()}<Transport />{/snippet}
@@ -14,10 +20,13 @@
 	</Shell>
 -->
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import { setContext, type Snippet } from 'svelte';
+	import { afterNavigate, beforeNavigate, goto } from '$app/navigation';
+	import { BACK, type BackContext, type BackTarget } from '../back.js';
 	import '../styles/index.css';
 	import type { ShellLink } from '../types.js';
 	import { world as worldFor } from '../worlds.js';
+	import Back from './Back.svelte';
 	import Body from './Body.svelte';
 	import Grain from './Grain.svelte';
 	import Notices from './Notices.svelte';
@@ -29,7 +38,7 @@
 		links?: ShellLink[];
 		/** Where the wordmark leads. */
 		home?: string;
-		/** The current page's path; the pane scrolls back to the top when it changes. */
+		/** The current page's path. A page whose path isn't a section's offers the way back. */
 		path?: string;
 		/** The bottom of the sidebar: status, the time, sign out. */
 		actions?: Snippet;
@@ -44,9 +53,128 @@
 	let list = $state<HTMLElement>();
 	let pane = $state<HTMLElement>();
 
+	// ---- Back, and where each page was left -----------------------------
+	// SvelteKit numbers the entries of the history. Leaving one, the pane's
+	// scroll and the page's name are kept under its number; coming back to
+	// it, the scroll returns. A new page starts at the top.
+	const places = new Map<number, number>();
+	const names = new Map<number, string>();
+	let unrestore: (() => void) | undefined;
+
+	/** The current entry's number, as SvelteKit keeps it in `history.state`. */
+	function entry(): number | null {
+		if (typeof history === 'undefined') return null;
+		const state = history.state as Record<string, unknown> | null;
+		const meta = state?.['sveltekit:metadata'] as { historyIndex?: unknown } | undefined;
+		const index = meta?.historyIndex ?? state?.['sveltekit:history'];
+		return typeof index === 'number' ? index : null;
+	}
+
+	// The Shell can open after the app has (behind a sign-in, say), so it
+	// starts from the entry it opens on, not from the app's first.
+	let here = $state(entry() ?? 0);
+	/** The entry the Shell opened on: there's nothing of it to go back to before this. */
+	let start = entry() ?? 0;
+
+	beforeNavigate((nav) => {
+		if (nav.willUnload || !pane) return;
+		unrestore?.();
+		places.set(here, pane.scrollTop);
+		// A section by its name in the sidebar, any other page by its title.
+		names.set(here, links.find((l) => l.href === path)?.label ?? document.title.split(' · ')[0].trim());
+	});
+
+	afterNavigate((nav) => {
+		here = entry() ?? (nav.type === 'popstate' ? here + nav.delta : nav.type === 'enter' ? 0 : here + 1);
+		if (nav.type === 'enter') start = here;
+		if (nav.type === 'popstate') restore(places.get(here) ?? 0);
+		else if (nav.type !== 'enter' && nav.from?.url.pathname !== nav.to?.url.pathname) pane?.scrollTo({ top: 0 });
+	});
+
+	/**
+	 * Scrolls the pane to `top` as soon as the page is tall enough, which
+	 * takes a moment while it loads. Scrolling or pressing anything first
+	 * leaves it be.
+	 */
+	function restore(top: number) {
+		unrestore?.();
+		const el = pane;
+		if (!el) return;
+		el.scrollTop = top;
+		if (Math.abs(el.scrollTop - top) < 2) return;
+		const own = ['wheel', 'pointerdown', 'touchstart'] as const;
+		const stop = () => {
+			grows.disconnect();
+			clearInterval(poll);
+			clearTimeout(timer);
+			for (const kind of own) el.removeEventListener(kind, stop);
+			window.removeEventListener('keydown', stop);
+			unrestore = undefined;
+		};
+		const again = () => {
+			el.scrollTop = top;
+			if (Math.abs(el.scrollTop - top) < 2) stop();
+		};
+		// Growth shows up in the frame it happens; the timer is for a window
+		// that isn't painting (hidden, minimised), where observers wait.
+		const grows = new ResizeObserver(again);
+		for (const child of el.children) grows.observe(child);
+		const poll = setInterval(again, 100);
+		const timer = setTimeout(stop, 4000);
+		for (const kind of own) el.addEventListener(kind, stop, { passive: true });
+		window.addEventListener('keydown', stop);
+		unrestore = stop;
+	}
+	$effect(() => () => unrestore?.());
+
+	/** A page that isn't one of the sections, so it was opened from somewhere. */
+	const deeper = $derived(!!path && links.length > 0 && !links.some((l) => l.href === path));
+	const back = $derived.by((): BackTarget | null => {
+		if (!deeper) return null;
+		if (here > start) return { label: names.get(here - 1) || 'Back', go: () => history.back() };
+		// Opened first thing: up to its section, or home.
+		const up = links.find((l) => l.current) ?? links.find((l) => l.href === home) ?? links[0];
+		return { label: up.label, go: () => goto(up.href) };
+	});
+
+	// A PageHead (or a page's own WayBack) shows the way back itself; without
+	// one it floats over the pane's corner.
+	let claimed = $state(0);
+	setContext<BackContext>(BACK, {
+		get back() {
+			return back;
+		},
+		claim() {
+			claimed++;
+			return () => claimed--;
+		}
+	});
+
+	/** Back through the history, or up when there's no history to go back through. */
+	function goBack(): boolean {
+		if (here > start) history.back();
+		else if (back) back.go();
+		else return false;
+		return true;
+	}
+
+	// The mouse's own back and forward buttons. WebKitGTK can't tell the page
+	// which was pressed, so the app catches them and says (orbit::mouse).
+	function mouse(e: MouseEvent) {
+		if (e.button === 3 && goBack()) e.preventDefault();
+		else if (e.button === 4) {
+			e.preventDefault();
+			history.forward();
+		}
+	}
 	$effect(() => {
-		path;
-		pane?.scrollTo({ top: 0 });
+		const told = (e: Event) => {
+			const way = (e as CustomEvent<string>).detail;
+			if (way === 'back') goBack();
+			else if (way === 'forward') history.forward();
+		};
+		window.addEventListener('sol:navigate', told);
+		return () => window.removeEventListener('sol:navigate', told);
 	});
 
 	// While the pane scrolls, what slides under a still pointer must not
@@ -89,6 +217,15 @@
 	});
 
 	function shortcut(e: KeyboardEvent) {
+		// Alt+← and Alt+→: back and forth, except where the arrows move through text.
+		if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+			const t = e.target as HTMLElement | null;
+			if (t?.isContentEditable || t?.tagName === 'INPUT' || t?.tagName === 'TEXTAREA') return;
+			if (e.key === 'ArrowRight') history.forward();
+			else if (!goBack()) return;
+			e.preventDefault();
+			return;
+		}
 		if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return;
 		const n = Number(e.key);
 		if (!Number.isInteger(n) || n < 1 || n > 9) return;
@@ -100,7 +237,7 @@
 	}
 </script>
 
-<svelte:window onkeydown={shortcut} />
+<svelte:window onkeydown={shortcut} onmouseup={mouse} />
 
 <div class="shell" style:--world={w.color}>
 	<nav class="side sol-chrome" aria-label="Main" bind:this={nav}>
@@ -145,6 +282,9 @@
 		{#if actions}<div class="actions">{@render actions()}</div>{/if}
 	</nav>
 	<div class="pane">
+		{#if back && !claimed}
+			{#key back.label}<Back {...back} floating />{/key}
+		{/if}
 		<main bind:this={pane} class:scrolling onscroll={scrolled}>
 			{#key path}
 				<div class="screen">
@@ -331,6 +471,7 @@
 	}
 
 	.pane {
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		min-width: 0;
