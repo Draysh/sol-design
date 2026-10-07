@@ -49,14 +49,14 @@
 
 	select {
 		width: 100%;
-		height: var(--target);
+		height: var(--control);
 		padding: 0 24px 0 0;
 		border: 0;
 		border-bottom: 1px solid var(--line-strong);
 		border-radius: 0;
 		background: transparent;
 		color: var(--text);
-		font-size: 17px;
+		font-size: var(--text-m);
 		font-weight: var(--weight-value);
 		appearance: none;
 		cursor: pointer;

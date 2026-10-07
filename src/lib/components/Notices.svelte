@@ -35,7 +35,7 @@
 <style>
 	.notices {
 		position: fixed;
-		top: calc(var(--nav-height) + var(--s-2));
+		top: var(--s-3);
 		left: 50%;
 		z-index: 50;
 		display: flex;

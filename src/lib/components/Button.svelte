@@ -39,8 +39,8 @@
 		align-items: center;
 		justify-content: center;
 		gap: var(--s-2);
-		min-height: 46px;
-		padding: 0 22px;
+		min-height: var(--control);
+		padding: 0 16px;
 		border: 1px solid rgb(255 255 255 / 0.4);
 		border-radius: 0;
 		background: transparent;
@@ -78,7 +78,7 @@
 
 	.quiet {
 		border-color: transparent;
-		padding: 0 12px;
+		padding: 0 10px;
 		color: var(--text-quiet);
 	}
 
@@ -89,7 +89,7 @@
 	}
 
 	.round {
-		width: 46px;
+		width: var(--control);
 		padding: 0;
 		border-color: rgb(255 255 255 / 0.35);
 		border-radius: 50%;

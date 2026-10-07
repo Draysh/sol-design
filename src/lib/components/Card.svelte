@@ -47,7 +47,7 @@
 		flex-direction: column;
 		gap: var(--s-3);
 		min-width: 0;
-		padding: 26px 28px;
+		padding: 18px 20px;
 		box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
 	}
 

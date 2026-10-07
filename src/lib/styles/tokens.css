@@ -60,9 +60,14 @@
 	--s-6: 64px;
 	--s-7: 112px;
 
-	--margin: clamp(16px, 6.6vw, 96px);
+	/* The pane's side margin. An app's content sits close to its chrome. */
+	--margin: clamp(16px, 3vw, 40px);
+	/* Touch targets stay 44 px; pointer controls are 36 px. */
 	--target: 44px;
-	--nav-height: 64px;
+	--control: 36px;
+	--sidebar: 228px;
+	--rail: 60px;
+	--nav-height: 56px;
 
 	/* Motion */
 	--fade: 240ms;

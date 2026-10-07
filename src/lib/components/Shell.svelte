@@ -1,10 +1,12 @@
 <!--
-	The frame around every screen: the bar (brand, the app's sections, its
-	status on the right), notices at the top edge and the film grain. It knows
-	nothing about sign-in or data; the app passes in what to show.
+	The frame around every screen: a sidebar on the left (the world, its
+	sections, its status at the bottom) and a pane on the right that scrolls
+	on its own. The window itself never scrolls, so the chrome stays put like
+	an app's, not a website's. Ctrl (or ⌘) + 1…9 jumps to a section.
 
-	<Shell world="sol" links={[{ href: '/', label: 'Home', current: true }]}>
+	<Shell world="sol" path={page.url.pathname} links={[{ href: '/', label: 'Overview', current: true }]}>
 		{#snippet actions()}<Button variant="quiet">Sign out</Button>{/snippet}
+		{#snippet footer()}<Transport />{/snippet}
 		…
 	</Shell>
 -->
@@ -13,6 +15,7 @@
 	import '../styles/index.css';
 	import type { ShellLink } from '../types.js';
 	import { world as worldFor } from '../worlds.js';
+	import Body from './Body.svelte';
 	import Grain from './Grain.svelte';
 	import Notices from './Notices.svelte';
 	import WorldGlyph from './WorldGlyph.svelte';
@@ -23,27 +26,60 @@
 		links?: ShellLink[];
 		/** Where the wordmark leads. */
 		home?: string;
-		/** The right end of the bar: status, the time, sign out. */
+		/** The current page's path; the pane scrolls back to the top when it changes. */
+		path?: string;
+		/** The bottom of the sidebar: status, the time, sign out. */
 		actions?: Snippet;
+		/** A bar along the bottom of the pane, e.g. a player's transport. */
+		footer?: Snippet;
 		children: Snippet;
 	}
 
-	let { world: id, links = [], home = '/', actions, children }: Props = $props();
+	let { world: id, links = [], home = '/', path, actions, footer, children }: Props = $props();
 	const w = $derived(worldFor(id));
+	let nav = $state<HTMLElement>();
+	let pane = $state<HTMLElement>();
+
+	$effect(() => {
+		path;
+		pane?.scrollTo({ top: 0 });
+	});
+
+	function shortcut(e: KeyboardEvent) {
+		if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return;
+		const n = Number(e.key);
+		if (!Number.isInteger(n) || n < 1 || n > 9) return;
+		const section = nav?.querySelectorAll<HTMLAnchorElement>('a[data-section]')[n - 1];
+		if (section) {
+			e.preventDefault();
+			section.click();
+		}
+	}
 </script>
 
+<svelte:window onkeydown={shortcut} />
+
 <div class="shell" style:--world={w.color}>
-	<nav class="bar" aria-label="Main">
+	<nav class="side sol-chrome" aria-label="Main" bind:this={nav}>
 		<a class="brand" href={home}>
-			<WorldGlyph world={id} size={9} />
-			<span>{w.name}</span>
+			<span class="disc" aria-hidden="true"><Body world={id} label="" /></span>
+			<span class="brand-name">{w.name}</span>
 		</a>
 		{#if links.length}
 			<ul>
-				{#each links as link (link.href)}
+				{#each links as link, i (link.href)}
 					<li>
-						<a href={link.href} aria-current={link.current ? 'page' : undefined}>
-							{#if link.world}<WorldGlyph world={link.world} size={9} />{/if}
+						<a
+							href={link.href}
+							data-section
+							aria-current={link.current ? 'page' : undefined}
+							title={i < 9 ? `Ctrl+${i + 1}` : undefined}
+						>
+							{#if link.world}
+								<WorldGlyph world={link.world} size={10} />
+							{:else}
+								<span class="mark" aria-hidden="true"></span>
+							{/if}
 							<span class="label">{link.label}</span>
 							{#if link.badge}<span class="badge" aria-label="{link.badge} waiting">{link.badge}</span>{/if}
 						</a>
@@ -53,72 +89,123 @@
 		{/if}
 		{#if actions}<div class="actions">{@render actions()}</div>{/if}
 	</nav>
-	<main>
-		{@render children()}
-	</main>
+	<div class="pane">
+		<main bind:this={pane}>
+			{@render children()}
+		</main>
+		{#if footer}<footer class="foot">{@render footer()}</footer>{/if}
+	</div>
 	<Notices />
 	<Grain />
 </div>
 
 <style>
 	.shell {
-		min-height: 100dvh;
+		display: grid;
+		grid-template-columns: var(--sidebar) minmax(0, 1fr);
+		height: 100dvh;
+		overflow: hidden;
 	}
 
-	.bar {
-		position: sticky;
-		top: 0;
-		z-index: 20;
+	.side {
 		display: flex;
-		align-items: center;
-		gap: var(--s-5);
-		height: var(--nav-height);
-		padding: 0 var(--margin);
-		background: linear-gradient(var(--space) 40%, transparent);
-	}
-
-	.brand,
-	ul a {
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
-		min-height: var(--target);
-		font-size: var(--text-xs);
-		letter-spacing: var(--track-caps);
-		text-transform: uppercase;
-		text-decoration: none;
-		color: var(--text-quiet);
-		transition: color var(--fade) var(--ease);
+		flex-direction: column;
+		min-height: 0;
+		padding: var(--s-2) 0 var(--s-3);
+		border-right: 1px solid var(--line);
+		background: var(--space);
 	}
 
 	.brand {
+		display: flex;
+		align-items: center;
+		gap: 12px;
 		flex: none;
+		height: var(--nav-height);
+		padding: 0 var(--s-3) 0 20px;
+		color: var(--text-bright);
 		font-size: var(--text-s);
 		font-weight: var(--weight-label);
-		letter-spacing: 0.32em;
-		color: var(--text-bright);
+		letter-spacing: 0.28em;
+		text-transform: uppercase;
+		text-decoration: none;
+	}
+
+	.disc {
+		display: block;
+		width: 22px;
+		flex: none;
 	}
 
 	ul {
-		display: flex;
-		gap: var(--s-4);
-		min-width: 0;
-		margin: 0;
-		padding: 0;
-		overflow-x: auto;
+		display: grid;
+		align-content: start;
+		gap: 2px;
+		flex: 1;
+		min-height: 0;
+		margin: var(--s-2) 0 0;
+		padding: 0 var(--s-2);
+		overflow-y: auto;
 		list-style: none;
-		scrollbar-width: none;
 	}
 
-	ul a:hover,
+	ul a {
+		position: relative;
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		height: var(--control);
+		padding: 0 12px;
+		color: var(--text-quiet);
+		font-size: var(--text-s);
+		text-decoration: none;
+		white-space: nowrap;
+		transition:
+			color var(--fade) var(--ease),
+			background var(--fade) var(--ease);
+	}
+
+	ul a:hover {
+		color: var(--text-bright);
+		background: var(--surface);
+	}
+
 	ul a[aria-current='page'] {
 		color: var(--text-bright);
+		background: var(--surface-hover);
 	}
 
-	ul a[aria-current='page'] .label {
-		text-decoration: underline;
-		text-decoration-thickness: 1px;
-		text-underline-offset: 6px;
+	/* The current section carries the world's light. */
+	ul a[aria-current='page']::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: 9px;
+		bottom: 9px;
+		width: 2px;
+		background: var(--world);
+		box-shadow: 0 0 8px var(--world);
+	}
+
+	.mark {
+		width: 6px;
+		height: 6px;
+		flex: none;
+		border: 1px solid var(--line-strong);
+		border-radius: 50%;
+		transition:
+			background var(--lock) var(--ease),
+			border-color var(--lock) var(--ease);
+	}
+
+	ul a[aria-current='page'] .mark {
+		border-color: var(--text-bright);
+		background: var(--text-bright);
+	}
+
+	.label {
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	.badge {
@@ -126,6 +213,7 @@
 		place-items: center;
 		min-width: 18px;
 		height: 18px;
+		margin-left: auto;
 		padding: 0 5px;
 		border-radius: 9px;
 		background: var(--world);
@@ -137,20 +225,59 @@
 
 	.actions {
 		display: flex;
-		align-items: center;
-		gap: var(--s-3);
-		margin-left: auto;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--s-2);
 		flex: none;
+		margin-top: var(--s-3);
+		padding: var(--s-3) var(--s-3) 0 20px;
+		border-top: 1px solid var(--line);
+		font-size: var(--text-xs);
 	}
 
-	@media (max-width: 720px) {
-		.bar {
-			gap: var(--s-3);
-			padding: 0 var(--s-3);
+	.pane {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+		min-height: 0;
+	}
+
+	main {
+		flex: 1;
+		min-height: 0;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+	}
+
+	.foot {
+		flex: none;
+		background: var(--space);
+	}
+
+	@media (max-width: 760px) {
+		.shell {
+			grid-template-columns: var(--rail) minmax(0, 1fr);
 		}
 
-		.brand span {
+		.brand {
+			justify-content: center;
+			padding: 0;
+		}
+
+		.brand-name,
+		.label,
+		.badge,
+		.actions {
 			display: none;
+		}
+
+		ul {
+			padding: 0 var(--s-1);
+		}
+
+		ul a {
+			justify-content: center;
+			padding: 0;
 		}
 	}
 </style>

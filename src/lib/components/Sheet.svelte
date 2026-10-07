@@ -1,7 +1,8 @@
 <!--
-	A world's main screen: the lit body, its name in a reticle, a callout, moon
-	links, data rows along the bottom and corner marks. DESIGN.md, "Anatomy of
-	a sheet", explains each part.
+	The band across the top of a world's first screen: the lit body, its name
+	in a reticle, a callout, moon links and data rows along the bottom. It is
+	a header, not a hero: the working surface starts right under it.
+	DESIGN.md, "The band", explains each part.
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
@@ -42,6 +43,8 @@
 
 <div class="wrap">
 	<section class="sheet" style:--world={w.color} aria-label={name ?? w.name}>
+		<!-- The 1600 × 900 frame the placements are made for, centred on the band. -->
+		<div class="frame">
 		<div class="sky landscape" aria-hidden="true">
 			<div class="body" style={place(w.hero)}><Body world={id} label="" /></div>
 			{#each w.companions ?? [] as c (c.world)}
@@ -54,7 +57,6 @@
 			<div class="body" style={place(w.portrait)}>
 				<Body world={id} light={w.portrait.light} phase={w.portrait.phase} label="" />
 			</div>
-			<div class="fade"></div>
 		</div>
 
 		<div class="center">
@@ -80,23 +82,18 @@
 				<Callout lines={callout} flip={w.callout.flip} />
 			</div>
 		{/if}
-
-		{#if rows.length}
-			<svg class="marks" aria-hidden="true" viewBox="0 0 100 40" preserveAspectRatio="none">
-				<path d="M0 20h40M20 0v40" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke"></path>
-			</svg>
-			<svg class="marks right" aria-hidden="true" viewBox="0 0 100 40" preserveAspectRatio="none">
-				<path d="M60 20h40M80 0v40" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke"></path>
-			</svg>
-			<div class="rows">
-				{#each blocks as { block, at }, i (i)}
-					<div class="block at-{at}">
-						<DataRows rows={block} align={at} />
-					</div>
-				{/each}
-			</div>
-		{/if}
+		</div>
 	</section>
+	{#if rows.length}
+		<!-- The facts, on a strip of their own under the band. -->
+		<div class="rows">
+			{#each blocks as { block, at }, i (i)}
+				<div class="block at-{at}">
+					<DataRows rows={block} align={at} />
+				</div>
+			{/each}
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -107,15 +104,23 @@
 
 	.sheet {
 		--u: calc(100cqw / 1600);
-		--reticle: clamp(170px, calc(var(--u) * 243), 260px);
+		--reticle: clamp(140px, calc(var(--u) * 200), 210px);
 		position: relative;
 		width: 100%;
-		aspect-ratio: 16 / 9;
-		min-height: 520px;
-		max-height: calc(100svh - var(--nav-height));
+		height: clamp(260px, calc(var(--u) * 470), 400px);
 		overflow: hidden;
 		background: var(--space);
+		border-bottom: 1px solid var(--line);
 		isolation: isolate;
+	}
+
+	/* The frame keeps its 16:9 shape; the band shows its middle. */
+	.frame {
+		position: absolute;
+		left: 0;
+		width: 100%;
+		top: calc(50% - var(--u) * 450);
+		height: calc(var(--u) * 900);
 	}
 
 	.sky {
@@ -132,13 +137,6 @@
 		position: absolute;
 	}
 
-	.fade {
-		position: absolute;
-		inset: auto 0 0;
-		height: 45%;
-		background: linear-gradient(transparent, var(--space) 70%);
-	}
-
 	.center {
 		position: absolute;
 		left: 50%;
@@ -152,7 +150,7 @@
 	.name {
 		white-space: nowrap;
 		font-weight: var(--weight-name);
-		font-size: clamp(22px, calc(var(--u) * 45), 46px);
+		font-size: clamp(20px, calc(var(--u) * 36), 34px);
 		letter-spacing: var(--track-name);
 		line-height: 1;
 		text-shadow: 0 0 18px rgb(0 0 0 / 0.7);
@@ -172,14 +170,12 @@
 	}
 
 	.rows {
-		position: absolute;
-		left: var(--margin);
-		right: var(--margin);
-		bottom: 40px;
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
-		align-items: end;
+		align-items: start;
 		gap: var(--s-4);
+		padding: var(--s-2) var(--margin);
+		border-bottom: 1px solid var(--line);
 	}
 
 	.at-center {
@@ -190,32 +186,20 @@
 		grid-column: 3;
 	}
 
-	.marks {
-		position: absolute;
-		left: calc(var(--margin) - 20px);
-		bottom: 130px;
-		width: 100px;
-		height: 40px;
-		color: var(--text-bright);
-		opacity: 0.5;
-	}
-
-	.marks.right {
-		left: auto;
-		right: calc(var(--margin) - 20px);
-	}
-
 	@container (max-width: 700px) {
 		.sheet {
 			--u: calc(100cqw / 390);
-			--reticle: 150px;
-			aspect-ratio: 390 / 580;
-			min-height: 0;
+			--reticle: 140px;
+			height: clamp(240px, calc(var(--u) * 340), 360px);
+		}
+
+		.frame {
+			top: calc(50% - var(--u) * 290);
+			height: calc(var(--u) * 580);
 		}
 
 		.landscape,
-		.callout,
-		.marks {
+		.callout {
 			display: none;
 		}
 
@@ -228,9 +212,6 @@
 		}
 
 		.rows {
-			left: var(--s-4);
-			right: var(--s-4);
-			bottom: var(--s-4);
 			grid-template-columns: 1fr 1fr;
 		}
 
