@@ -49,6 +49,18 @@
 		pane?.scrollTo({ top: 0 });
 	});
 
+	// While the pane scrolls, what slides under a still pointer must not
+	// react to it: covers lifting and dropping as they pass read as the page
+	// jumping. Hover comes back a moment after the scroll stops.
+	let scrolling = $state(false);
+	let still: ReturnType<typeof setTimeout> | undefined;
+	function scrolled() {
+		if (!scrolling) scrolling = true;
+		clearTimeout(still);
+		still = setTimeout(() => (scrolling = false), 180);
+	}
+	$effect(() => () => clearTimeout(still));
+
 	// The light: one element that moves to the current section instead of
 	// a mark on each, so the change is seen as movement. It appears in place
 	// the first time and glides from then on.
@@ -133,7 +145,7 @@
 		{#if actions}<div class="actions">{@render actions()}</div>{/if}
 	</nav>
 	<div class="pane">
-		<main bind:this={pane}>
+		<main bind:this={pane} class:scrolling onscroll={scrolled}>
 			{#key path}
 				<div class="screen">
 					{@render children()}
@@ -335,6 +347,12 @@
 	/* A screen settles into the pane as it opens. */
 	.screen {
 		animation: sol-settle var(--settle) var(--ease-out) both;
+	}
+
+	/* Scrolling: the content ignores the pointer until the pane is still.
+	   The pane itself keeps it, so the wheel goes on scrolling. */
+	.scrolling > .screen {
+		pointer-events: none;
 	}
 
 	.foot {

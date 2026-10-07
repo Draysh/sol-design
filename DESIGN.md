@@ -242,11 +242,20 @@ differently from Chromium. `scripts/shot.py URL out.png [W H [wait [js]]]`
 renders a page in WebKitGTK (on Wayland, as the apps run) and saves it;
 look at that before calling a screen done.
 
-`scripts/scrollbench.py URL [setup-js [seconds [selector [variant-js]]]]`
-scrolls the pane in WebKitGTK and prints the frame rate it reached, the
-median and slow frame times and how many frames were late. Run it before
-and after anything that could cost the compositor: a blur, a blend mode, a
-filter. It is also how the apps' frame pacing was found: WebKitGTK's
-DMA-BUF renderer draws 60 frames a second whatever the monitor does, so
-every app sets `WEBKIT_DISABLE_DMABUF_RENDERER=1` before it starts and
-follows the compositor's clock instead.
+`scripts/scrollbench.py URL [setup-js [seconds]]` scrolls the pane the way a
+person does, with mouse-wheel notches and the pointer resting over it, and
+reports the frames the window actually painted, how often something under
+the still pointer was newly hovered, and how many movements that set off.
+Run it before and after anything that could make scrolling feel rough: a
+hover that moves things, a blur, a blend mode, a filter.
+
+Two things it found, so nobody looks for them again:
+
+- While the pane scrolls, the Shell makes its content ignore the pointer
+  until the pane has been still for a moment. Otherwise covers lifting and
+  dropping as they slide under a still pointer read as the page jumping.
+- The apps' window paints at most about 60 frames a second, whatever the
+  monitor's rate. Tauri's Linux webview is WebKitGTK on GTK3, and GTK3 paces
+  OpenGL drawing on Wayland with its own 60 Hz timer (GTK4 doesn't). No
+  WebKit or app setting lifts it, and `WEBKIT_DISABLE_DMABUF_RENDERER`
+  only swaps the GPU for software rendering at the same rate. Never set it.
