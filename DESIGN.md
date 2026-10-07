@@ -25,14 +25,25 @@ Every app is a window, not a page. `<Shell>` draws the frame:
 
 | Part | What it is | Rule |
 | --- | --- | --- |
-| Sidebar | The world's disc and name, its sections, its status at the bottom | 228 px, a rail of 60 px on narrow windows. Chrome: not selectable |
+| Sidebar | The world's disc and name, its sections, its doors, its status at the bottom | 228 px, a rail of 60 px on narrow windows. Chrome: not selectable |
 | Current section | A line of the world's light down its left edge | Light means attention; nothing else in the chrome is coloured |
+| Doors | Under the sections: Sol, and the moons or planet this world works with, each a glyph and a name | Opening one opens that app (the Rust side does it, `orbit::doors`); only apps installed on this computer are doors |
+| Status | The bottom of the sidebar: `LinkStatus`, one line on where the app stands with Sol | In sync, sending, or offline with what waits |
 | Pane | The app's screens | Scrolls on its own; the window and the chrome never scroll |
 | Footer | A bar along the bottom of the pane | For what is always there, e.g. a player's transport |
 
-`Ctrl` (or `⌘`) + `1`…`9` jumps to a section. A new page starts at the top
-of the pane and settles into it, so give the Shell the current path. The
-light glides from the old section to the new.
+`Ctrl` (or `⌘`) + `1`…`9` jumps to a section, `/` opens the app's search
+(give the Shell its path as `search`) and `?` opens a sheet of the keys:
+the Shell's own, then the app's (`shortcuts`), so nobody has to guess what
+`Space` does here. A new page starts at the top of the pane and settles
+into it, so give the Shell the current path. The light glides from the old
+section to the new.
+
+Every section carries a `hint`: one line on what it is for (`Timeline`:
+"What's on the way, week by week"), shown on hover and read out where the
+rail shows only a dot. The world's own tagline sits on its name at the top.
+Names alone are for people who know the app; the hint is for the day they
+don't.
 
 ### Going back
 
@@ -66,7 +77,7 @@ hero: the working surface starts right under it.
 | Body | The world's photograph, lit from one side | Cropped so the light's edge crosses the band; never centred and whole |
 | Name and reticle | Centred | Two arcs and an axis at the real tilt (`worlds.ts`) |
 | Callout | Dotted leader and a short list | What comes next in this world; three lines at most, `Thing = state` |
-| Moon links and the main action | Under the name | Moons are doors to their own apps; shown only when that app is up |
+| Moon links and the main action | Under the name | Doors to the world's moons, or from a moon to its planet; shown only when that app is installed here |
 | Data rows | A strip under the band, two or three blocks | Seven lines at most in total |
 
 The band arrives in order: the body rises, the reticle draws itself around
@@ -166,7 +177,8 @@ no blend mode, so scrolling under it is free.
 | `RingGauge` | Part of a whole of a whole (episode of season of show) |
 | `DataRows` | `Label: value` facts |
 | `Callout` | A short list leading from a body |
-| `MoonLink` | A link to a moon's app |
+| `MoonLink` | A link to a moon's app (or a moon's way to its planet); `onclick` opens the app itself |
+| `LinkStatus` | The bottom of a world app's sidebar: in sync, sending, or offline with what waits; `busy` names other work, `warn` something wrong beside Sol |
 | `Widget` | Drawing a `WidgetView` (Sol's overview does this for every world) |
 | `Notices` / `notices.show()` | Short in-app messages at the top edge |
 | `Loader` | The moment before data arrives |
@@ -221,7 +233,33 @@ Rules for an app's own motion:
 - Callout lines are `Thing = state`: `Walk = done`.
 - Event summaries (shown in Sol's activity feed and notifications) are one
   sentence written by the app: `Did “Walk outside”, 4 days in a row`.
+- Section hints say what the section is for, in one line without a full
+  stop: `Every episode and film, as you watched them`.
+- A door is named for the world, with what it is for after a dot when that
+  helps: `Titan · what to watch next`, `Sol · settings and connections`.
 - No exclamation marks, no emoji.
+
+## Interactions
+
+- **Something that can't be undone asks once, in place.** The control says
+  so with an ellipsis (`Remove…`, `Unpair…`, `Archive…`) and, pressed, turns
+  into the deed and a way out: `Remove it` · `Keep`. A line above says what
+  goes with it ("Its status, rating, notes and watched episodes go too").
+  Nothing else asks twice. A dialog is for naming something, not for
+  confirming.
+- **A screen that waits shows the Loader**, centred in `.sol-loading`, never
+  an empty pane and never an empty state that isn't true yet ("Nothing
+  learned" while the taste is still loading).
+- **Every failure says why.** A command that fails in a handler becomes a
+  notice titled for what didn't happen (`Not saved`, `Not ticked`), with
+  the reason as its body. A load that fails outside a handler reaches
+  `watchUnhandled` (called once in the layout) and becomes a notice too, so
+  a blank card never stays silent.
+- **Every list has an empty state** that says what would fill it and where
+  that happens ("Nothing watched yet. Ticks appear here as you make them").
+- **A long piece of work shows its progress** (`Progress`) or at least that
+  it is going on (a busy button, a line in `LinkStatus`), and the screen
+  never waits for it.
 
 ## Building an app the same way
 
@@ -230,9 +268,12 @@ now, a phone app later) that pairs with Sol and keeps its data there. Every
 world's app is built the same way, starting from `sol-planet-template`:
 
 1. The root layout is `<Shell world="<id>" links={…} path={…}>`, with the
-   app's own sections in the sidebar, its connection status in `actions`,
-   and anything that is always there (a player) in `footer`.
-2. The first screen is a `<Sheet>` with the world's callout and data rows.
+   app's own sections (each with a `hint`) in the sidebar, its doors
+   (`doors`: Sol, and its moons or planet, through `orbit::doors`), its
+   search as `search`, its own keys as `shortcuts`, a `<LinkStatus>` in
+   `actions`, and anything that is always there (a player) in `footer`.
+2. The first screen is a `<Sheet>` with the world's callout and data rows;
+   a planet's shows its installed moons under the name, a moon's its planet.
 3. Other pages start with a `<PageHead>`; everything else is `Card`s in the
    standard grid, built from these components. No custom colours, fonts,
    shadows or rounded boxes.
@@ -247,6 +288,13 @@ world's app is built the same way, starting from `sol-planet-template`:
 9. A moon runs by itself whenever its planet runs (`orbit::moons`): nobody
    has to open it for its work to happen. Its Settings page has a
    `<WithPlanet>` card to turn that off on a computer.
+10. The connections a world works best with are in its manifest
+    (`connections`, with a `why` each): Sol offers them on the world's page
+    and under Connections, to make in one click. A moon lists the ones to
+    and from its planet. An app's own empty state names them too, and sends
+    the person to Sol rather than explaining the builder.
+11. The Connect screen (the first thing a new copy shows) says what the
+    world is for under its name, in the tagline's words.
 
 Sol's own web app follows the same rules, with `world="sol"`.
 

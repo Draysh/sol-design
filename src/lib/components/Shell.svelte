@@ -2,7 +2,12 @@
 	The frame around every screen: a sidebar on the left (the world, its
 	sections, its status at the bottom) and a pane on the right that scrolls
 	on its own. The window itself never scrolls, so the chrome stays put like
-	an app's, not a website's. Ctrl (or ⌘) + 1…9 jumps to a section.
+	an app's, not a website's. Ctrl (or ⌘) + 1…9 jumps to a section, `/`
+	opens the app's search and `?` a sheet of the keys.
+
+	Under the sections, doors: Sol, and the moons or planet this world works
+	with, each a glyph and a name that opens that app. Every section can
+	carry a `hint`, one line on what it is for, shown on hover.
 
 	The world's light marks the current section and glides to the next one
 	when it changes; each screen settles into the pane as it opens.
@@ -13,8 +18,15 @@
 	as a `sol:navigate` event: orbit::mouse). Going back lands where you left off:
 	the pane's scroll is kept for every step of the history.
 
-	<Shell world="sol" path={page.url.pathname} links={[{ href: '/', label: 'Overview', current: true }]}>
-		{#snippet actions()}<Button variant="quiet">Sign out</Button>{/snippet}
+	<Shell
+		world="saturn"
+		path={page.url.pathname}
+		links={[{ href: '/', label: 'Home', hint: 'What you are in the middle of', current: true }]}
+		doors={[{ world: 'sol', label: 'Sol', onclick: openSol }]}
+		search="/search"
+		shortcuts={[{ keys: 'Space', does: 'Play or pause' }]}
+	>
+		{#snippet actions()}<LinkStatus online unsent={0} />{/snippet}
 		{#snippet footer()}<Transport />{/snippet}
 		…
 	</Shell>
@@ -24,12 +36,13 @@
 	import { afterNavigate, beforeNavigate, goto } from '$app/navigation';
 	import { BACK, type BackContext, type BackTarget } from '../back.js';
 	import '../styles/index.css';
-	import type { ShellLink } from '../types.js';
+	import type { Door, ShellLink, Shortcut } from '../types.js';
 	import { world as worldFor } from '../worlds.js';
 	import Back from './Back.svelte';
 	import Body from './Body.svelte';
 	import Grain from './Grain.svelte';
 	import Notices from './Notices.svelte';
+	import Shortcuts from './Shortcuts.svelte';
 	import WorldGlyph from './WorldGlyph.svelte';
 
 	interface Props {
@@ -40,6 +53,12 @@
 		home?: string;
 		/** The current page's path. A page whose path isn't a section's offers the way back. */
 		path?: string;
+		/** Doors to other apps, under the sections: Sol, a moon, the planet. */
+		doors?: Door[];
+		/** Where `/` leads: the app's search page. */
+		search?: string;
+		/** The app's own keys, for the sheet `?` opens; the Shell's are listed already. */
+		shortcuts?: Shortcut[];
 		/** The bottom of the sidebar: status, the time, sign out. */
 		actions?: Snippet;
 		/** A bar along the bottom of the pane, e.g. a player's transport. */
@@ -47,7 +66,8 @@
 		children: Snippet;
 	}
 
-	let { world: id, links = [], home = '/', path, actions, footer, children }: Props = $props();
+	let { world: id, links = [], home = '/', path, doors = [], search, shortcuts = [], actions, footer, children }: Props = $props();
+	let keys = $state(false);
 	const w = $derived(worldFor(id));
 	let nav = $state<HTMLElement>();
 	let list = $state<HTMLElement>();
@@ -216,15 +236,45 @@
 		return () => ro.disconnect();
 	});
 
+	/** Whether the key was pressed while writing, where it means itself. */
+	function typing(e: KeyboardEvent): boolean {
+		const t = e.target;
+		return t instanceof Element && !!t.closest('input, textarea, select, [contenteditable]');
+	}
+
 	function shortcut(e: KeyboardEvent) {
 		// Alt+← and Alt+→: back and forth, except where the arrows move through text.
 		if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
-			const t = e.target as HTMLElement | null;
-			if (t?.isContentEditable || t?.tagName === 'INPUT' || t?.tagName === 'TEXTAREA') return;
+			if (typing(e)) return;
 			if (e.key === 'ArrowRight') history.forward();
 			else if (!goBack()) return;
 			e.preventDefault();
 			return;
+		}
+		// `/` opens the search, `?` the keys; neither while writing.
+		if (!e.ctrlKey && !e.metaKey && !e.altKey && !typing(e)) {
+			// `?` is Shift+/ on most keyboards; some report the slash with Shift held.
+			const slash = e.key === '/' || e.code === 'Slash';
+			const help = e.key === '?' || (slash && e.shiftKey);
+			if (slash && !help && search && !keys) {
+				// A page may use `/` itself (a library's find box): it says so by
+				// preventing the default, and gets the key. Its handler runs after
+				// this one, and a microtask would run between the two (the browser
+				// checks for them after every listener), so wait for the next task.
+				setTimeout(() => {
+					if (!e.defaultPrevented) goto(search);
+				}, 0);
+				return;
+			}
+			if (help) {
+				e.preventDefault();
+				keys = !keys;
+				return;
+			}
+			if (e.key === 'Escape' && keys) {
+				keys = false;
+				return;
+			}
 		}
 		if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return;
 		const n = Number(e.key);
@@ -241,7 +291,7 @@
 
 <div class="shell" style:--world={w.color}>
 	<nav class="side sol-chrome" aria-label="Main" bind:this={nav}>
-		<a class="brand" href={home}>
+		<a class="brand" href={home} title={w.tagline || undefined}>
 			<span class="disc" aria-hidden="true"><Body world={id} label="" /></span>
 			<span class="brand-name">{w.name}</span>
 		</a>
@@ -261,7 +311,8 @@
 							href={link.href}
 							data-section
 							aria-current={link.current ? 'page' : undefined}
-							title={i < 9 ? `Ctrl+${i + 1}` : undefined}
+							aria-label={link.hint ? `${link.label}. ${link.hint}` : link.label}
+							title={[link.hint, i < 9 ? `Ctrl+${i + 1}` : null].filter(Boolean).join(' · ') || undefined}
 						>
 							{#if link.world}
 								<WorldGlyph world={link.world} size={10} />
@@ -275,6 +326,25 @@
 								{/key}
 							{/if}
 						</a>
+					</li>
+				{/each}
+			</ul>
+		{/if}
+		{#if doors.length}
+			<ul class="doors" aria-label="Other apps">
+				{#each doors as door, i (door.world + door.label)}
+					<li class="door" style:--i={links.length + i}>
+						{#if door.onclick}
+							<button type="button" onclick={door.onclick} title={door.hint} aria-label={door.hint ? `${door.label}. ${door.hint}` : door.label}>
+								<WorldGlyph world={door.world} size={10} />
+								<span class="label">{door.label}</span>
+							</button>
+						{:else}
+							<a href={door.href ?? '#'} title={door.hint} aria-label={door.hint ? `${door.label}. ${door.hint}` : door.label} data-sveltekit-reload>
+								<WorldGlyph world={door.world} size={10} />
+								<span class="label">{door.label}</span>
+							</a>
+						{/if}
 					</li>
 				{/each}
 			</ul>
@@ -294,6 +364,9 @@
 		</main>
 		{#if footer}<footer class="foot">{@render footer()}</footer>{/if}
 	</div>
+	{#if keys}
+		<Shortcuts {shortcuts} search={!!search} sections={links.length} onclose={() => (keys = false)} />
+	{/if}
 	<Notices />
 	<Grain />
 </div>
@@ -458,6 +531,55 @@
 		animation: sol-pop var(--settle) var(--ease-out) both;
 	}
 
+	/* Doors to other apps: after the sections, before the status. */
+	.doors {
+		display: grid;
+		gap: 2px;
+		flex: none;
+		margin: var(--s-3) 0 0;
+		padding: var(--s-2) var(--s-2) 0;
+		border-top: 1px solid var(--line);
+		list-style: none;
+	}
+
+	.door {
+		animation: sol-settle var(--settle) var(--ease-out) both;
+		animation-delay: calc(var(--i, 0) * var(--stagger));
+	}
+
+	.door a,
+	.door button {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		width: 100%;
+		height: var(--control);
+		padding: 0 12px;
+		border: 0;
+		background: transparent;
+		color: var(--text-quiet);
+		font-family: var(--font);
+		font-size: var(--text-s);
+		font-weight: var(--weight-value);
+		text-align: left;
+		text-decoration: none;
+		white-space: nowrap;
+		cursor: pointer;
+		transition:
+			color var(--fade) var(--ease),
+			background var(--fade) var(--ease);
+	}
+
+	.door a:hover,
+	.door button:hover {
+		color: var(--text-bright);
+		background: var(--surface);
+	}
+
+	.door :global(svg) {
+		flex: none;
+	}
+
 	.actions {
 		display: flex;
 		flex-direction: column;
@@ -518,11 +640,25 @@
 			display: none;
 		}
 
+		.door .label {
+			display: none;
+		}
+
 		ul {
 			padding: 0 var(--s-1);
 		}
 
 		ul a {
+			justify-content: center;
+			padding: 0;
+		}
+
+		.doors {
+			padding: var(--s-2) var(--s-1) 0;
+		}
+
+		.door a,
+		.door button {
 			justify-content: center;
 			padding: 0;
 		}

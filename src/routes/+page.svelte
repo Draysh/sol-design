@@ -11,6 +11,7 @@
 		Check,
 		DataRows,
 		Field,
+		LinkStatus,
 		MoonLink,
 		Progress,
 		RingGauge,
@@ -240,6 +241,19 @@
 			<p class="note">Callouts summarise; moon links open another world.</p>
 		</Card>
 
+		<Card title="Status and keys" world="terra">
+			<div class="col">
+				<LinkStatus online unsent={0} />
+				<LinkStatus online unsent={3} />
+				<LinkStatus online={false} unsent={2} />
+				<LinkStatus online busy="Syncing library" warn="Navidrome · not answering" />
+			</div>
+			<p class="note">
+				The bottom of every sidebar. Under the sections, doors to Sol and to the world’s moons or planet; `?` opens
+				the keys, `/` the search, and every section says what it is for on hover.
+			</p>
+		</Card>
+
 		<Card title="Progress" world="neptune">
 			<Progress value={134} max={306} label="Position" start="2:14" end="5:06" />
 			<div class="row">
@@ -324,6 +338,11 @@
 </section>
 
 <style>
+	.col {
+		display: grid;
+		gap: var(--s-2);
+	}
+
 	.top {
 		display: flex;
 		justify-content: space-between;

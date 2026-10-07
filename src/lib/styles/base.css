@@ -129,6 +129,14 @@ svg {
 	color: var(--text-value);
 }
 
+/* The moments before a screen has data: the Loader, centred in the pane. */
+.sol-loading {
+	display: grid;
+	place-items: center;
+	min-height: 240px;
+	padding: var(--s-6) var(--margin);
+}
+
 .sol-visually-hidden {
 	position: absolute;
 	width: 1px;

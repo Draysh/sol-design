@@ -1068,6 +1068,25 @@ export interface components {
             url: string;
             version: string;
         };
+        /**
+         * @description A connection a world suggests: "when this happens there, do that here"
+         *     (or the other way round). Sol offers it, with `why`, wherever the person
+         *     can make it in one click; nothing is connected without them.
+         */
+        Suggested: {
+            /** @description The action's parameters, filled in. */
+            params?: {
+                [key: string]: unknown;
+            };
+            /** @description Its action's id. */
+            then_action: string;
+            /** @description The world whose action runs. */
+            then_world: string;
+            /** @description The event, e.g. `saturn.title.rated`; its world is the part before the first dot. */
+            when: string;
+            /** @description One sentence on what it does for the person: `Titan learns what you rate.` */
+            why: string;
+        };
         SystemInfo: {
             /** @description CPU architecture, e.g. `aarch64` on the NAS. */
             arch: string;
@@ -1168,6 +1187,11 @@ export interface components {
             actions?: components["schemas"]["Action"][];
             /** @description What it keeps in Sol, for the data overview. */
             collections?: components["schemas"]["Collection"][];
+            /**
+             * @description Connections this world works best with, offered in Sol once both
+             *     worlds are installed: a moon lists the ones to and from its planet.
+             */
+            connections?: components["schemas"]["Suggested"][];
             /** @description Events it posts, which connections can listen for. */
             emits?: components["schemas"]["EventKind"][];
             /** @description Lowercase letters, digits and dashes; also the world's namespace. */

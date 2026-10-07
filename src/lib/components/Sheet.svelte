@@ -69,7 +69,7 @@
 			{#if moons.length || children}
 				<div class="under">
 					{#each moons as moon (moon.id)}
-						<MoonLink href={moon.href}>{moon.label}</MoonLink>
+						<MoonLink href={moon.href} onclick={moon.onclick}>{moon.label}</MoonLink>
 					{/each}
 					{@render children?.()}
 				</div>
