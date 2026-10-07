@@ -1,7 +1,8 @@
 <!--
 	The top of a working page: a slim toolbar that stays put while the page
 	scrolls under it. The title in the name style, a quiet line beside it,
-	and the page's main action on the right.
+	and the page's main action on the right. Solid black, with a short fade
+	below it, so what scrolls under it is composited, never blurred.
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
@@ -21,7 +22,9 @@
 	<div class="text">
 		{#if eyebrow}<span class="sol-quiet">{eyebrow}</span>{/if}
 		<h1>{title}</h1>
-		{#if lead}<span class="lead">{lead}</span>{/if}
+		{#if lead}
+			{#key lead}<span class="lead sol-fade">{lead}</span>{/key}
+		{/if}
 	</div>
 	{#if actions}<div class="actions">{@render actions()}</div>{/if}
 </header>
@@ -39,8 +42,19 @@
 		min-height: var(--nav-height);
 		padding: var(--s-2) var(--margin);
 		border-bottom: 1px solid var(--line);
-		background: color-mix(in srgb, var(--space) 86%, transparent);
-		backdrop-filter: blur(14px);
+		background: var(--space);
+	}
+
+	/* What slides under the bar dims out over a few pixels first. */
+	.head::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: 100%;
+		height: 12px;
+		background: linear-gradient(to bottom, rgb(0 0 0 / 0.6), transparent);
+		pointer-events: none;
 	}
 
 	.text {

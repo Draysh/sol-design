@@ -23,5 +23,6 @@ export { default as Toggle } from './components/Toggle.svelte';
 export { default as Widget } from './components/Widget.svelte';
 export { default as WorldGlyph } from './components/WorldGlyph.svelte';
 
+export { count, type Count } from './actions/count.js';
 export { worlds, world, moonsOf, type World, type Placement, type Companion } from './worlds.js';
 export type { Row, Moon, ShellLink, Option, AppHere, AppOffer, AppUpdateStatus } from './types.js';

@@ -1,6 +1,7 @@
 <!--
 	Hairlines and capitals. `primary` is the only filled shape on a screen:
-	use it once, for the screen's main action. Focus locks two corner ticks on.
+	use it once, for the screen's main action. Focus locks two corner ticks
+	on; a press gives a little; while busy, a hairline sweeps along the bottom.
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
@@ -29,6 +30,7 @@
 		aria-busy={busy || undefined}
 	>
 		{@render children()}
+		{#if busy}<span class="sweep" aria-hidden="true"></span>{/if}
 	</button>
 {/if}
 
@@ -53,15 +55,24 @@
 		text-decoration: none;
 		white-space: nowrap;
 		cursor: pointer;
+		overflow: visible;
 		transition:
 			background var(--fade) var(--ease),
 			border-color var(--fade) var(--ease),
-			color var(--fade) var(--ease);
+			color var(--fade) var(--ease),
+			box-shadow var(--settle) var(--ease-out),
+			transform var(--lock) var(--ease);
 	}
 
 	.btn:hover:not(:disabled) {
 		border-color: var(--text);
 		background: var(--surface-hover);
+	}
+
+	/* A press gives, like a real key. */
+	.btn:active:not(:disabled) {
+		transform: translateY(1px);
+		transition-duration: 40ms;
 	}
 
 	.primary {
@@ -74,6 +85,7 @@
 	.primary:hover:not(:disabled) {
 		background: var(--text-bright);
 		color: var(--space);
+		box-shadow: 0 0 56px color-mix(in srgb, var(--world) 50%, transparent);
 	}
 
 	.quiet {
@@ -106,6 +118,36 @@
 	.btn[aria-busy='true'] {
 		color: var(--text-quiet);
 		cursor: progress;
+	}
+
+	/* Busy: a hairline sweeps along the bottom edge until the work is done. */
+	.sweep {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: -1px;
+		height: 1px;
+		overflow: hidden;
+		pointer-events: none;
+	}
+
+	.sweep::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		width: 40%;
+		height: 100%;
+		background: var(--text-bright);
+		animation: sweep 1.1s var(--ease) infinite;
+	}
+
+	@keyframes sweep {
+		from {
+			left: -40%;
+		}
+		to {
+			left: 100%;
+		}
 	}
 
 	/* Focus: two ticks lock onto the control, like a reticle finding its target. */
@@ -149,5 +191,11 @@
 		right: -6px;
 		bottom: -6px;
 		opacity: 1;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.sweep::before {
+			animation-duration: 3s;
+		}
 	}
 </style>

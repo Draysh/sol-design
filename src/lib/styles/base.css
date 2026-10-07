@@ -1,4 +1,4 @@
-/* Sol · Observatory base: reset, type and the few global utilities. */
+/* Sol · Observatory base: reset, type, motion and the few global utilities. */
 
 @view-transition {
 	navigation: auto;
@@ -137,4 +137,71 @@ svg {
 	overflow: hidden;
 	clip-path: inset(50%);
 	white-space: nowrap;
+}
+
+/*
+ * Motion: things settle into place. `.sol-settle` rises a few pixels and
+ * fades in as it appears; set `--i` (its place in a list) and each comes a
+ * stagger after the one before, never more than 400 ms late. `.sol-stagger`
+ * does that for every child, numbering them itself, and leaves anything
+ * past the first two dozen to appear at once: a wall of covers shouldn't
+ * take a second to fill. `.sol-fade` is the plain fade, for text that
+ * changed. Opacity and transforms only, so the pane keeps scrolling.
+ */
+@keyframes sol-settle {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+}
+
+@keyframes sol-fade {
+	from {
+		opacity: 0;
+	}
+}
+
+@keyframes sol-pop {
+	from {
+		opacity: 0;
+		transform: scale(0.6);
+	}
+}
+
+.sol-settle,
+.sol-stagger > * {
+	animation: sol-settle var(--settle) var(--ease-out) both;
+	animation-delay: min(calc(var(--i, 0) * var(--stagger)), 400ms);
+}
+
+.sol-stagger > :nth-child(2) { --i: 1; }
+.sol-stagger > :nth-child(3) { --i: 2; }
+.sol-stagger > :nth-child(4) { --i: 3; }
+.sol-stagger > :nth-child(5) { --i: 4; }
+.sol-stagger > :nth-child(6) { --i: 5; }
+.sol-stagger > :nth-child(7) { --i: 6; }
+.sol-stagger > :nth-child(8) { --i: 7; }
+.sol-stagger > :nth-child(9) { --i: 8; }
+.sol-stagger > :nth-child(10) { --i: 9; }
+.sol-stagger > :nth-child(11) { --i: 10; }
+.sol-stagger > :nth-child(12) { --i: 11; }
+.sol-stagger > :nth-child(13) { --i: 12; }
+.sol-stagger > :nth-child(14) { --i: 13; }
+.sol-stagger > :nth-child(15) { --i: 14; }
+.sol-stagger > :nth-child(16) { --i: 15; }
+.sol-stagger > :nth-child(17) { --i: 16; }
+.sol-stagger > :nth-child(18) { --i: 17; }
+.sol-stagger > :nth-child(19) { --i: 18; }
+.sol-stagger > :nth-child(20) { --i: 19; }
+.sol-stagger > :nth-child(21) { --i: 20; }
+.sol-stagger > :nth-child(22) { --i: 21; }
+.sol-stagger > :nth-child(23) { --i: 22; }
+.sol-stagger > :nth-child(24) { --i: 23; }
+
+.sol-stagger > :nth-child(n + 25) {
+	animation: none;
+}
+
+.sol-fade {
+	animation: sol-fade var(--fade) var(--ease) both;
 }

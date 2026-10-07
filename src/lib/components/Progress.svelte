@@ -1,4 +1,4 @@
-<!-- A hairline with a playhead. -->
+<!-- A hairline with a playhead. It fills to its value as it appears, and follows the value after. -->
 <script lang="ts">
 	interface Props {
 		value: number;
@@ -10,6 +10,14 @@
 
 	let { value, max, label, start, end }: Props = $props();
 	const pct = $derived(max > 0 ? Math.min(100, Math.max(0, (value / max) * 100)) : 0);
+
+	// Drawn from nothing on the first frame, so the fill grows into place.
+	let shown = $state(0);
+	$effect(() => {
+		const target = pct;
+		const frame = requestAnimationFrame(() => (shown = target));
+		return () => cancelAnimationFrame(frame);
+	});
 </script>
 
 <div class="progress">
@@ -20,7 +28,7 @@
 		aria-valuemin="0"
 		aria-valuemax={max}
 		aria-valuenow={value}
-		style:--pct="{pct}%"
+		style:--pct={shown}
 	>
 		<span class="fill"></span>
 		<span class="head"></span>
@@ -56,20 +64,23 @@
 		background: rgb(255 255 255 / 0.2);
 	}
 
+	/* The fill is scaled, never resized: the compositor's work. */
 	.fill {
-		width: var(--pct);
+		width: 100%;
 		background: var(--text);
-		transition: width var(--fade) var(--ease);
+		transform: scaleX(calc(var(--pct) / 100));
+		transform-origin: left;
+		transition: transform var(--rise) var(--ease-out);
 	}
 
 	.head {
 		position: absolute;
-		left: var(--pct);
+		left: calc(var(--pct) * 1%);
 		top: 0;
 		width: 1px;
 		height: 13px;
 		background: var(--text);
-		transition: left var(--fade) var(--ease);
+		transition: left var(--rise) var(--ease-out);
 	}
 
 	.ends {

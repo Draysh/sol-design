@@ -69,16 +69,30 @@
 	--rail: 60px;
 	--nav-height: 56px;
 
-	/* Motion */
+	/*
+	 * Motion. Four durations: a fade for text and colour, a lock for ticks
+	 * and switches, a settle for something taking its place on the screen,
+	 * and a rise for a body appearing. Things that arrive together arrive one
+	 * after another, a stagger apart. Only opacity and transforms move; the
+	 * compositor does the work and the pane keeps scrolling at full rate.
+	 */
 	--fade: 240ms;
 	--lock: 120ms;
+	--settle: 420ms;
+	--rise: 900ms;
+	--stagger: 28ms;
 	--drift: 12s;
 	--ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+	/* Fast out, long soft landing: how things settle. */
+	--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
 	:root {
 		--fade: 0ms;
 		--lock: 0ms;
+		--settle: 0ms;
+		--rise: 0ms;
+		--stagger: 0ms;
 	}
 }

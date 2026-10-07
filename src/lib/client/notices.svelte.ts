@@ -7,7 +7,8 @@ export interface Notice {
 	tone?: 'info' | 'error';
 }
 
-const LINGER_MS = 6000;
+/** How long a notice stays, unless held. */
+export const LINGER_MS = 6000;
 
 /** In-app notices: they fade in at the top and leave after six seconds unless hovered. */
 class Notices {

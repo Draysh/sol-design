@@ -1,6 +1,7 @@
 <!--
 	Two arcs and an axis at the world's real tilt, with whatever it frames in
-	the middle (usually the world's name).
+	the middle (usually the world's name). It finds its target as it appears:
+	the arcs draw themselves, the axis extends from the centre, then the poles.
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
@@ -34,18 +35,19 @@
 	<svg viewBox="-100 -100 200 200" aria-hidden="true">
 		<g fill="none" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke" opacity="0.6">
 			{#each arcs as d (d)}
-				<path {d} vector-effect="non-scaling-stroke"></path>
+				<path class="arc" {d} pathLength="1" vector-effect="non-scaling-stroke"></path>
 			{/each}
 		</g>
 		<path
+			class="axis"
 			d="M{-axis.x} {-axis.y}L{axis.x} {axis.y}"
 			stroke="currentColor"
 			stroke-width="1"
 			vector-effect="non-scaling-stroke"
 			opacity="0.65"
 		></path>
-		<circle cx={axis.x} cy={axis.y} r="2" fill="currentColor"></circle>
-		<circle cx={-axis.x} cy={-axis.y} r="2" fill="currentColor"></circle>
+		<circle class="pole" cx={axis.x} cy={axis.y} r="2" fill="currentColor"></circle>
+		<circle class="pole" cx={-axis.x} cy={-axis.y} r="2" fill="currentColor"></circle>
 	</svg>
 	{#if children}
 		<div class="inside">{@render children()}</div>
@@ -70,6 +72,23 @@
 		overflow: visible;
 	}
 
+	.arc {
+		stroke-dasharray: 1;
+		animation: draw var(--rise) var(--ease-out) both;
+	}
+
+	.axis {
+		transform-box: fill-box;
+		transform-origin: center;
+		animation: extend var(--rise) var(--ease-out) both;
+		animation-delay: calc(var(--rise) / 3);
+	}
+
+	.pole {
+		animation: sol-fade var(--fade) var(--ease) both;
+		animation-delay: calc(var(--rise) * 0.8);
+	}
+
 	/* Centred on the reticle even when it is wider, as a long name is. */
 	.inside {
 		position: absolute;
@@ -78,5 +97,23 @@
 		translate: -50% -50%;
 		text-align: center;
 		white-space: nowrap;
+	}
+
+	@keyframes draw {
+		from {
+			stroke-dashoffset: 1;
+		}
+		to {
+			stroke-dashoffset: 0;
+		}
+	}
+
+	@keyframes extend {
+		from {
+			transform: scale(0.001);
+		}
+		to {
+			transform: scale(1);
+		}
 	}
 </style>

@@ -31,7 +31,8 @@ Every app is a window, not a page. `<Shell>` draws the frame:
 | Footer | A bar along the bottom of the pane | For what is always there, e.g. a player's transport |
 
 `Ctrl` (or `⌘`) + `1`…`9` jumps to a section. The pane scrolls back to the
-top when `path` changes, so give the Shell the current path.
+top when `path` changes, and the new screen settles into it, so give the
+Shell the current path. The light glides from the old section to the new.
 
 ## The band
 
@@ -47,9 +48,13 @@ hero: the working surface starts right under it.
 | Moon links and the main action | Under the name | Moons are doors to their own apps; shown only when that app is up |
 | Data rows | A strip under the band, two or three blocks | Seven lines at most in total |
 
+The band arrives in order: the body rises, the reticle draws itself around
+the name, then the callout and the strip of facts settle after it.
+
 Everything below is the app's working surface: `Card`s in a grid, each
 other page starting with a `<PageHead>` toolbar that stays put while the
-page scrolls.
+page scrolls. The toolbar is solid black with a short fade under it, never a
+blur: what scrolls under it must cost the compositor nothing.
 
 On a phone the body rises from the bottom, lit from above, the callout
 drops out, and the strip keeps two blocks.
@@ -101,7 +106,9 @@ photograph:
 The lighting recipe (in `Body.svelte`): the photo is clipped to a circle; a
 blurred black circle offset away from the light makes a soft terminator; a
 blurred stroke in the world's colour, masked to the lit side, makes the limb
-glow. A 9 % film grain covers everything.
+glow. A film grain of dark specks covers everything: invisible over black,
+a fine texture over photographs and light type. It is one plain layer with
+no blend mode, so scrolling under it is free.
 
 ## Layout
 
@@ -149,14 +156,38 @@ get a 1 px white outline 4 px out.
 
 ## Motion
 
-| Name | Duration | Used for |
-| --- | --- | --- |
-| Fade | 240 ms | Text, notices, colour changes |
-| Lock | 120 ms | Focus ticks, checkboxes |
-| Rise | about 1 s | A body appearing |
+Things arrive; nothing moves for its own sake. Motion marks a change (a
+screen opening, a value changing, a tick locking on) and then stops. Only
+the Loader and a busy button keep moving, because the app is.
 
-Moving between worlds is a page load, softened by a cross-document view
-transition. Respect `prefers-reduced-motion`: the tokens drop to zero.
+| Name | Token | Duration | Used for |
+| --- | --- | --- | --- |
+| Fade | `--fade` | 240 ms | Text, notices, colour changes; `.sol-fade` on text that changed |
+| Lock | `--lock` | 120 ms | Focus ticks, checkboxes, switches, a press |
+| Settle | `--settle` | 420 ms | Something taking its place: a screen, a card, a row (`.sol-settle`) |
+| Rise | `--rise` | 900 ms | A body appearing, a figure counting up (`use:count`), an arc drawing |
+| Stagger | `--stagger` | 28 ms | Between things that arrive together (`.sol-stagger`), at most 400 ms late |
+
+The easing for settling and rising is `--ease-out`: fast out, a long soft
+landing. The components already move this way: the Shell's light glides to
+the new section and each screen settles into the pane; the Sheet's body
+rises and the Reticle draws itself; Cards lock their ticks on; Check draws
+its tick; Progress fills to its value; RingGauge draws its arcs; a Field's
+line lights from the left on focus; a Notice drops in and a hairline runs
+out as its time does; DataRows fade a value that changed.
+
+Rules for an app's own motion:
+
+- Animate opacity and transforms only. Never width, height, filters or
+  blur: the pane must keep scrolling at the monitor's full rate (170 Hz on
+  a fast screen, 6 ms a frame).
+- A list staggers its first two dozen items and lets the rest appear at
+  once; a wall of covers must not take a second to fill.
+- Nothing loops, except the Loader and a busy control.
+- Moving between worlds is a page load, softened by a cross-document view
+  transition.
+- Respect `prefers-reduced-motion`: every token drops to zero, and
+  `use:count` sets its figure at once.
 
 ## Writing
 
@@ -208,5 +239,14 @@ Add an entry to `src/lib/worlds.ts` and a photo to `src/lib/assets/`:
 
 Every Sol app's window is WebKitGTK on Linux, which clips and composites
 differently from Chromium. `scripts/shot.py URL out.png [W H [wait [js]]]`
-renders a page in WebKitGTK and saves it; look at that before calling a
-screen done.
+renders a page in WebKitGTK (on Wayland, as the apps run) and saves it;
+look at that before calling a screen done.
+
+`scripts/scrollbench.py URL [setup-js [seconds [selector [variant-js]]]]`
+scrolls the pane in WebKitGTK and prints the frame rate it reached, the
+median and slow frame times and how many frames were late. Run it before
+and after anything that could cost the compositor: a blur, a blend mode, a
+filter. It is also how the apps' frame pacing was found: WebKitGTK's
+DMA-BUF renderer draws 60 frames a second whatever the monitor does, so
+every app sets `WEBKIT_DISABLE_DMABUF_RENDERER=1` before it starts and
+follows the compositor's clock instead.

@@ -4,6 +4,9 @@
 	on its own. The window itself never scrolls, so the chrome stays put like
 	an app's, not a website's. Ctrl (or ⌘) + 1…9 jumps to a section.
 
+	The world's light marks the current section and glides to the next one
+	when it changes; each screen settles into the pane as it opens.
+
 	<Shell world="sol" path={page.url.pathname} links={[{ href: '/', label: 'Overview', current: true }]}>
 		{#snippet actions()}<Button variant="quiet">Sign out</Button>{/snippet}
 		{#snippet footer()}<Transport />{/snippet}
@@ -38,11 +41,39 @@
 	let { world: id, links = [], home = '/', path, actions, footer, children }: Props = $props();
 	const w = $derived(worldFor(id));
 	let nav = $state<HTMLElement>();
+	let list = $state<HTMLElement>();
 	let pane = $state<HTMLElement>();
 
 	$effect(() => {
 		path;
 		pane?.scrollTo({ top: 0 });
+	});
+
+	// The light: one element that moves to the current section instead of
+	// a mark on each, so the change is seen as movement. It appears in place
+	// the first time and glides from then on.
+	let light = $state({ y: 0, h: 0, on: false, moved: false });
+	let lit = false;
+	$effect(() => {
+		links;
+		if (!list) return;
+		const place = () => {
+			const a = list?.querySelector<HTMLAnchorElement>('a[aria-current="page"]');
+			if (!a || !list) {
+				light = { y: 0, h: 0, on: false, moved: lit };
+				return;
+			}
+			// Layout positions, not rects: the sections are still settling in,
+			// and a section mid-animation is an offset parent of its own.
+			let y = 0;
+			for (let el: HTMLElement | null = a; el && el !== list; el = el.offsetParent as HTMLElement | null) y += el.offsetTop;
+			light = { y, h: a.offsetHeight, on: true, moved: lit };
+			lit = true;
+		};
+		place();
+		const ro = new ResizeObserver(place);
+		ro.observe(list);
+		return () => ro.disconnect();
 	});
 
 	function shortcut(e: KeyboardEvent) {
@@ -66,9 +97,17 @@
 			<span class="brand-name">{w.name}</span>
 		</a>
 		{#if links.length}
-			<ul>
+			<ul bind:this={list}>
+				<li
+					class="light"
+					class:on={light.on}
+					class:moved={light.moved}
+					style:transform="translateY({light.y}px)"
+					style:height="{light.h}px"
+					aria-hidden="true"
+				></li>
 				{#each links as link, i (link.href)}
-					<li>
+					<li class="section" style:--i={i}>
 						<a
 							href={link.href}
 							data-section
@@ -81,7 +120,11 @@
 								<span class="mark" aria-hidden="true"></span>
 							{/if}
 							<span class="label">{link.label}</span>
-							{#if link.badge}<span class="badge" aria-label="{link.badge} waiting">{link.badge}</span>{/if}
+							{#if link.badge}
+								{#key link.badge}
+									<span class="badge" aria-label="{link.badge} waiting">{link.badge}</span>
+								{/key}
+							{/if}
 						</a>
 					</li>
 				{/each}
@@ -91,7 +134,11 @@
 	</nav>
 	<div class="pane">
 		<main bind:this={pane}>
-			{@render children()}
+			{#key path}
+				<div class="screen">
+					{@render children()}
+				</div>
+			{/key}
 		</main>
 		{#if footer}<footer class="foot">{@render footer()}</footer>{/if}
 	</div>
@@ -135,9 +182,15 @@
 		display: block;
 		width: 22px;
 		flex: none;
+		transition: transform var(--settle) var(--ease-out);
+	}
+
+	.brand:hover .disc {
+		transform: scale(1.08);
 	}
 
 	ul {
+		position: relative;
 		display: grid;
 		align-content: start;
 		gap: 2px;
@@ -147,6 +200,35 @@
 		padding: 0 var(--s-2);
 		overflow-y: auto;
 		list-style: none;
+	}
+
+	.section {
+		animation: sol-settle var(--settle) var(--ease-out) both;
+		animation-delay: calc(var(--i, 0) * var(--stagger));
+	}
+
+	/* The current section carries the world's light. */
+	.light {
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 2px;
+		margin: 9px 0;
+		height: calc(var(--control) - 18px);
+		background: var(--world);
+		box-shadow: 0 0 8px var(--world);
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.light.on {
+		opacity: 1;
+	}
+
+	.light.moved {
+		transition:
+			transform var(--settle) var(--ease-out),
+			opacity var(--fade) var(--ease);
 	}
 
 	ul a {
@@ -175,18 +257,6 @@
 		background: var(--surface-hover);
 	}
 
-	/* The current section carries the world's light. */
-	ul a[aria-current='page']::before {
-		content: '';
-		position: absolute;
-		left: 0;
-		top: 9px;
-		bottom: 9px;
-		width: 2px;
-		background: var(--world);
-		box-shadow: 0 0 8px var(--world);
-	}
-
 	.mark {
 		width: 6px;
 		height: 6px;
@@ -195,17 +265,29 @@
 		border-radius: 50%;
 		transition:
 			background var(--lock) var(--ease),
-			border-color var(--lock) var(--ease);
+			border-color var(--lock) var(--ease),
+			transform var(--settle) var(--ease-out);
+	}
+
+	ul a:hover .mark {
+		border-color: var(--text-bright);
+		transform: scale(1.2);
 	}
 
 	ul a[aria-current='page'] .mark {
 		border-color: var(--text-bright);
 		background: var(--text-bright);
+		transform: none;
 	}
 
 	.label {
 		overflow: hidden;
 		text-overflow: ellipsis;
+		transition: transform var(--settle) var(--ease-out);
+	}
+
+	ul a:hover .label {
+		transform: translateX(2px);
 	}
 
 	.badge {
@@ -221,6 +303,7 @@
 		font-size: 10px;
 		font-weight: var(--weight-label);
 		letter-spacing: 0;
+		animation: sol-pop var(--settle) var(--ease-out) both;
 	}
 
 	.actions {
@@ -247,6 +330,11 @@
 		min-height: 0;
 		overflow-y: auto;
 		overscroll-behavior: contain;
+	}
+
+	/* A screen settles into the pane as it opens. */
+	.screen {
+		animation: sol-settle var(--settle) var(--ease-out) both;
 	}
 
 	.foot {

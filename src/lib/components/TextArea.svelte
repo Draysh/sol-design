@@ -1,4 +1,4 @@
-<!-- A label and room to write: underlined like a field, growing as you type. -->
+<!-- A label and room to write: underlined like a field, growing as you type. Focus lights the line from the left. -->
 <script lang="ts">
 	import type { HTMLTextareaAttributes } from 'svelte/elements';
 
@@ -15,7 +15,9 @@
 
 <div class="area">
 	<label class="sol-label" for={areaId}>{label}</label>
-	<textarea id={areaId} bind:value {rows} aria-describedby={hint ? `${uid}-hint` : undefined} {...rest}></textarea>
+	<span class="control">
+		<textarea id={areaId} bind:value {rows} aria-describedby={hint ? `${uid}-hint` : undefined} {...rest}></textarea>
+	</span>
 	{#if hint}<p class="hint" id="{uid}-hint">{hint}</p>{/if}
 </div>
 
@@ -30,7 +32,14 @@
 		font-size: var(--text-xs);
 	}
 
+	.control {
+		position: relative;
+		display: block;
+	}
+
 	textarea {
+		display: block;
+		width: 100%;
 		min-height: var(--target);
 		padding: 8px 0;
 		border: 0;
@@ -43,6 +52,7 @@
 		line-height: 1.6;
 		resize: vertical;
 		field-sizing: content;
+		transition: border-color var(--fade) var(--ease);
 	}
 
 	textarea::placeholder {
@@ -56,7 +66,24 @@
 	textarea:focus-visible {
 		outline: none;
 		border-color: var(--text-bright);
-		box-shadow: 0 1px 0 var(--text-bright);
+	}
+
+	.control::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		height: 1px;
+		background: var(--text-bright);
+		transform: scaleX(0);
+		transform-origin: left;
+		transition: transform var(--settle) var(--ease-out);
+		pointer-events: none;
+	}
+
+	.control:focus-within::after {
+		transform: scaleX(1);
 	}
 
 	.hint {

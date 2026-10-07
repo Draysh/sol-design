@@ -3,6 +3,9 @@
 	in a reticle, a callout, moon links and data rows along the bottom. It is
 	a header, not a hero: the working surface starts right under it.
 	DESIGN.md, "The band", explains each part.
+
+	It arrives in order: the body rises, the reticle finds the name, the
+	callout and the strip of facts settle after it.
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
@@ -88,7 +91,7 @@
 		<!-- The facts, on a strip of their own under the band. -->
 		<div class="rows">
 			{#each blocks as { block, at }, i (i)}
-				<div class="block at-{at}">
+				<div class="block at-{at}" style:--i={i}>
 					<DataRows rows={block} align={at} />
 				</div>
 			{/each}
@@ -135,6 +138,8 @@
 
 	.body {
 		position: absolute;
+		/* Drawn once into its own layer, so scrolling under the band costs nothing. */
+		will-change: transform;
 	}
 
 	.center {
@@ -147,6 +152,7 @@
 		translate: -50% calc(var(--reticle) / -2);
 	}
 
+	/* The name comes into focus: from wide-spaced and faint to set. */
 	.name {
 		white-space: nowrap;
 		font-weight: var(--weight-name);
@@ -154,6 +160,15 @@
 		letter-spacing: var(--track-name);
 		line-height: 1;
 		text-shadow: 0 0 18px rgb(0 0 0 / 0.7);
+		animation: focus var(--rise) var(--ease-out) both;
+		animation-delay: calc(var(--rise) / 4);
+	}
+
+	@keyframes focus {
+		from {
+			opacity: 0;
+			letter-spacing: 0.3em;
+		}
 	}
 
 	.under {
@@ -163,10 +178,14 @@
 		align-items: center;
 		gap: var(--s-2) var(--s-4);
 		margin-top: var(--s-2);
+		animation: sol-settle var(--settle) var(--ease-out) both;
+		animation-delay: calc(var(--rise) / 2);
 	}
 
 	.callout {
 		position: absolute;
+		animation: sol-fade var(--fade) var(--ease) both;
+		animation-delay: calc(var(--rise) / 2);
 	}
 
 	.rows {
@@ -176,6 +195,11 @@
 		gap: var(--s-4);
 		padding: var(--s-2) var(--margin);
 		border-bottom: 1px solid var(--line);
+	}
+
+	.block {
+		animation: sol-settle var(--settle) var(--ease-out) both;
+		animation-delay: calc(var(--rise) / 3 + var(--i, 0) * var(--stagger) * 3);
 	}
 
 	.at-center {

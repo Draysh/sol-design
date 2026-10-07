@@ -68,6 +68,10 @@
 		transition: border-color var(--lock) var(--ease);
 	}
 
+	button:hover:not(:disabled) .track {
+		border-color: var(--text);
+	}
+
 	.disc {
 		position: absolute;
 		left: 3px;
@@ -77,9 +81,15 @@
 		border-radius: 50%;
 		background: var(--text-quiet);
 		transition:
-			left var(--lock) var(--ease),
+			transform var(--settle) var(--ease-out),
 			background var(--lock) var(--ease),
-			box-shadow var(--lock) var(--ease);
+			box-shadow var(--settle) var(--ease-out);
+	}
+
+	/* Pressed: the disc stretches towards where it is going. */
+	button:active:not(:disabled) .disc {
+		transform: scaleX(1.3);
+		transform-origin: left;
 	}
 
 	[aria-checked='true'] .track {
@@ -87,9 +97,14 @@
 	}
 
 	[aria-checked='true'] .disc {
-		left: 21px;
+		transform: translateX(18px);
 		background: var(--text-bright);
 		box-shadow: 0 0 10px color-mix(in srgb, var(--world) 70%, transparent);
+	}
+
+	[aria-checked='true']:active:not(:disabled) .disc {
+		transform: translateX(18px) scaleX(1.3);
+		transform-origin: right;
 	}
 
 	.hint {

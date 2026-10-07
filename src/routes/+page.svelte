@@ -19,6 +19,7 @@
 		Toggle,
 		Widget,
 		WorldGlyph,
+		count,
 		moonsOf,
 		worlds,
 		type Row
@@ -109,6 +110,11 @@
 		{ label: 'Journal before bed', meta: '22:30', done: false }
 	]);
 
+	let motionKey = $state(0);
+	let busy = $state(false);
+	let figure = $state(1284);
+	let ring = $state({ value: 3, max: 12 });
+
 	const principles = [
 		['One light', 'Every body is lit from one side. Darkness is the default; light means attention.'],
 		['Black is space', 'The ground is pure black. Groups get corner ticks, not boxes; nothing is filled unless it is the action.'],
@@ -119,7 +125,7 @@
 
 <header class="top">
 	<span class="sol-label">Sol · Design language</span>
-	<span class="sol-quiet">Observatory · v0.1</span>
+	<span class="sol-quiet">Observatory · v0.6</span>
 </header>
 
 <Sheet
@@ -165,7 +171,7 @@
 	<div class="grid three facts">
 		<DataRows rows={[{ label: 'Key light', value: 'one side only' }, { label: 'Terminator', value: 'blur 4.5 % of radius' }, { label: 'Limb glow', value: 'world colour, 2.4 % stroke' }]} />
 		<DataRows rows={[{ label: 'Space', value: '#000000' }, { label: 'Text', value: '#F2F2F2' }, { label: 'Value · quiet', value: '#BDBDBD · #A8A8A8' }]} />
-		<DataRows rows={[{ label: 'Lines', value: 'white at 8 % and 45 %' }, { label: 'Grain', value: '9 % overlay' }, { label: 'This world', value: w.tagline }]} />
+		<DataRows rows={[{ label: 'Lines', value: 'white at 8 % and 45 %' }, { label: 'Grain', value: 'dark specks, one layer' }, { label: 'This world', value: w.tagline }]} />
 	</div>
 </section>
 
@@ -254,9 +260,66 @@
 		</Card>
 	</div>
 	<div class="grid three facts">
-		<DataRows rows={[{ label: 'Fade', value: '240 ms · text, notices' }, { label: 'Lock', value: '120 ms · focus ticks' }, { label: 'Reduced motion', value: 'respected' }]} />
 		<DataRows rows={[{ label: 'Steps', value: '8 · 16 · 24 · 40 · 64 · 112' }, { label: 'Margin', value: '16 to 96, fluid' }, { label: 'Targets', value: '44 px or more' }]} />
 		<DataRows rows={[{ label: 'Corners', value: 'square; round only for discs' }, { label: 'Lines', value: '1 px, never thicker' }, { label: 'Shadows', value: 'none; light comes from bodies' }]} />
+		<DataRows rows={[{ label: 'Chrome', value: 'solid black, never blurred' }, { label: 'Bars', value: 'stay put; the pane scrolls' }, { label: 'Grain', value: 'one layer over all' }]} />
+	</div>
+</section>
+
+<section>
+	<h2 class="head"><span class="num">05</span><span class="sol-label">Motion</span></h2>
+	<p class="sol-prose lead">
+		Things arrive; nothing moves for its own sake. A screen settles into the pane, a list comes a stagger at a time, a
+		figure counts up to its value, and the reticle finds its name. Only opacity and transforms move, so the pane
+		keeps scrolling at the monitor's full rate. Reduced motion sets every duration to zero.
+	</p>
+	<div class="grid three">
+		<Card title="Arriving">
+			{#key motionKey}
+				<ul class="sol-stagger demo-list">
+					{#each ['Blade Runner Blues', 'Memories of Green', 'Tears in Rain', 'Rachel’s Song', 'One More Kiss, Dear'] as line (line)}
+						<li>{line}</li>
+					{/each}
+				</ul>
+			{/key}
+			<div class="row">
+				<Button onclick={() => motionKey++}>Again</Button>
+				<Button busy={busy} onclick={() => {
+					busy = true;
+					setTimeout(() => (busy = false), 2400);
+				}}>Busy for a moment</Button>
+			</div>
+			<p class="note">A settle is 420 ms; each item comes 28 ms after the one before, never more than 400 ms late. A busy button sweeps a hairline until it is done.</p>
+		</Card>
+
+		<Card title="Figures" world="saturn">
+			{#key motionKey}
+				<p class="figure"><span class="big" use:count={{ value: figure }}>0</span><span class="sol-quiet">episodes</span></p>
+			{/key}
+			<div class="row">
+				<RingGauge outer={ring} inner={{ value: 1, max: 2 }} center="E{String(ring.value).padStart(2, '0')}" label="Episode of season" />
+				<Progress value={ring.value} max={ring.max} label="Season" start="E{ring.value}" end="of {ring.max}" />
+			</div>
+			<div class="row">
+				<Button onclick={() => (figure += 137)}>Another evening</Button>
+				<Button variant="quiet" onclick={() => (ring = { value: (ring.value % 12) + 1, max: 12 })}>Next episode</Button>
+			</div>
+			<p class="note">A figure counts up over the rise (900 ms); a progress line fills to its value and follows it after; an arc draws itself.</p>
+		</Card>
+
+		<Card title="Tokens">
+			<DataRows
+				rows={[
+					{ label: 'Fade', value: '240 ms · text, colour' },
+					{ label: 'Lock', value: '120 ms · ticks, switches' },
+					{ label: 'Settle', value: '420 ms · taking a place' },
+					{ label: 'Rise', value: '900 ms · a body, a figure' },
+					{ label: 'Stagger', value: '28 ms · between siblings' },
+					{ label: 'Ease out', value: 'fast out, soft landing' }
+				]}
+			/>
+			<p class="note">Use <code>.sol-settle</code> with <code>--i</code>, <code>.sol-stagger</code> on a list, <code>.sol-fade</code> on changed text, and <code>use:count</code> on a display figure.</p>
+		</Card>
 	</div>
 </section>
 
@@ -406,6 +469,39 @@
 	.note {
 		font-size: var(--text-s);
 		color: var(--text-quiet);
+	}
+
+	.note code {
+		font-family: inherit;
+		color: var(--text-value);
+	}
+
+	.demo-list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		color: var(--text-value);
+	}
+
+	.demo-list li {
+		min-height: 36px;
+		display: flex;
+		align-items: center;
+		border-bottom: 1px solid var(--line);
+	}
+
+	.figure {
+		display: flex;
+		align-items: baseline;
+		gap: var(--s-3);
+	}
+
+	.big {
+		font-weight: var(--weight-display);
+		font-size: var(--text-2xl);
+		line-height: 1;
+		letter-spacing: var(--track-display);
+		font-variant-numeric: tabular-nums;
 	}
 
 	@media (max-width: 720px) {

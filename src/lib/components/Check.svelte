@@ -1,4 +1,4 @@
-<!-- One checklist row: a square box, the label, and a short note on the right. -->
+<!-- One checklist row: a square box, the label, and a short note on the right. The tick draws itself in. -->
 <script lang="ts">
 	interface Props {
 		label: string;
@@ -23,11 +23,13 @@
 >
 	<span class="box" class:on={checked} aria-hidden="true">
 		{#if checked}
-			<svg width="10" height="10" viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2.4"></path></svg>
+			<svg width="10" height="10" viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7" pathLength="1" fill="none" stroke="currentColor" stroke-width="2.4"></path></svg>
 		{/if}
 	</span>
 	<span class="label" class:done={checked}>{label}</span>
-	{#if meta}<span class="sol-quiet">{meta}</span>{/if}
+	{#if meta}
+		{#key meta}<span class="sol-quiet sol-fade">{meta}</span>{/key}
+	{/if}
 </button>
 
 <style>
@@ -70,16 +72,43 @@
 		color: var(--space);
 		transition:
 			background var(--lock) var(--ease),
-			border-color var(--lock) var(--ease);
+			border-color var(--lock) var(--ease),
+			transform var(--lock) var(--ease);
 	}
 
-	.check:hover .box {
+	.check:hover:not(:disabled) .box {
 		border-color: var(--text-bright);
+	}
+
+	.check:active:not(:disabled) .box {
+		transform: scale(0.85);
 	}
 
 	.box.on {
 		border-color: var(--text);
 		background: var(--text);
+		animation: lock var(--settle) var(--ease-out);
+	}
+
+	@keyframes lock {
+		30% {
+			transform: scale(1.18);
+		}
+	}
+
+	.box path {
+		stroke-dasharray: 1;
+		animation: draw calc(var(--lock) * 2) var(--ease-out) both;
+		animation-delay: var(--lock);
+	}
+
+	@keyframes draw {
+		from {
+			stroke-dashoffset: 1;
+		}
+		to {
+			stroke-dashoffset: 0;
+		}
 	}
 
 	.label {

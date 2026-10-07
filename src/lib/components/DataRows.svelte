@@ -1,4 +1,4 @@
-<!-- Facts as `Label: value`. Semibold says what it is; light says what it is now. -->
+<!-- Facts as `Label: value`. Semibold says what it is; light says what it is now. A value that changes fades to the new one. -->
 <script lang="ts">
 	import type { Row } from '../types.js';
 
@@ -13,7 +13,10 @@
 
 <dl class="rows {size}" style:text-align={align}>
 	{#each rows as row, i (i)}
-		<div><dt>{row.label}:</dt> <dd class:keep={row.keepCase}>{row.value}</dd></div>
+		<div>
+			<dt>{row.label}:</dt>
+			{#key row.value}<dd class="sol-fade" class:keep={row.keepCase}>{row.value}</dd>{/key}
+		</div>
 	{/each}
 </dl>
 

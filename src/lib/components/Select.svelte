@@ -1,4 +1,4 @@
-<!-- A label and a choice, underlined like a field. -->
+<!-- A label and a choice, underlined like a field. Focus lights the line from the left. -->
 <script lang="ts">
 	import type { HTMLSelectAttributes } from 'svelte/elements';
 	import type { Option } from '../types.js';
@@ -60,6 +60,7 @@
 		font-weight: var(--weight-value);
 		appearance: none;
 		cursor: pointer;
+		transition: border-color var(--fade) var(--ease);
 	}
 
 	select:hover {
@@ -69,7 +70,24 @@
 	select:focus-visible {
 		outline: none;
 		border-color: var(--text-bright);
-		box-shadow: 0 1px 0 var(--text-bright);
+	}
+
+	.control::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		height: 1px;
+		background: var(--text-bright);
+		transform: scaleX(0);
+		transform-origin: left;
+		transition: transform var(--settle) var(--ease-out);
+		pointer-events: none;
+	}
+
+	.control:focus-within::after {
+		transform: scaleX(1);
 	}
 
 	option {
@@ -83,6 +101,11 @@
 		top: 50%;
 		translate: 0 -50%;
 		pointer-events: none;
+		transition: transform var(--settle) var(--ease-out);
+	}
+
+	.control:hover svg {
+		transform: translateY(1px);
 	}
 
 	.hint {

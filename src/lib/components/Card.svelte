@@ -1,4 +1,4 @@
-<!-- A group, marked by two corner ticks instead of a box. -->
+<!-- A group, marked by two corner ticks instead of a box. The ticks lock on as the card appears. -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import WorldGlyph from './WorldGlyph.svelte';
@@ -59,18 +59,29 @@
 		height: 14px;
 		border: 0 solid var(--tick);
 		pointer-events: none;
+		animation: lock var(--settle) var(--ease-out) both;
+		animation-delay: calc(var(--settle) / 2);
 	}
 
 	.card::before {
 		left: -1px;
 		top: -1px;
 		border-width: 1px 0 0 1px;
+		transform-origin: top left;
 	}
 
 	.card::after {
 		right: -1px;
 		bottom: -1px;
 		border-width: 0 1px 1px 0;
+		transform-origin: bottom right;
+	}
+
+	@keyframes lock {
+		from {
+			opacity: 0;
+			transform: scale(0.3);
+		}
 	}
 
 	header {
@@ -102,7 +113,15 @@
 		transition: color var(--fade) var(--ease);
 	}
 
+	.open svg {
+		transition: transform var(--settle) var(--ease-out);
+	}
+
 	.open:hover {
 		color: var(--text-bright);
+	}
+
+	.open:hover svg {
+		transform: translate(1px, -1px);
 	}
 </style>

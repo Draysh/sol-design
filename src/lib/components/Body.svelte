@@ -148,13 +148,14 @@
 		height: auto;
 		margin: -35%;
 		aspect-ratio: 1;
-		animation: rise var(--fade, 240ms) var(--ease, ease) both;
-		animation-duration: calc(var(--fade, 240ms) * 4);
+		animation: rise var(--rise, 900ms) var(--ease-out, ease) both;
 	}
 
+	/* A body comes up out of the dark, a touch closer as it brightens. */
 	@keyframes rise {
 		from {
 			opacity: 0;
+			transform: scale(0.97);
 		}
 	}
 </style>
