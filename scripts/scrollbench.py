@@ -18,8 +18,8 @@ Prints the screen's refresh rate, the frames painted per second while
 scrolling, the median and slow gaps between painted frames, how many gaps
 were long enough to see as a stutter, `hovers` and `moves`.
 
-The window is set up the way the apps set up theirs (`smooth_frames` in each
-app's lib.rs), so a change to that is measured here first:
+The window is set up the way the apps set up theirs (page updates at the
+screen's rate, not near 60), so a change to that is measured here first:
 
     BENCH_NEAR60=1     keep WebKit's cap of page updates near 60 a second
     BENCH_SMOOTH=0     turn WebKit's smooth wheel scrolling off
@@ -27,9 +27,21 @@ app's lib.rs), so a change to that is measured here first:
     BENCH_W, BENCH_H   the window's size (default 1266 × 840)
     BENCH_LABEL        the window's title, to tell runs apart while watching
     BENCH_WHEEL=8      wheel notches a second (default 8)
+    BENCH_GPU=1        print webkit://gpu instead: which vblank monitor WebKit
+                       runs on (DRM at the screen's rate, or its 60 Hz timer)
     GDK_BACKEND        wayland (default, as the apps run) or x11
+    WEBKIT_FORCE_VBLANK_TIMER=1
+                       WebKit's 60 Hz timer, for comparison
     WEBKIT_DISABLE_DMABUF_RENDERER=1
                        software rendering, for comparison; never ship it
+
+Where the driver has no drmWaitVBlank (NVIDIA), WebKit paints 60 frames a
+second whatever the page does, and so does this bench: the apps get past it
+with their own drmWaitVBlank (orbit's `frames` module), which the bench can
+only borrow by preloading it:
+
+    (cd ../kit/orbit && cargo build --release --features app --example frames)
+    LD_PRELOAD=../kit/orbit/target/release/examples/libframes.so scripts/scrollbench.py …
 """
 import json
 import os
@@ -43,7 +55,7 @@ gi.require_version('Gtk', '3.0')
 gi.require_version('Gdk', '3.0')
 from gi.repository import Gdk, GLib, Gtk, WebKit2  # noqa: E402
 
-url = sys.argv[1]
+url = 'webkit://gpu' if os.environ.get('BENCH_GPU') == '1' else sys.argv[1]
 setup = sys.argv[2] if len(sys.argv) > 2 else ''
 seconds = float(sys.argv[3]) if len(sys.argv) > 3 else 4
 near60 = os.environ.get('BENCH_NEAR60') == '1'
@@ -187,8 +199,17 @@ def start():
 	return False
 
 
+def gpu_page(v, res):
+	value = v.evaluate_javascript_finish(res)
+	print(value.to_string() if value and value.is_string() else '(nothing)')
+	Gtk.main_quit()
+
+
 def loaded(v, event):
 	if event == WebKit2.LoadEvent.FINISHED:
+		if url == 'webkit://gpu':
+			GLib.timeout_add(500, lambda: (view.evaluate_javascript('document.body.innerText', -1, None, None, None, gpu_page), False)[1])
+			return
 		if setup:
 			GLib.timeout_add(1500, lambda: (view.evaluate_javascript(setup, -1, None, None, None, None, None), False)[1])
 		GLib.timeout_add(11500 if setup else 3000, start)

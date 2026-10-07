@@ -254,8 +254,18 @@ Two things it found, so nobody looks for them again:
 - While the pane scrolls, the Shell makes its content ignore the pointer
   until the pane has been still for a moment. Otherwise covers lifting and
   dropping as they slide under a still pointer read as the page jumping.
-- The apps' window paints at most about 60 frames a second, whatever the
-  monitor's rate. Tauri's Linux webview is WebKitGTK on GTK3, and GTK3 paces
-  OpenGL drawing on Wayland with its own 60 Hz timer (GTK4 doesn't). No
-  WebKit or app setting lifts it, and `WEBKIT_DISABLE_DMABUF_RENDERER`
-  only swaps the GPU for software rendering at the same rate. Never set it.
+- WebKitGTK paces its frames on the display's vertical blank, which it
+  waits for with libdrm's `drmWaitVBlank`. Where the driver has no such
+  thing (NVIDIA's doesn't) or WebKit can't match the monitor to a CRTC, it
+  falls back to a timer fixed at 60 frames a second whatever the screen
+  does, and no setting raises it; `WEBKIT_DISABLE_DMABUF_RENDERER` only
+  swaps the GPU for software rendering at the same rate. It is not Tauri
+  or GTK3: GTK follows the compositor's frame clock. The apps' answer is
+  orbit's `frames` module: each app exports its own `drmWaitVBlank`, which
+  paces at the CRTC's real rate when libdrm's fails, and turns off WebKit's
+  preference for page updates near 60 a second. The bench runs the system
+  WebKit without the apps' binary, so to measure what the apps do, preload
+  the shim built from orbit: `LD_PRELOAD=…/libframes.so` (its `frames`
+  example). `BENCH_GPU=1` prints `webkit://gpu`, which names the vblank
+  monitor WebKit is using and why; `WEBKIT_FORCE_VBLANK_TIMER=1` brings the
+  60 Hz timer back, to compare.
