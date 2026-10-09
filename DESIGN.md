@@ -263,31 +263,37 @@ Rules for an app's own motion:
 
 ## Building an app the same way
 
-Sol is the one server; each world is an app of its own (a Tauri desktop app
-now, a phone app later) that pairs with Sol and keeps its data there. Every
-world's app is built the same way, starting from `sol-planet-template`:
+Sol is the one server; each world is an app of its own (a desktop app in
+Rust and Qt Quick now, a phone app later) that pairs with Sol and keeps its
+data there. Every world's app is built the same way, starting from
+`kit/template`, with the screens from sol-quick's `Sol.Design` module (the
+same language as this package, drawn by Qt's scene graph: real blur behind
+the Connect screen, a shader lighting every world's photo, glows that are
+light, not pictures of light):
 
-1. The root layout is `<Shell world="<id>" links={…} path={…}>`, with the
-   app's own sections (each with a `hint`) in the sidebar, its doors
-   (`doors`: Sol, and its moons or planet, through `orbit::doors`), its
-   search as `search`, its own keys as `shortcuts`, a `<LinkStatus>` in
-   `actions`, and anything that is always there (a player) in `footer`.
-2. The first screen is a `<Sheet>` with the world's callout and data rows;
+1. The window is an `AppWindow` with the app's own sections (each with a
+   `hint`) in the sidebar, its search as `search`, its own keys as
+   `shortcuts`, and anything that is always there (a player) as `footer`.
+   The doors (Sol, and its moons or planet, through `orbit::doors`) and the
+   `LinkStatus` come by themselves.
+2. The first screen is a `Sheet` with the world's callout and data rows;
    a planet's shows its installed moons under the name, a moon's its planet.
-3. Other pages start with a `<PageHead>`; everything else is `Card`s in the
-   standard grid, built from these components. No custom colours, fonts,
-   shadows or rounded boxes.
+3. Other pages are `Screen`s that start with a `PageHead`; everything else
+   is `Card`s in the standard `Grid`, built from these components. No
+   custom colours, fonts, shadows or rounded boxes: every token is in
+   `Theme`.
 4. One `primary` button per screen at most.
-5. Data comes from Sol through `orbit::client` on the app's Rust side; the UI
-   never talks to Sol directly.
+5. Data comes from Sol through `orbit::link::Link` on the app's Rust side,
+   called from QML as commands (`Sol.call`); the UI never talks to Sol
+   directly.
 6. Every event the app posts carries a `summary` sentence.
 7. Widgets for Sol's overview are `WidgetView`s the app pushes; items with
    `toggle` can be ticked from the overview and arrive in the app's inbox.
-8. The app's Settings page has an `<AppUpdates>` card: the app installs
+8. The app's Settings page has an `AppUpdates` card: the app installs
    itself from there and takes its updates through Sol (`orbit::updates`).
 9. A moon runs by itself whenever its planet runs (`orbit::moons`): nobody
    has to open it for its work to happen. Its Settings page has a
-   `<WithPlanet>` card to turn that off on a computer.
+   `WithPlanet` card to turn that off on a computer.
 10. The connections a world works best with are in its manifest
     (`connections`, with a `why` each): Sol offers them on the world's page
     and under Connections, to make in one click. A moon lists the ones to
@@ -295,8 +301,13 @@ world's app is built the same way, starting from `sol-planet-template`:
     the person to Sol rather than explaining the builder.
 11. The Connect screen (the first thing a new copy shows) says what the
     world is for under its name, in the tagline's words.
+12. Lists arrive with the stagger (`Settle`); a card's figures count up
+    (`Display`); bars grow from their baseline; a page's hero drifts a
+    little with the scroll. Motion says what changed and no more: the
+    durations in `Theme` (`fade`, `lock`, `settle`, `rise`) are the only ones.
 
-Sol's own web app follows the same rules, with `world="sol"`.
+Sol's own web app follows the same rules, with `world="sol"`, from this
+package's Svelte components.
 
 ## Adding a world
 
@@ -311,8 +322,13 @@ Add an entry to `src/lib/worlds.ts` and a photo to `src/lib/assets/`:
 
 ## Checking a screen
 
-Every Sol app's window is WebKitGTK on Linux, which clips and composites
-differently from Chromium. `scripts/shot.py URL out.png [W H [wait [js]]]`
+A world's app draws its own screens (Qt Quick), so check one in the app:
+`SOL_PREVIEW=1 SOL_SHOT=out.png SOL_SHOT_AFTER=2500 SOL_SHOT_PATH=/ cargo run`
+saves the page as it renders, and `journalctl --user -S -1min | grep
+'<world>['` shows the QML errors, which never reach the terminal. The rest
+of this section is about Sol's own web app, whose window in the desktop
+shell is WebKitGTK on Linux, which clips and composites differently from
+Chromium. `scripts/shot.py URL out.png [W H [wait [js]]]`
 renders a page in WebKitGTK (on Wayland, as the apps run) and saves it;
 look at that before calling a screen done.
 
