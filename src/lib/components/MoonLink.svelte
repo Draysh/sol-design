@@ -40,7 +40,7 @@
 		letter-spacing: var(--track-caps);
 		text-transform: uppercase;
 		text-decoration: none;
-		color: #e6e6e6;
+		color: var(--text);
 		transition: color var(--fade) var(--ease);
 	}
 

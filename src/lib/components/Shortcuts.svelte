@@ -79,7 +79,7 @@
 		display: grid;
 		place-items: center;
 		padding: var(--s-4);
-		background: rgb(0 0 0 / 0.6);
+		background: color-mix(in srgb, var(--veil) 60%, transparent);
 	}
 
 	/* The rest of the window: a click there closes the sheet. */
@@ -97,7 +97,8 @@
 		max-height: calc(100dvh - 2 * var(--s-4));
 		overflow-y: auto;
 		padding: 18px 20px 20px;
-		background: var(--space);
+		border-radius: var(--radius-l);
+		background: linear-gradient(to bottom, var(--raised-top), var(--raised));
 		box-shadow: inset 0 0 0 1px var(--line-mid);
 		outline: none;
 	}

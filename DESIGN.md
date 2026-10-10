@@ -4,16 +4,24 @@ Every Sol app looks and behaves as if it came from one observatory. This page
 holds the rules. The components in this package already follow them, so the
 fastest way to obey a rule is to use the component instead of rebuilding it.
 
+Sol's web app and the worlds' desktop apps share one look: the same night and
+day palettes (sol-quick's `Theme.qml`, this package's `tokens.css`), the same
+corners, the same raised panels, and the same lit bodies (sol-quick's
+`body.frag`, ported to WebGL in `body-gl.ts`) from the same world data
+(`Worlds.qml`, from which `worlds.gen.ts` is written).
+
 The visual reference is the brand canvas (direction 03C, "Observatory"):
-mission photographs of real bodies lit from one side on pure black, a name
+mission photographs of real bodies lit from one side on a night sky, a name
 inside a reticle, short callouts, and facts written as `Label: value`.
 
 ## Principles
 
 1. **One light.** Every body is lit from one side. Darkness is the default;
    light means attention.
-2. **Black is space.** The ground is pure black. Groups get corner ticks, not
-   boxes. Nothing is filled except the screen's main action.
+2. **Night is space.** The ground is a night sky in three depths, tinted a
+   little by the world: the chrome deepest, the pane, and panels raised off
+   it. By day it is a pale sky. Nothing is filled except the screen's main
+   action.
 3. **Name in the reticle.** Every world names itself inside a reticle whose
    axis leans at that world's real axial tilt.
 4. **Label: value.** Facts read as label and value. Semibold says what it is;
@@ -85,8 +93,8 @@ the name, then the callout and the strip of facts settle after it.
 
 Everything below is the app's working surface: `Card`s in a grid, each
 other page starting with a `<PageHead>` toolbar that stays put while the
-page scrolls. The toolbar is solid black with a short fade under it, never a
-blur: what scrolls under it must cost the compositor nothing.
+page scrolls. The toolbar is the deep sky (`--deep`) with a short fade under
+it, never a blur: what scrolls under it must cost the compositor nothing.
 
 On a phone the body rises from the bottom, lit from above, the callout
 drops out, and the strip keeps two blocks.
@@ -110,16 +118,35 @@ uses `--font-jp` (Shippori Mincho) at the same size as the text around it.
 
 ## Light and colour
 
-| Token | Value | Use |
-| --- | --- | --- |
-| `--space` | `#000000` | Every background |
-| `--text` | `#F2F2F2` | Text, primary button fill |
-| `--text-value` | `#BDBDBD` | Values and reading text |
-| `--text-quiet` | `#A8A8A8` | Secondary facts, units, dates |
-| `--text-faint` | `#5A5A5A` | Disabled |
-| `--line` / `--line-mid` / `--line-strong` | white at 8 / 14 / 45 % | Hairlines |
-| `--danger` / `--danger-text` | `#FF6B5A` / `#FF8A7A` | Errors only |
-| `--world` | the world's colour | Glow, glyphs, one accent line. Never text, never fills |
+The sky comes in three depths, at night or by day, as in the apps
+(`Theme.qml`): each is made from the sky and the world's colour, so each app's
+sky is tinted a little by its own world. Elements that set a world of their
+own (`--world` on the Shell, a Sheet) carry the class `sol-sky`, which works
+the depths out again from it.
+
+| Token | Night | Day | Use |
+| --- | --- | --- | --- |
+| `--night` | `#0C0E13` | `#EEF1F5` | The sky the depths are made from |
+| `--space` | night with 5 % of the world | day with 7 % | The pane, where the work is |
+| `--deep` | a step deeper (×0.69) | ×0.95 | The chrome: the sidebar, a Sheet's band and strip, a PageHead |
+| `--raised` / `--raised-top` | white at 3.5 / 6 % over the pane | white at 70 / 90 % | A panel off the pane: a Card, lit a little from above |
+| `--ink` | white | black | What overlays and hairlines are drawn in, at an alpha |
+| `--line` / `--line-mid` / `--line-strong` | ink at 7 / 12 / 36 % | 9 / 15 / 36 % | Hairlines |
+| `--text` / `--text-bright` | `#E6E8ED` / `#FFFFFF` | `#1B1F27` / `#07080B` | Text and values; names |
+| `--text-value` | `#C3C7CF` | `#3B414D` | Reading text |
+| `--text-quiet` / `--text-faint` | `#8B919D` / `#4F5561` | `#666D7B` / `#A6ABB5` | A fact's label, units, dates; disabled |
+| `--text-world` | text with 55 % of the world | the world deepened, 75 % | A panel's title, the world's role |
+| `--accent` | the world | no lighter than a mid-tone | Small marks: the current section's light, a glyph |
+| `--danger` / `--danger-text` | `#FF6B5A` / `#FF8A7A` | `#D9493A` / `#B8352A` | Errors only |
+| `--world` | the world's colour | | Glow, glyphs, one accent line. Never fills |
+
+**Night and day.** Night is the default. Day comes from the desktop
+(`prefers-color-scheme`), or from the person's choice in this browser:
+`light.mode` (`light.svelte.ts`, shown as `<LightChoice />` on Sol's
+Settings) is "system", "sun" (day from 07:00 to 19:00), "night" or "day",
+the same choices the apps offer under Settings → On this device, kept in
+`localStorage` as `sol.light`. What it comes to is set on the root as
+`data-light`; Sol's `app.html` sets it before anything paints.
 
 Colour comes only from the bodies. Each world's colour is sampled from its own
 photograph:
@@ -131,16 +158,28 @@ photograph:
 | Luna | `#FFFFFF` | 6.68° | left | Terra's quieter twin |
 | Saturn | `#E6CF9E` | 26.73° | (photo) | Movies, series and anime |
 | Titan | `#FFB06A` | 0.3° | upper right | Recommendations, made at home |
-| Mercury | `#F2F2F2`, split red/blue rim | 0.03° | above | Japanese |
+| Mercury | `#F2F2F2` | 0.03° | above | Japanese |
 | Neptune | `#6F9BFF` | 28.32° | upper left | Music through Navidrome |
-| Triton | `#CFE8FF` | 157° (retrograde) | upper left | Radio and discovery |
+| Triton | `#E4D1DD` | 157° (retrograde) | upper left | Radio and discovery |
 
-The lighting recipe (in `Body.svelte`): the photo is clipped to a circle; a
-blurred black circle offset away from the light makes a soft terminator; a
-blurred stroke in the world's colour, masked to the lit side, makes the limb
-glow. A film grain of dark specks covers everything: invisible over black,
-a fine texture over photographs and light type. It is one plain layer with
-no blend mode, so scrolling under it is free.
+The lighting (in `Body.svelte`, through `body-gl.ts`, the apps' `body.frag`
+in WebGL): each world's photograph is laid on a sphere (`fit` says where the
+disc is in the photograph, and turns one with a terminator of its own to face
+its light) and lit by a distant sun from `light` at `phase`. The terminator is
+soft where there is air (`air`) and crisp on rock; the night side is nearly
+black, and by day lets the sky through, as the moon does in daylight; a world
+with an atmosphere gets a thin rim of it on the sunny limb, and Titan's haze
+rings even its night side. Sol is a star: its photograph tinted, a darker
+limb, a corona. Saturn is its photograph used whole, laid on as light, so its
+black becomes the sky. Terra and Luna follow the real sky (`skyOf`): Luna
+shows tonight's phase, Terra the local hour. Clouds drift over Terra,
+Neptune and Titan and Sol's corona flickers, on a body at least 120 px wide
+while it is on screen. One hidden WebGL canvas draws every body on the page;
+without WebGL the photograph shows clipped to a circle.
+
+A film grain of dark specks covers everything: a fine texture over the night
+and over photographs, a touch only by day. It is one plain layer with no
+blend mode, so scrolling under it is free.
 
 ## Layout
 
@@ -149,8 +188,16 @@ no blend mode, so scrolling under it is free.
 - Spacing steps: 4, 8, 16, 24, 40, 64, 112 (`--s-1` … `--s-7`). A page
   pads `var(--s-4) var(--margin) var(--s-6)`.
 - Cards sit in an auto-fit grid, `minmax(300px, 1fr)`, 24 px gaps.
-- Corners are square. Only discs and round icon buttons are round.
-- Lines are 1 px, never thicker. No drop shadows: light comes from bodies.
+- Corners come from one scale, so a thing inside another rounds with it (an
+  inner corner is about the outer one less the room between them):
+  `--radius-s` 4 px (a check's box, a pairing code, a link's focus ticks),
+  `--radius-m` 6 px (a button, the way back, a sidebar row), `--radius` 10 px
+  (a card, a notice), `--radius-l` 14 px (a big surface on its own: the keys
+  sheet, the sign-in panel). Pills (a round button, a switch, a count) stay
+  pills; hairlines and rules stay straight.
+- Lines are 1 px, never thicker. No drop shadows on panels: they are raised
+  by their light (a gradient from `--raised-top`) and a hairline; light comes
+  from bodies.
 - Pointer controls (buttons, fields, sidebar rows) are 36 px (`--control`);
   anything meant for a thumb stays 44 px (`--target`).
 - Headings in the chrome are small capitals; big type is for names in
@@ -166,10 +213,11 @@ no blend mode, so scrolling under it is free.
 | `WayBack` | The way back, on an opened page with a header of its own (`PageHead` has it already) |
 | `Body` | A lit world anywhere else, e.g. the dashboard's corner sun |
 | `Reticle` | Framing a name or one key figure |
-| `Card` | A group of related things, marked by corner ticks |
+| `Card` | A group of related things: a raised panel, its title in the world's light over a hairline, ticks that lock on under the pointer |
 | `Button` | `primary` once per screen for the main action; `ghost` otherwise; `quiet` for low-stakes actions; `round` for icon-only controls (always with `aria-label`) |
 | `Field` | Text input with label; errors say what to do |
 | `Select` | A choice from a short list, underlined like a field |
+| `LightChoice` | Night or day in this browser: the apps' four choices |
 | `TextArea` | Writing more than a line, e.g. a diary; grows as you type |
 | `Toggle` | An on/off setting that applies at once or with its form |
 | `Check` | One checklist row |
@@ -186,8 +234,11 @@ no blend mode, so scrolling under it is free.
 | `AppUpdates` | A world app's Settings: installing itself, and its updates through Sol |
 | `WithPlanet` | A moon's Settings: running with its planet, without a window (`orbit::moons`) |
 
-Focus is visible everywhere: buttons lock two corner ticks on; other controls
-get a 1 px white outline 4 px out.
+Focus is visible everywhere and follows the shape it marks: buttons and links
+lock two corner ticks on, bent round their own corners a few pixels out
+(`.sol-ticks`, `--tick-radius`); a switch and a check get a hairline round
+the switch or the box; fields light their underline; anything else gets a
+1 px outline 4 px out, rounded with it.
 
 ## Motion
 
@@ -206,7 +257,7 @@ the Loader and a busy button keep moving, because the app is.
 The easing for settling and rising is `--ease-out`: fast out, a long soft
 landing. The components already move this way: the Shell's light glides to
 the new section and each screen settles into the pane; the Sheet's body
-rises and the Reticle draws itself; Cards lock their ticks on; Check draws
+rises and the Reticle draws itself; a Card's ticks lock on under the pointer; Check draws
 its tick; Progress fills to its value; RingGauge draws its arcs; a Field's
 line lights from the left on focus; a Notice drops in and a hairline runs
 out as its time does; DataRows fade a value that changed.
@@ -280,7 +331,7 @@ light, not pictures of light):
    a planet's shows its installed moons under the name, a moon's its planet.
 3. Other pages are `Screen`s that start with a `PageHead`; everything else
    is `Card`s in the standard `Grid`, built from these components. No
-   custom colours, fonts, shadows or rounded boxes: every token is in
+   custom colours, fonts, shadows or corners: every token is in
    `Theme`.
 4. One `primary` button per screen at most.
 5. Data comes from Sol through `orbit::link::Link` on the app's Rust side,
@@ -311,26 +362,42 @@ package's Svelte components.
 
 ## Adding a world
 
-Add an entry to `src/lib/worlds.ts` and a photo to `src/lib/assets/`:
+A world's data lives in one place, sol-quick's `qml/Worlds.qml`: add its
+entry there (name, role, tagline, colour, tilt, photograph, `fit`, `air`,
+the hero, portrait and companions on the sheet, the callout), then write
+this package's copy from it and give it a photograph here too:
+
+```sh
+node scripts/worlds-from-qml.mjs   # writes src/lib/worlds.gen.ts; commit it
+```
+
+and add the photograph to `src/lib/assets/` and to `pictures` in
+`src/lib/worlds.ts`, under the name `Worlds.qml` gives it.
 
 - **Photo:** public domain or openly licensed (credit it in `CREDITS.md`),
-  cropped tight to the disc, square, about 1200 px, WebP.
+  cropped tight to the disc, square, about 1200 px, WebP here, PNG in
+  sol-quick, the same crop in both (`fit` is measured on it).
 - **Colour:** sample the glow from the photo's lit limb.
 - **Tilt:** the body's real axial tilt.
 - **Hero placement:** in a 1600 × 900 frame, keep the centre (800, 450) clear
-  for the name, and let the body run off at least one edge.
+  for the name, and either show the body whole beside it (r about 170) or
+  let it rise as a horizon from the band's bottom edge.
 
 ## Checking a screen
 
 A world's app draws its own screens (Qt Quick), so check one in the app:
 `SOL_PREVIEW=1 SOL_SHOT=out.png SOL_SHOT_AFTER=2500 SOL_SHOT_PATH=/ cargo run`
 saves the page as it renders, and `journalctl --user -S -1min | grep
-'<world>['` shows the QML errors, which never reach the terminal. The rest
-of this section is about Sol's own web app, whose window in the desktop
-shell is WebKitGTK on Linux, which clips and composites differently from
-Chromium. `scripts/shot.py URL out.png [W H [wait [js]]]`
-renders a page in WebKitGTK (on Wayland, as the apps run) and saves it;
-look at that before calling a screen done.
+'<world>['` shows the QML errors, which never reach the terminal.
+
+Sol's own web app runs in any browser: look at it on a Sol started on a
+throwaway data folder (`sol serve --data-dir <tmp> --bind 127.0.0.1:<port>`,
+an account made with `SMOKE_FRESH=1 SETUP_CODE=<code from its log>
+scripts/smoke.sh`), night and day, and at the brand book (`npm run build`,
+then serve `build/`). The rest of this section is from when the worlds' apps
+were Svelte pages in WebKitGTK, which clips and composites differently from
+Chromium: `scripts/shot.py URL out.png [W H [wait [js]]]` renders a page in
+WebKitGTK (on Wayland) and saves it.
 
 `scripts/scrollbench.py URL [setup-js [seconds]]` scrolls the pane the way a
 person does, with mouse-wheel notches and the pointer resting over it, and

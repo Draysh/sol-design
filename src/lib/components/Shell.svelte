@@ -35,6 +35,7 @@
 	import { setContext, type Snippet } from 'svelte';
 	import { afterNavigate, beforeNavigate, goto } from '$app/navigation';
 	import { BACK, type BackContext, type BackTarget } from '../back.js';
+	import { light as daylight } from '../light.svelte.js';
 	import '../styles/index.css';
 	import type { Door, ShellLink, Shortcut } from '../types.js';
 	import { world as worldFor } from '../worlds.js';
@@ -67,6 +68,8 @@
 	}
 
 	let { world: id, links = [], home = '/', path, doors = [], search, shortcuts = [], actions, footer, children }: Props = $props();
+	// Night or day, as the person chose in this browser.
+	$effect(() => daylight.follow());
 	let keys = $state(false);
 	const w = $derived(worldFor(id));
 	let nav = $state<HTMLElement>();
@@ -289,11 +292,14 @@
 
 <svelte:window onkeydown={shortcut} onmouseup={mouse} />
 
-<div class="shell" style:--world={w.color}>
+<div class="shell sol-sky" style:--world={w.color}>
 	<nav class="side sol-chrome" aria-label="Main" bind:this={nav}>
 		<a class="brand" href={home} title={w.tagline || undefined}>
-			<span class="disc" aria-hidden="true"><Body world={id} label="" /></span>
-			<span class="brand-name">{w.name}</span>
+			<span class="disc" aria-hidden="true"><Body world={id} label="" animated={false} /></span>
+			<span class="brand-text">
+				<span class="brand-name">{w.name}</span>
+				{#if w.role}<span class="role">{w.role}</span>{/if}
+			</span>
 		</a>
 		{#if links.length}
 			<ul bind:this={list}>
@@ -377,15 +383,18 @@
 		grid-template-columns: var(--sidebar) minmax(0, 1fr);
 		height: 100dvh;
 		overflow: hidden;
+		background: var(--space);
+		color: var(--text);
 	}
 
+	/* The chrome: a step deeper than the pane. */
 	.side {
 		display: flex;
 		flex-direction: column;
 		min-height: 0;
 		padding: var(--s-2) 0 var(--s-3);
 		border-right: 1px solid var(--line);
-		background: var(--space);
+		background: var(--deep);
 	}
 
 	.brand {
@@ -408,6 +417,25 @@
 		width: 22px;
 		flex: none;
 		transition: transform var(--settle) var(--ease-out);
+	}
+
+	.brand-text {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+		line-height: 1.2;
+	}
+
+	/* What the world is for, in its light, under its name. */
+	.role {
+		overflow: hidden;
+		font-size: 10px;
+		font-weight: var(--weight-value);
+		letter-spacing: var(--track-caps);
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		color: var(--text-world);
 	}
 
 	.brand:hover .disc {
@@ -440,8 +468,9 @@
 		width: 2px;
 		margin: 9px 0;
 		height: calc(var(--control) - 18px);
-		background: var(--world);
-		box-shadow: 0 0 8px var(--world);
+		border-radius: 1px;
+		background: var(--accent);
+		box-shadow: 0 0 8px var(--accent);
 		opacity: 0;
 		pointer-events: none;
 	}
@@ -463,6 +492,7 @@
 		gap: 12px;
 		height: var(--control);
 		padding: 0 12px;
+		border-radius: var(--radius-m);
 		color: var(--text-quiet);
 		font-size: var(--text-s);
 		text-decoration: none;
@@ -523,7 +553,7 @@
 		margin-left: auto;
 		padding: 0 5px;
 		border-radius: 9px;
-		background: var(--world);
+		background: var(--text-world);
 		color: var(--space);
 		font-size: 10px;
 		font-weight: var(--weight-label);
@@ -556,6 +586,7 @@
 		height: var(--control);
 		padding: 0 12px;
 		border: 0;
+		border-radius: var(--radius-m);
 		background: transparent;
 		color: var(--text-quiet);
 		font-family: var(--font);
@@ -620,7 +651,8 @@
 
 	.foot {
 		flex: none;
-		background: var(--space);
+		border-top: 1px solid var(--line);
+		background: var(--deep);
 	}
 
 	@media (max-width: 760px) {
@@ -633,7 +665,7 @@
 			padding: 0;
 		}
 
-		.brand-name,
+		.brand-text,
 		.label,
 		.badge,
 		.actions {

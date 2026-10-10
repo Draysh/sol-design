@@ -29,14 +29,14 @@
 </script>
 
 <svg width={size} height={size} viewBox="0 0 96 96" role="img" aria-label={label}>
-	<circle cx="48" cy="48" r="44" fill="none" stroke="rgb(255 255 255 / 0.14)" stroke-width="1"></circle>
+	<circle cx="48" cy="48" r="44" fill="none" stroke="var(--line-mid)" stroke-width="1"></circle>
 	{#if outer.value > 0}
 		{#key outerArc}
 			<path class="arc" d={outerArc} pathLength="1" fill="none" stroke="var(--text)" stroke-width="1.5"></path>
 		{/key}
 	{/if}
 	{#if inner}
-		<circle cx="48" cy="48" r="34" fill="none" stroke="rgb(255 255 255 / 0.14)" stroke-width="1"></circle>
+		<circle cx="48" cy="48" r="34" fill="none" stroke="var(--line-mid)" stroke-width="1"></circle>
 		{#if inner.value > 0}
 			{#key innerArc}
 				<path class="arc inner" d={innerArc} pathLength="1" fill="none" stroke="var(--world)" stroke-width="1.5"></path>

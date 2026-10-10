@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/api/sol/backup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["download_backup"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sol/catalog": {
         parameters: {
             query?: never;
@@ -15,6 +31,22 @@ export interface paths {
         put?: never;
         post: operations["add_from_github"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sol/catalog/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["remove_from_catalog"];
         options?: never;
         head?: never;
         patch?: never;
@@ -52,6 +84,22 @@ export interface paths {
         patch: operations["update_connection"];
         trace?: never;
     };
+    "/api/sol/connections/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["connection_history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sol/devices": {
         parameters: {
             query?: never;
@@ -81,7 +129,7 @@ export interface paths {
         delete: operations["revoke"];
         options?: never;
         head?: never;
-        patch?: never;
+        patch: operations["rename_device"];
         trace?: never;
     };
     "/api/sol/events/recent": {
@@ -152,6 +200,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sol/logout/everywhere": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["logout_everywhere"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sol/me": {
         parameters: {
             query?: never;
@@ -161,6 +225,22 @@ export interface paths {
         };
         get: operations["me"];
         put: operations["update_me"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sol/me/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["change_password"];
         post?: never;
         delete?: never;
         options?: never;
@@ -211,6 +291,38 @@ export interface paths {
         put?: never;
         post: operations["decline"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sol/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_sessions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sol/sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["end_session"];
         options?: never;
         head?: never;
         patch?: never;
@@ -652,7 +764,10 @@ export interface components {
             /** Format: int64 */
             id: number;
             name: string;
-            /** @description `linux`, `windows`, `macos` or `android`; `None` for other files. */
+            /**
+             * @description `linux` for an app file; `None` for other files (signatures, the
+             *     manifest, files for systems the worlds don't ship for).
+             */
             platform?: string | null;
             /** Format: int64 */
             size: number;
@@ -660,6 +775,12 @@ export interface components {
         /** @description `GET /api/v1/changes?after=N`: every write after version `N`, oldest first. */
         ChangePage: {
             changes: components["schemas"]["Doc"][];
+            /**
+             * @description The id of Sol's database, made when Sol first started and again when
+             *     it is restored from a backup. Cursors (`next` here and in the inbox)
+             *     belong to one id: when it changes, start again from `0`.
+             */
+            database?: string | null;
             /** @description More changes are waiting; ask again straight away. */
             more: boolean;
             /**
@@ -689,7 +810,7 @@ export interface components {
             id: string;
             label: string;
         };
-        /** @description The `409` body when `if_version` didn't match. */
+        /** @description The `409` body when `if_version` didn't match (`error` is `conflict`). */
         Conflict: {
             current?: null | components["schemas"]["Doc"];
             error: string;
@@ -746,9 +867,16 @@ export interface components {
         };
         /** @description `GET /api/v1/me`: who this device is. */
         DeviceMe: {
+            /** @description The id of Sol's database (see [`crate::doc::ChangePage::database`]). */
+            database?: string | null;
             device_id: string;
             user: components["schemas"]["Person"];
             world: string;
+        };
+        /** @description A new name for a paired device, as the person calls it. */
+        DeviceRename: {
+            /** @description At most 64 characters; spaces at the ends are dropped. */
+            name: string;
         };
         Doc: {
             collection: string;
@@ -836,8 +964,13 @@ export interface components {
             label: string;
             required?: boolean;
         };
-        /** @enum {string} */
-        FieldKind: "text" | "url" | "secret" | "number" | "toggle" | "time";
+        /**
+         * @description What a setting or a parameter holds. A kind this build doesn't know
+         *     (from a newer world) reads as [`FieldKind::Unknown`]: Sol shows such a
+         *     setting with a note and doesn't take values for it.
+         * @enum {string}
+         */
+        FieldKind: "text" | "url" | "secret" | "number" | "toggle" | "time" | "unknown";
         GithubToken: {
             /** @description A token that can read the worlds' repositories; empty or null removes it. */
             token?: string | null;
@@ -862,10 +995,15 @@ export interface components {
             uptime_s: number;
             version: string;
         };
-        /** @description `GET /api/v1/inbox?after=N`. */
+        /** @description `GET /api/v1/inbox?after=N`: at most 100 deliveries after `N`. */
         InboxPage: {
+            /** @description The id of Sol's database (see [`crate::doc::ChangePage::database`]). */
+            database?: string | null;
             deliveries: components["schemas"]["Delivery"][];
-            /** Format: int64 */
+            /**
+             * Format: int64
+             * @description Send as `after` next time.
+             */
             next: number;
         };
         Item: {
@@ -886,7 +1024,7 @@ export interface components {
          * @description How a copy of an app was installed, which decides how it updates.
          * @enum {string}
          */
-        Kind: "portable" | "setup" | "deb" | "rpm";
+        Kind: "portable" | "unknown";
         LoginRequest: {
             password: string;
             username: string;
@@ -917,7 +1055,10 @@ export interface components {
             notes?: string | null;
             /** Format: date-time */
             published_at?: string | null;
-            /** @description The file's minisign signature, base64 as `tauri signer sign` writes it. */
+            /**
+             * @description The file's minisign signature: the `.minisig` text (two comment
+             *     lines and two base64 lines), itself encoded in base64.
+             */
             signature: string;
             /** Format: int64 */
             size: number;
@@ -930,7 +1071,10 @@ export interface components {
         PairRequest: {
             /** @description How the device appears in Sol, e.g. `Desktop` or `Lukas's phone`. */
             device: string;
-            /** @description `linux`, `windows`, `macos`, `android` or `ios`. */
+            /**
+             * @description The system it runs on: `linux` (what the worlds ship for). Sol takes
+             *     any short name and shows the ones it knows.
+             */
             platform?: string | null;
             /** @description The world the app is, e.g. `terra`. */
             world: string;
@@ -952,8 +1096,15 @@ export interface components {
             user: components["schemas"]["Person"];
             world: string;
         };
-        /** @description Answer to a claim that is still waiting for the person. */
+        PasswordChange: {
+            /** @description The password in use now. */
+            current: string;
+            /** @description At least 10 characters. */
+            password: string;
+        };
+        /** @description Answer to a claim that is still waiting for the person (`202`). */
         Pending: {
+            /** @description Always `pending`. */
             status: string;
         };
         /** @description A request to pair, as Sol's UI shows it. */
@@ -1007,7 +1158,7 @@ export interface components {
             version?: string | null;
         };
         /** @enum {string} */
-        ReleaseStatus: "ok" | "none" | "unreachable";
+        ReleaseStatus: "ok" | "none" | "unreachable" | "unknown";
         RemoveRequest: {
             /** @description Also delete everything the world keeps in Sol. Can't be undone. */
             delete_data?: boolean;
@@ -1015,6 +1166,44 @@ export interface components {
         Row: {
             label: string;
             value: string;
+        };
+        /**
+         * @description One time a connection ran: the event that set it off and what became of
+         *     the delivery it made.
+         */
+        Run: {
+            /** Format: date-time */
+            at: string;
+            /** @description The device that took it, while it is still paired. */
+            device?: string | null;
+            /**
+             * Format: int64
+             * @description The delivery's number in the target world's inbox.
+             */
+            n: number;
+            state: components["schemas"]["RunState"];
+            /** @description The event's own sentence, e.g. `Finished a review of 42 cards`. */
+            summary?: string | null;
+        };
+        /**
+         * @description Whether a run has reached the world it was for.
+         * @enum {string}
+         */
+        RunState: "taken" | "waiting";
+        /** @description A browser signed in to Sol. */
+        SessionInfo: {
+            /** Format: date-time */
+            created_at: string;
+            /** @description The session this request came with. */
+            current: boolean;
+            /** @description The browser and system, e.g. `Firefox on Linux`. */
+            device: string;
+            /** Format: date-time */
+            expires_at: string;
+            id: string;
+            /** Format: date-time */
+            last_seen?: string | null;
+            user_agent?: string | null;
         };
         Setting: {
             default?: unknown;
@@ -1041,6 +1230,11 @@ export interface components {
             shared_with: string[];
             /** @description The stored value; never sent for secrets. */
             value?: unknown;
+            /**
+             * @description Other installed worlds that ask for the same shared secret but don't
+             *     get it: Sol shares secrets only between the worlds built into it.
+             */
+            withheld_from: string[];
         };
         /** @description New values by key; `null` goes back to the default. */
         SettingsUpdate: {
@@ -1196,11 +1390,27 @@ export interface components {
             emits?: components["schemas"]["EventKind"][];
             /** @description Lowercase letters, digits and dashes; also the world's namespace. */
             id: string;
+            /**
+             * @description The oldest Sol the world works with, e.g. `1.2.0`; Sol won't install
+             *     it when it is older.
+             */
+            min_sol?: string | null;
             name: string;
             /** @description The planet a moon belongs to, e.g. `neptune` for Triton. */
             parent?: string | null;
+            /**
+             * Format: int32
+             * @description The protocol its app speaks ([`crate::PROTOCOL`] when it was built);
+             *     Sol won't install a world whose app it can't talk to.
+             */
+            protocol?: number | null;
             /** @description `owner/name` on GitHub, where releases and the app downloads live. */
             repo: string;
+            /**
+             * @description What it is for, in a word or three (`Habits and diary`): shown under
+             *     its name in the app menu and the tray.
+             */
+            role?: string | null;
             /** @description Settings people set once in Sol; every paired device reads them. */
             settings?: components["schemas"]["Setting"][];
             /** @description One line about what it is for. */
@@ -1208,6 +1418,12 @@ export interface components {
         };
         /** @description One world as the Worlds page shows it. */
         WorldSummary: {
+            /**
+             * @description Why Sol can't read the world's manifest; the manifest then holds
+             *     only the names Sol could still make out. Its apps can't pair or
+             *     sync until a Sol that reads it (or the world added again) fixes it.
+             */
+            broken?: string | null;
             /** @description Part of Sol's own catalog, rather than added from GitHub. */
             builtin: boolean;
             /**
@@ -1224,6 +1440,11 @@ export interface components {
              */
             last_seen?: string | null;
             manifest: components["schemas"]["WorldManifest"];
+            /**
+             * @description Why this Sol can't install the world: it needs a newer Sol, or its
+             *     app speaks a protocol this Sol doesn't.
+             */
+            unfit?: string | null;
         };
     };
     responses: never;
@@ -1234,6 +1455,26 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    download_backup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A tar of sol.db and worlds/<id>.db, for `sol restore` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/x-tar": unknown;
+                };
+            };
+        };
+    };
     add_from_github: {
         parameters: {
             query?: never;
@@ -1256,6 +1497,44 @@ export interface operations {
                 };
             };
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    remove_from_catalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sol forgets the world; adding it from GitHub again brings it back */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No world added from GitHub has that id */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description It is built in, or still installed */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1375,6 +1654,36 @@ export interface operations {
             };
         };
     };
+    connection_history: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The latest runs, newest first: what Sol keeps (30 days) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Run"][];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     list_devices: {
         parameters: {
             query?: never;
@@ -1410,6 +1719,47 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    rename_device: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeviceRename"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceInfo"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
             };
             404: {
                 headers: {
@@ -1525,6 +1875,24 @@ export interface operations {
             };
         };
     };
+    logout_everywhere: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Every session has ended, this one too */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     me: {
         parameters: {
             query?: never;
@@ -1571,6 +1939,53 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Me"];
+                };
+            };
+        };
+    };
+    change_password: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordChange"];
+            };
+        };
+        responses: {
+            /** @description Changed; every other session has ended */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The current password is wrong */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
                 };
             };
         };
@@ -1637,6 +2052,52 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    list_sessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionInfo"][];
+                };
+            };
+        };
+    };
+    end_session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
             };
         };
     };
@@ -1926,6 +2387,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
+            /** @description The world needs a newer Sol or protocol, or Sol can't read its manifest */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
         };
     };
     release: {
@@ -2154,6 +2624,14 @@ export interface operations {
                     "application/json": components["schemas"]["Conflict"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
         };
     };
     delete_doc: {
@@ -2185,6 +2663,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
         };
     };
     emit: {
@@ -2208,7 +2694,17 @@ export interface operations {
                     "application/json": components["schemas"]["Envelope"];
                 };
             };
+            /** @description Not a valid event, or its id is another world's */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The device's writes for now are used up; see Retry-After */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2328,7 +2824,25 @@ export interface operations {
                     "application/json": components["schemas"]["PairStarted"];
                 };
             };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The world isn't installed in Sol */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description No Sol-Protocol, or one Sol doesn't speak */
+            426: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2381,6 +2895,23 @@ export interface operations {
             };
             /** @description Expired, declined or unknown; start again */
             410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description No Sol-Protocol, or one Sol doesn't speak */
+            426: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2495,6 +3026,14 @@ export interface operations {
                 content?: never;
             };
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };

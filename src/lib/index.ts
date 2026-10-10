@@ -9,6 +9,7 @@ export { default as Check } from './components/Check.svelte';
 export { default as DataRows } from './components/DataRows.svelte';
 export { default as Field } from './components/Field.svelte';
 export { default as Grain } from './components/Grain.svelte';
+export { default as LightChoice } from './components/LightChoice.svelte';
 export { default as LinkStatus } from './components/LinkStatus.svelte';
 export { default as Loader } from './components/Loader.svelte';
 export { default as MoonLink } from './components/MoonLink.svelte';
@@ -28,6 +29,7 @@ export { default as WithPlanet } from './components/WithPlanet.svelte';
 export { default as WorldGlyph } from './components/WorldGlyph.svelte';
 
 export { count, type Count } from './actions/count.js';
-export { worlds, world, moonsOf, type World, type Placement, type Companion } from './worlds.js';
+export { worlds, world, moonsOf, kin, moonAt, skyOf, type World, type WorldData, type Placement, type Companion, type Light } from './worlds.js';
+export { light, lightModes, type LightMode } from './light.svelte.js';
 export { BACK, type BackContext, type BackTarget } from './back.js';
 export type { Row, Moon, Door, Shortcut, ShellLink, Option, AppHere, AppOffer, AppUpdateStatus } from './types.js';

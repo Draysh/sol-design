@@ -58,6 +58,16 @@
 		cursor: default;
 	}
 
+	/* Focus: arcs round the switch, not a box round the row. */
+	button:focus-visible {
+		outline: none;
+	}
+
+	button:focus-visible .track {
+		outline: 1px solid var(--text-bright);
+		outline-offset: 4px;
+	}
+
 	.track {
 		position: relative;
 		flex: none;

@@ -60,7 +60,7 @@
 	}
 
 	textarea:hover {
-		border-color: rgb(255 255 255 / 0.7);
+		border-color: rgb(var(--ink) / 0.7);
 	}
 
 	textarea:focus-visible {

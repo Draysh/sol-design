@@ -11,6 +11,7 @@
 		Check,
 		DataRows,
 		Field,
+		LightChoice,
 		LinkStatus,
 		MoonLink,
 		Progress,
@@ -21,6 +22,7 @@
 		Widget,
 		WorldGlyph,
 		count,
+		light,
 		moonsOf,
 		worlds,
 		type Row
@@ -118,7 +120,7 @@
 
 	const principles = [
 		['One light', 'Every body is lit from one side. Darkness is the default; light means attention.'],
-		['Black is space', 'The ground is pure black. Groups get corner ticks, not boxes; nothing is filled unless it is the action.'],
+		['Night is space', 'The ground is a night sky in three depths, tinted by the world: the chrome deepest, the pane, and the panels raised off it. Nothing is filled but the screen’s main action.'],
 		['Name in the reticle', 'Every world names itself inside a reticle whose axis leans at that world’s real tilt.'],
 		['Label: value', 'Facts read as label and value. Semibold says what it is; light says what it is now.']
 	];
@@ -126,7 +128,8 @@
 
 <header class="top">
 	<span class="sol-label">Sol · Design language</span>
-	<span class="sol-quiet">Observatory · v0.6</span>
+	<span class="sol-quiet">Observatory · the apps’ look · {light.day ? 'day' : 'night'}</span>
+	<div class="mode"><LightChoice /></div>
 </header>
 
 <Sheet
@@ -159,7 +162,7 @@
 
 <section>
 	<h2 class="head"><span class="num">02</span><span class="sol-label">Light</span></h2>
-	<p class="sol-prose lead">Colour comes only from the bodies. Each world’s glow is sampled from its own photograph and used for glow and icons, never for text or fills.</p>
+	<p class="sol-prose lead">Colour comes only from the bodies. Each world’s glow is sampled from its own photograph and used for glow, marks and a panel’s title, never for fills; the sky of each app is tinted a little by its world. The bodies are lit as in the apps: the photograph on a sphere, a terminator soft where there is air, a rim of atmosphere on the sunny limb, Sol’s corona, Saturn’s photograph laid on as light.</p>
 	<div class="grid eight">
 		{#each order as id (id)}
 			<div class="swatch" id={id}>
@@ -170,9 +173,9 @@
 		{/each}
 	</div>
 	<div class="grid three facts">
-		<DataRows rows={[{ label: 'Key light', value: 'one side only' }, { label: 'Terminator', value: 'blur 4.5 % of radius' }, { label: 'Limb glow', value: 'world colour, 2.4 % stroke' }]} />
-		<DataRows rows={[{ label: 'Space', value: '#000000' }, { label: 'Text', value: '#F2F2F2' }, { label: 'Value · quiet', value: '#BDBDBD · #A8A8A8' }]} />
-		<DataRows rows={[{ label: 'Lines', value: 'white at 8 % and 45 %' }, { label: 'Grain', value: 'dark specks, one layer' }, { label: 'This world', value: w.tagline }]} />
+		<DataRows rows={[{ label: 'Key light', value: 'one side only' }, { label: 'Terminator', value: 'soft with air, crisp on rock' }, { label: 'Atmosphere', value: 'a rim in the world’s colour' }]} />
+		<DataRows rows={[{ label: 'Night', value: '#0C0E13, 5 % world' }, { label: 'Day', value: '#EEF1F5, 7 % world' }, { label: 'Depths', value: 'deep · space · raised' }]} />
+		<DataRows rows={[{ label: 'Lines', value: 'ink at 7, 12 and 36 %' }, { label: 'Grain', value: 'dark specks, one layer' }, { label: 'This world', value: `${w.role} · ${w.tagline}` }]} />
 	</div>
 </section>
 
@@ -207,6 +210,15 @@
 				</Button>
 			</div>
 			<p class="note">One filled button per screen. Tab to a button to see the focus ticks lock on.</p>
+		</Card>
+
+		<Card title="Corners">
+			<div class="corners">
+				{#each [['S', 'var(--radius-s)', 'a check, a mark'], ['M', 'var(--radius-m)', 'a control, a row'], ['', 'var(--radius)', 'a panel'], ['L', 'var(--radius-l)', 'a sheet on its own']] as [size, radius, use] (radius)}
+					<div class="corner" style:border-radius={radius}><span class="sol-label">{size || 'Panel'}</span><span class="sol-quiet">{use}</span></div>
+				{/each}
+			</div>
+			<p class="note">One scale, so a thing inside another rounds with it. Pills stay pills; hairlines stay straight. Focus ticks bend round the corner they mark.</p>
 		</Card>
 
 		<Card title="Fields">
@@ -275,8 +287,8 @@
 	</div>
 	<div class="grid three facts">
 		<DataRows rows={[{ label: 'Steps', value: '8 · 16 · 24 · 40 · 64 · 112' }, { label: 'Margin', value: '16 to 96, fluid' }, { label: 'Targets', value: '44 px or more' }]} />
-		<DataRows rows={[{ label: 'Corners', value: 'square; round only for discs' }, { label: 'Lines', value: '1 px, never thicker' }, { label: 'Shadows', value: 'none; light comes from bodies' }]} />
-		<DataRows rows={[{ label: 'Chrome', value: 'solid black, never blurred' }, { label: 'Bars', value: 'stay put; the pane scrolls' }, { label: 'Grain', value: 'one layer over all' }]} />
+		<DataRows rows={[{ label: 'Corners', value: '4 · 6 · 10 · 14' }, { label: 'Lines', value: '1 px, never thicker' }, { label: 'Panels', value: 'raised, lit from above' }]} />
+		<DataRows rows={[{ label: 'Chrome', value: 'the deep sky, never blurred' }, { label: 'Bars', value: 'stay put; the pane scrolls' }, { label: 'Focus', value: 'ticks round the corner' }]} />
 	</div>
 </section>
 
@@ -345,8 +357,16 @@
 
 	.top {
 		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
 		justify-content: space-between;
+		gap: var(--s-3);
 		padding: var(--s-4) var(--margin);
+		background: var(--deep);
+	}
+
+	.mode {
+		width: 200px;
 	}
 
 	.picker {
@@ -363,6 +383,7 @@
 		min-height: var(--target);
 		padding: 0 14px;
 		border: 1px solid var(--line-mid);
+		border-radius: var(--radius-m);
 		background: transparent;
 		font-size: var(--text-xs);
 		letter-spacing: var(--track-caps);
@@ -435,7 +456,7 @@
 		flex-direction: column;
 		gap: 14px;
 		padding-top: 18px;
-		border-top: 1px solid rgb(255 255 255 / 0.3);
+		border-top: 1px solid var(--line-strong);
 	}
 
 	.swatch {
@@ -493,6 +514,21 @@
 	.note code {
 		font-family: inherit;
 		color: var(--text-value);
+	}
+
+	.corners {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: var(--s-2);
+	}
+
+	.corner {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		padding: 10px 12px;
+		border: 1px solid var(--line-mid);
+		background: var(--surface);
 	}
 
 	.demo-list {

@@ -61,7 +61,7 @@
 
 	.track::before {
 		right: 0;
-		background: rgb(255 255 255 / 0.2);
+		background: rgb(var(--ink) / 0.2);
 	}
 
 	/* The fill is scaled, never resized: the compositor's work. */

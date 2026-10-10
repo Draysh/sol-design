@@ -16,7 +16,8 @@
 		position: fixed;
 		inset: 0;
 		z-index: 100;
-		opacity: 0.14;
+		/* By day the specks show as speckle on paper: a touch only. */
+		opacity: var(--k-grain, 0.14);
 		pointer-events: none;
 		contain: strict;
 		will-change: transform;

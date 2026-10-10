@@ -6,28 +6,44 @@ import terra from './assets/disc-terra.webp';
 import titan from './assets/disc-titan.webp';
 import triton from './assets/disc-triton.webp';
 import saturn from './assets/saturn.webp';
+import { lit, rising, table } from './worlds.gen.js';
 
-/**
- * Where a body sits on a sheet. Landscape positions are in a 1600 × 900
- * frame, portrait ones in a 390-wide frame; both scale with the sheet's width.
+/*
+ * The worlds, as the design knows them. The data comes from sol-quick's
+ * `qml/Worlds.qml` (the one source for both kits): `worlds.gen.ts` is
+ * written from it by `scripts/worlds-from-qml.mjs`. This file adds the
+ * types, this package's pictures and the real sky.
+ *
+ * A sheet's band shows the middle of its frame: in landscape a 1600 × 900
+ * frame (about y 215..685 at any width; the bodies stop growing when the
+ * band stops), in portrait a 390-wide frame 580 tall (about y 120..460).
  */
-export interface Placement {
+
+/** Where the light comes from and how much of the disc it lights. */
+export interface Light {
+	/** Degrees clockwise from the top. */
+	light: number;
+	/** 0 is new, 1 is full. */
+	phase: number;
+}
+
+/** Where a body sits on a sheet, in the frame's units, and its light there. */
+export interface Placement extends Light {
 	cx: number;
 	cy: number;
 	r: number;
-	/** Where the light comes from, in degrees clockwise from the top. */
-	light: number;
-	/** How much of the disc is lit: 0 is new, 1 is full. */
-	phase: number;
 }
 
 export interface Companion extends Placement {
 	world: string;
 }
 
-export interface World {
+/** A world as Worlds.qml has it, with its photograph by name. */
+export interface WorldData {
 	id: string;
 	name: string;
+	/** What the app is for in a word or three, shown beside its name. */
+	role: string;
 	/** One line about what the app is for. */
 	tagline: string;
 	kind: 'star' | 'planet' | 'moon';
@@ -37,134 +53,51 @@ export interface World {
 	color: string;
 	/** Real axial tilt in degrees; the reticle's axis leans by it. */
 	tilt: number;
-	/** A tightly cropped square photo of the disc (or Saturn's full frame). */
 	image: string;
+	/** A disc on a sphere, a star, or a photograph used whole (Saturn). */
 	render: 'star' | 'disc' | 'photo';
-	/** Effects particular to one world. */
-	effect?: 'haze' | 'split-rim';
+	/** A haze that rings even the night side (Titan). */
+	effect?: 'haze';
+	/** What moves on a big body: clouds drifting, a corona flickering. */
+	live?: 'clouds' | 'corona';
+	/** How much atmosphere: 0 none, 1 Titan's haze. */
+	air?: number;
+	/**
+	 * Where the disc is in the photograph (centre and radius as fractions of
+	 * its width) and, for one with a terminator of its own, where its light
+	 * comes from (`lit`), so the body turns it to face its light.
+	 */
+	fit?: { x: number; y: number; r: number; lit?: number };
 	hero: Placement;
 	portrait: Placement;
+	/** The light where the body is small (the sidebar, a list). */
+	icon: Light;
 	/** Where the callout's text block starts, in the landscape frame. */
 	callout: { x: number; y: number; flip?: boolean };
 	companions?: Companion[];
 }
 
-/** Rising from the bottom of a phone screen, lit from above. */
-const rising: Placement = { cx: 195, cy: 600, r: 470, light: 0, phase: 0.08 };
+export interface World extends WorldData {
+	/** The photograph's address. */
+	image: string;
+}
 
-export const worlds: Record<string, World> = {
-	sol: {
-		id: 'sol',
-		name: 'Sol',
-		tagline: 'The hub: sign-in, worlds and events',
-		kind: 'star',
-		color: '#ff7a2e',
-		tilt: 7.25,
-		image: sun,
-		render: 'star',
-		hero: { cx: 1400, cy: 450, r: 540, light: 90, phase: 0.5 },
-		portrait: { cx: 195, cy: 720, r: 520, light: 0, phase: 1 },
-		callout: { x: 380, y: 250 }
-	},
-	terra: {
-		id: 'terra',
-		name: 'Terra',
-		tagline: 'Habits, diary and wellbeing',
-		kind: 'planet',
-		color: '#8ec5ff',
-		tilt: 23.44,
-		image: terra,
-		render: 'disc',
-		hero: { cx: 1080, cy: 420, r: 300, light: 90, phase: 0.55 },
-		portrait: rising,
-		callout: { x: 620, y: 250, flip: true },
-		companions: [{ world: 'luna', cx: 360, cy: 170, r: 40, light: 90, phase: 0.5 }]
-	},
-	luna: {
-		id: 'luna',
-		name: 'Luna',
-		tagline: 'Terra’s quieter twin',
-		kind: 'moon',
-		parent: 'terra',
-		color: '#ffffff',
-		tilt: 6.68,
-		image: luna,
-		render: 'disc',
-		hero: { cx: 560, cy: 450, r: 320, light: 270, phase: 0.28 },
-		portrait: rising,
-		callout: { x: 1040, y: 290 }
-	},
-	saturn: {
-		id: 'saturn',
-		name: 'Saturn',
-		tagline: 'Movies, series and anime',
-		kind: 'planet',
-		color: '#e6cf9e',
-		tilt: 26.73,
-		image: saturn,
-		render: 'photo',
-		hero: { cx: 800, cy: 450, r: 760, light: 90, phase: 1 },
-		portrait: { cx: 195, cy: 560, r: 300, light: 0, phase: 1 },
-		callout: { x: 1180, y: 150 }
-	},
-	titan: {
-		id: 'titan',
-		name: 'Titan',
-		tagline: 'What to watch next, chosen at home',
-		kind: 'moon',
-		parent: 'saturn',
-		color: '#ffb06a',
-		tilt: 0.3,
-		image: titan,
-		render: 'disc',
-		effect: 'haze',
-		hero: { cx: 560, cy: 450, r: 280, light: 45, phase: 0.42 },
-		portrait: rising,
-		callout: { x: 1000, y: 290 }
-	},
-	mercury: {
-		id: 'mercury',
-		name: 'Mercury',
-		tagline: 'Japanese, every day',
-		kind: 'planet',
-		color: '#f2f2f2',
-		tilt: 0.03,
-		image: mercury,
-		render: 'disc',
-		effect: 'split-rim',
-		hero: { cx: 820, cy: 860, r: 640, light: 0, phase: 0.22 },
-		portrait: rising,
-		callout: { x: 1100, y: 110 }
-	},
-	neptune: {
-		id: 'neptune',
-		name: 'Neptune',
-		tagline: 'Your music, through Navidrome',
-		kind: 'planet',
-		color: '#6f9bff',
-		tilt: 28.32,
-		image: neptune,
-		render: 'disc',
-		hero: { cx: 520, cy: 1010, r: 790, light: 315, phase: 0.15 },
-		portrait: rising,
-		callout: { x: 1000, y: 236 },
-		companions: [{ world: 'triton', cx: 1080, cy: 610, r: 86, light: 330, phase: 0.3 }]
-	},
-	triton: {
-		id: 'triton',
-		name: 'Triton',
-		tagline: 'Radio and discovery',
-		kind: 'moon',
-		parent: 'neptune',
-		color: '#e4d1dd',
-		tilt: 157,
-		image: triton,
-		render: 'disc',
-		hero: { cx: 1080, cy: 560, r: 300, light: 330, phase: 0.5 },
-		portrait: rising,
-		callout: { x: 640, y: 230, flip: true }
-	}
+const pictures: Record<string, string> = {
+	'disc-luna': luna,
+	'disc-mercury': mercury,
+	'disc-neptune': neptune,
+	'disc-sun': sun,
+	'disc-terra': terra,
+	'disc-titan': titan,
+	'disc-triton': triton,
+	saturn
 };
+
+export { rising, lit };
+
+export const worlds: Record<string, World> = Object.fromEntries(
+	Object.entries(table).map(([id, w]) => [id, { ...w, image: pictures[w.image] ?? '' }])
+);
 
 /** A world that isn't in the list yet still gets a sensible look. */
 export function world(id: string): World {
@@ -172,15 +105,17 @@ export function world(id: string): World {
 		worlds[id] ?? {
 			id,
 			name: id.charAt(0).toUpperCase() + id.slice(1),
+			role: '',
 			tagline: '',
 			kind: 'planet',
 			color: '#f2f2f2',
 			tilt: 0,
 			image: '',
 			render: 'disc',
-			hero: { cx: 1100, cy: 560, r: 320, light: 315, phase: 0.4 },
+			hero: { cx: 1130, cy: 450, r: 170, light: 315, phase: 0.5 },
 			portrait: rising,
-			callout: { x: 620, y: 240, flip: true }
+			icon: lit,
+			callout: { x: 620, y: 320, flip: true }
 		}
 	);
 }
@@ -188,4 +123,44 @@ export function world(id: string): World {
 /** The moons that open from a world's screens. */
 export function moonsOf(id: string): World[] {
 	return Object.values(worlds).filter((w) => w.parent === id);
+}
+
+/** The worlds this one works with: a moon's planet, a planet's moons. */
+export function kin(id: string): World[] {
+	const w = world(id);
+	return w.kind === 'moon' && w.parent ? [world(w.parent)] : moonsOf(id);
+}
+
+/**
+ * The moon at `date`: its age in days since new, the lit fraction, whether
+ * it is waxing, and its name. From a known new moon and the mean synodic
+ * month; within a few hours of the almanac, which a disc can't show.
+ */
+export function moonAt(date: Date) {
+	const synodic = 29.530588853;
+	const knownNew = Date.UTC(2000, 0, 6, 18, 14);
+	const days = (date.getTime() - knownNew) / 86400000;
+	const age = ((days % synodic) + synodic) % synodic;
+	const fraction = (1 - Math.cos((2 * Math.PI * age) / synodic)) / 2;
+	const names = ['New moon', 'Waxing crescent', 'First quarter', 'Waxing gibbous', 'Full moon', 'Waning gibbous', 'Last quarter', 'Waning crescent'];
+	return { age, fraction, waxing: age < synodic / 2, name: names[Math.floor((age / synodic) * 8 + 0.5) % 8] };
+}
+
+/**
+ * Where the light falls on a world at `now`, for the ones that follow the
+ * real sky; null for the rest. Luna shows tonight's phase, lit on the right
+ * while it waxes (as seen from the north). Terra is seen from above where
+ * you are: lit from the east in the morning, full at noon, from the west in
+ * the evening, a thin crescent at midnight.
+ */
+export function skyOf(id: string, now = new Date()): Light | null {
+	if (id === 'luna') {
+		const m = moonAt(now);
+		return { phase: Math.max(0.05, m.fraction), light: m.waxing ? 90 : 270 };
+	}
+	if (id === 'terra') {
+		const h = now.getHours() + now.getMinutes() / 60;
+		return { phase: Math.max(0.08, (1 - Math.cos((2 * Math.PI * h) / 24)) / 2), light: h < 12 ? 90 : 270 };
+	}
+	return null;
 }

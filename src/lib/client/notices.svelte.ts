@@ -56,6 +56,8 @@ export function watchUnhandled(world: string): () => void {
 	const seen = new Map<string, number>();
 	const on = (event: PromiseRejectionEvent) => {
 		const reason = event.reason;
+		// A page transition the browser skipped (a page left while it started) is no failure.
+		if (reason instanceof DOMException && reason.name === 'AbortError') return;
 		const body = reason instanceof Error ? reason.message : String(reason ?? 'Something went wrong');
 		// The same failure in a loop (a poll) says so once a minute, not every time.
 		const now = Date.now();

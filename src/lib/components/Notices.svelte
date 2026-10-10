@@ -74,8 +74,12 @@
 		align-items: flex-start;
 		gap: 14px;
 		padding: 14px 4px 14px 18px;
-		background: rgb(8 8 8 / 0.96);
+		border-radius: var(--radius);
+		/* Glass: the page behind, blurred, under the sky's tint. */
+		background: color-mix(in srgb, var(--raised) 82%, transparent);
 		box-shadow: inset 0 0 0 1px var(--line-mid);
+		backdrop-filter: blur(18px);
+		-webkit-backdrop-filter: blur(18px);
 		pointer-events: auto;
 	}
 
@@ -122,8 +126,8 @@
 	/* How long it stays: a line that runs out. */
 	.time {
 		position: absolute;
-		left: 1px;
-		right: 1px;
+		left: var(--radius);
+		right: var(--radius);
 		bottom: 1px;
 		height: 1px;
 		background: var(--line-strong);

@@ -49,7 +49,7 @@
 		min-height: var(--nav-height);
 		padding: var(--s-2) var(--margin);
 		border-bottom: 1px solid var(--line);
-		background: var(--space);
+		background: var(--deep);
 	}
 
 	/* What slides under the bar dims out over a few pixels first. */
@@ -60,7 +60,7 @@
 		right: 0;
 		top: 100%;
 		height: 12px;
-		background: linear-gradient(to bottom, rgb(0 0 0 / 0.6), transparent);
+		background: linear-gradient(to bottom, color-mix(in srgb, var(--deep) 80%, transparent), transparent);
 		pointer-events: none;
 	}
 

@@ -1,7 +1,9 @@
 <!--
-	Hairlines and capitals. `primary` is the only filled shape on a screen:
-	use it once, for the screen's main action. Focus locks two corner ticks
-	on; a press gives a little; while busy, a hairline sweeps along the bottom.
+	Hairlines and capitals, with `--radius-m` corners (a `round` one is a
+	circle). `primary` is the only filled shape on a screen: use it once, for
+	the screen's main action; the world's light glows behind it. Focus locks
+	two corner ticks on, bent round the button's corners; a press gives a
+	little; while busy, a hairline sweeps along the bottom.
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
@@ -19,11 +21,11 @@
 </script>
 
 {#if rest.href !== undefined}
-	<a class="btn {variant}" {...rest as HTMLAnchorAttributes}>{@render children()}</a>
+	<a class="btn sol-ticks {variant}" {...rest as HTMLAnchorAttributes}>{@render children()}</a>
 {:else}
 	{@const attrs = rest as HTMLButtonAttributes}
 	<button
-		class="btn {variant}"
+		class="btn sol-ticks {variant}"
 		{...attrs}
 		type={attrs.type ?? 'button'}
 		disabled={attrs.disabled || busy}
@@ -43,8 +45,8 @@
 		gap: var(--s-2);
 		min-height: var(--control);
 		padding: 0 16px;
-		border: 1px solid rgb(255 255 255 / 0.4);
-		border-radius: 0;
+		border: 1px solid rgb(var(--ink) / 0.4);
+		border-radius: var(--radius-m);
 		background: transparent;
 		color: var(--text);
 		font-family: var(--font);
@@ -101,9 +103,10 @@
 	}
 
 	.round {
+		--tick-radius: calc(var(--control) / 2);
 		width: var(--control);
 		padding: 0;
-		border-color: rgb(255 255 255 / 0.35);
+		border-color: rgb(var(--ink) / 0.35);
 		border-radius: 50%;
 	}
 
@@ -123,8 +126,8 @@
 	/* Busy: a hairline sweeps along the bottom edge until the work is done. */
 	.sweep {
 		position: absolute;
-		left: 0;
-		right: 0;
+		left: var(--radius-m);
+		right: var(--radius-m);
 		bottom: -1px;
 		height: 1px;
 		overflow: hidden;
@@ -148,49 +151,6 @@
 		to {
 			left: 100%;
 		}
-	}
-
-	/* Focus: two ticks lock onto the control, like a reticle finding its target. */
-	.btn:focus-visible {
-		outline: none;
-	}
-
-	.btn::before,
-	.btn::after {
-		content: '';
-		position: absolute;
-		width: 10px;
-		height: 10px;
-		border: 0 solid var(--text-bright);
-		opacity: 0;
-		transition:
-			opacity var(--lock) var(--ease),
-			inset var(--lock) var(--ease);
-		pointer-events: none;
-	}
-
-	.btn::before {
-		left: -10px;
-		top: -10px;
-		border-width: 1px 0 0 1px;
-	}
-
-	.btn::after {
-		right: -10px;
-		bottom: -10px;
-		border-width: 0 1px 1px 0;
-	}
-
-	.btn:focus-visible::before {
-		left: -6px;
-		top: -6px;
-		opacity: 1;
-	}
-
-	.btn:focus-visible::after {
-		right: -6px;
-		bottom: -6px;
-		opacity: 1;
 	}
 
 	@media (prefers-reduced-motion: reduce) {

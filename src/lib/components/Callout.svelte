@@ -67,7 +67,7 @@
 		line-height: 1.6;
 		letter-spacing: var(--track-rows);
 		text-transform: uppercase;
-		color: #d6d6d6;
+		color: var(--text);
 		white-space: nowrap;
 	}
 

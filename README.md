@@ -3,19 +3,28 @@
 The design language of [Sol](https://github.com/Draysh/sol), a self-hosted
 system of apps named after the solar system, for **Sol's own web app**. The
 worlds' desktop apps are Qt Quick and use the same language from
-[sol-quick](https://github.com/Draysh/sol-quick) instead, which has its own
-palette (a night, not pure black) in `qml/Theme.qml`.
+[sol-quick](https://github.com/Draysh/sol-quick); both share one look: its
+night and day palettes (`qml/Theme.qml`), corners, raised panels, and the
+lit bodies of `shaders/body.frag`, from the same world data (`qml/Worlds.qml`).
 
 - **[DESIGN.md](DESIGN.md)**: the rules (principles, anatomy of a screen, type,
   light, layout, components, motion, writing).
 - **Components** (Svelte 5): `Shell`, `Sheet`, `PageHead`, `Back`, `Body`,
   `Reticle`, `Card`, `Button`, `Field`, `TextArea`, `Select`, `Toggle`,
   `Check`, `Progress`, `RingGauge`, `DataRows`, `Callout`, `MoonLink`,
-  `Widget`, `Notices`, `Loader`, `WorldGlyph`, `Grain`. `AppUpdates`,
+  `Widget`, `Notices`, `Loader`, `WorldGlyph`, `Grain`, `LightChoice`. `AppUpdates`,
   `LinkStatus`, `WayBack` and `WithPlanet` are left from when the worlds'
   apps were Svelte too; Sol's web app doesn't use them.
-- **Worlds** (`worlds.ts`): each world's colour, real axial tilt, photo and
-  composition.
+- **Worlds** (`worlds.ts`): each world's name, role, colour, real axial tilt,
+  photo, lighting and composition, from `worlds.gen.ts`, which
+  `node scripts/worlds-from-qml.mjs` writes from sol-quick's `Worlds.qml`
+  (run it by hand after changing that file, and commit the result); the real
+  sky (`skyOf`, `moonAt`).
+- **Night and day** (`light`): the person's choice for this browser, as the
+  apps have it ("system", "sun", "night", "day"), set on the root as
+  `data-light`.
+- **Bodies** (`Body`, `body-gl.ts`): sol-quick's body shader in WebGL, one
+  shared context for the page.
 - **Client** (`@sol/design/client`): Sol's typed API, session and live event
   stream, for Sol's own web app; notices and system notifications for any app.
 

@@ -2,4 +2,4 @@ export { sol, errorMessage, type SolPaths, type SolSchemas, type WidgetView } fr
 export { session, type Me } from './session.svelte.js';
 export { events, matches, describe, type SolEvent } from './events.svelte.js';
 export { notices, watchUnhandled, type Notice } from './notices.svelte.js';
-export { isTauri, notify } from './platform.js';
+export { notify } from './platform.js';

@@ -1,157 +1,154 @@
 <!--
-	A world, lit from one side. The SVG box is the disc itself (radius 100 in
-	its own units); the glow paints outside it, so give the parent room.
+	A world, lit from one side, drawn on the GPU (body-gl.ts, the apps'
+	body shader): the photograph on a sphere lit by a distant sun, a
+	terminator opposite the light (soft where there is air), a night side
+	nearly black (see-through by day), and, for a world with an atmosphere,
+	a thin rim of it lit on the sunny limb. Sol is a star with a corona;
+	Saturn is its photograph, laid on as light.
+
+	The element is as wide as its parent and square: that is the disc. The
+	glow paints outside it, so give the parent room. Without WebGL the
+	photograph shows clipped to a circle.
 -->
 <script lang="ts">
-	import { world as worldFor } from '../worlds.js';
+	import { onMount } from 'svelte';
+	import { animate, now, renderer, sideFor, type BodyLook } from '../body-gl.js';
+	import { light as daylight } from '../light.svelte.js';
+	import { skyOf, world as worldFor } from '../worlds.js';
 
 	interface Props {
 		world: string;
-		/** Where the light comes from, degrees clockwise from the top. */
+		/** Where the light comes from, degrees clockwise from the top: the real sky's for the worlds that follow it, else the world's own. */
 		light?: number;
-		/** 0 is new, 1 is full. */
+		/** 0 is new, 1 is full; as `light`. */
 		phase?: number;
 		/** Accessible name; pass an empty string when the body is decoration. */
 		label?: string;
+		/** Rises out of the dark as it appears. */
+		animated?: boolean;
 		class?: string;
 	}
 
-	let { world: id, light, phase, label, class: className = '' }: Props = $props();
+	let { world: id, light, phase, label, animated = true, class: className = '' }: Props = $props();
 
-	const uid = $props.id();
 	const w = $derived(worldFor(id));
-	const lit = $derived(light ?? w.hero.light);
-	const amount = $derived(Math.min(1, Math.max(0, phase ?? w.hero.phase)));
-
-	// The shadow sits opposite the light; the further it slides, the more is lit.
-	const away = $derived({
-		x: -Math.sin((lit * Math.PI) / 180),
-		y: Math.cos((lit * Math.PI) / 180)
-	});
-	const reach = $derived(amount * 200);
-	const occluder = $derived({ x: away.x * reach, y: away.y * reach });
-	const shade = $derived({ x: away.x * (reach * 1.1 + 5), y: away.y * (reach * 1.1 + 5) });
+	const sky = $derived(skyOf(id));
 	const name = $derived(label ?? w.name);
-	const photoHeight = 200 * (774 / 1600);
+
+	let box = $state<HTMLElement>();
+	let canvas = $state<HTMLCanvasElement>();
+	/** The disc's diameter on screen. */
+	let disc = $state(0);
+	let seen = $state(false);
+	let gl = $state<boolean | null>(null);
+
+	const look = $derived.by((): BodyLook => {
+		const lit = light ?? sky?.light ?? w.icon.light;
+		const fit = w.fit ?? { x: 0.5, y: 0.5, r: 0.5 };
+		return {
+			image: w.image,
+			mode: w.render === 'star' ? 1 : w.render === 'photo' ? 2 : 0,
+			effect: w.effect === 'haze' ? 1 : 0,
+			live: w.live === 'clouds' ? 1 : w.live === 'corona' ? 2 : 0,
+			color: w.color,
+			light: lit,
+			// Small, a body keeps at least a crescent, so a new moon still shows.
+			phase: Math.min(1, Math.max(disc < 48 ? 0.2 : 0, phase ?? sky?.phase ?? w.icon.phase)),
+			fit: { x: fit.x, y: fit.y, r: fit.r, turn: fit.lit === undefined ? 0 : ((lit - fit.lit) * Math.PI) / 180 },
+			air: w.air ?? 0,
+			aspect: 774 / 1600,
+			day: daylight.day,
+			disc
+		};
+	});
+
+	onMount(() => {
+		gl = !!renderer();
+		const sizes = new ResizeObserver(([entry]) => (disc = entry.contentRect.width));
+		const shown = new IntersectionObserver(([entry]) => (seen = entry.isIntersecting), { rootMargin: '64px' });
+		if (box) {
+			sizes.observe(box);
+			shown.observe(box);
+		}
+		return () => {
+			sizes.disconnect();
+			shown.disconnect();
+		};
+	});
+
+	function draw(time: number) {
+		const r = renderer();
+		if (!r || !canvas || !disc || !look.image) return;
+		const side = sideFor(disc * 1.7);
+		if (canvas.width !== side) {
+			canvas.width = side;
+			canvas.height = side;
+		}
+		r.draw(canvas, look, time, () => draw(now()));
+	}
+
+	// Drawn again whenever what it looks like changes.
+	$effect(() => {
+		if (gl && seen) draw(now());
+	});
+
+	// Alive: clouds drift and a corona flickers on a body big enough to see
+	// it, while it is on screen; a still one never asks for a frame.
+	const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+	$effect(() => {
+		if (!gl || !seen || !look.live || disc < 120 || reduced) return;
+		return animate((time) => draw(time));
+	});
 </script>
 
-<svg
+<div
+	bind:this={box}
 	class="body {className}"
-	viewBox="-170 -170 340 340"
+	class:rise={animated}
 	role={name ? 'img' : undefined}
 	aria-label={name || undefined}
 	aria-hidden={name ? undefined : 'true'}
 >
-	<defs>
-		<filter id="{uid}-halo" x="-30%" y="-30%" width="160%" height="160%">
-			<feGaussianBlur stdDeviation="2"></feGaussianBlur>
-		</filter>
-		<filter id="{uid}-soft" x="-40%" y="-40%" width="180%" height="180%">
-			<feGaussianBlur stdDeviation="4.5"></feGaussianBlur>
-		</filter>
-		<filter id="{uid}-rim" x="-10%" y="-10%" width="120%" height="120%">
-			<feGaussianBlur stdDeviation="0.8"></feGaussianBlur>
-		</filter>
-		<filter id="{uid}-tint" color-interpolation-filters="sRGB">
-			<feColorMatrix
-				type="matrix"
-				values="0.75 0.45 0.1 0 0.06 0.32 0.32 0.06 0 0.01 0.06 0.06 0.03 0 0 0 0 0 1 0"
-			></feColorMatrix>
-		</filter>
-		<radialGradient id="{uid}-corona" cx="0" cy="0" r="170" gradientUnits="userSpaceOnUse">
-			<stop offset="0.55" stop-color={w.color} stop-opacity="0.55"></stop>
-			<stop offset="0.75" stop-color="#b8401a" stop-opacity="0.16"></stop>
-			<stop offset="1" stop-color="#000" stop-opacity="0"></stop>
-		</radialGradient>
-		<radialGradient id="{uid}-limb" cx="0" cy="0" r="100" gradientUnits="userSpaceOnUse">
-			<stop offset="0.55" stop-color="#000" stop-opacity="0"></stop>
-			<stop offset="0.88" stop-color="#2a0800" stop-opacity="0.5"></stop>
-			<stop offset="1" stop-color="#000" stop-opacity="0.85"></stop>
-		</radialGradient>
-		<linearGradient
-			id="{uid}-shade"
-			gradientUnits="userSpaceOnUse"
-			x1={away.x * 100}
-			y1={away.y * 100}
-			x2={-away.x * 100}
-			y2={-away.y * 100}
-		>
-			<stop offset="0" stop-color="#000" stop-opacity="0.92"></stop>
-			<stop offset="0.5" stop-color="#000" stop-opacity="0.4"></stop>
-			<stop offset="1" stop-color="#000" stop-opacity="0"></stop>
-		</linearGradient>
-		<clipPath id="{uid}-disc"><circle r="100"></circle></clipPath>
-		<!-- Glow only on the lit limb: a mask, so nothing black is painted outside the disc. -->
-		<mask id="{uid}-lit" maskUnits="userSpaceOnUse" x="-130" y="-130" width="260" height="260">
-			<rect x="-130" y="-130" width="260" height="260" fill="#fff"></rect>
-			<circle cx={shade.x} cy={shade.y} r="108" fill="#000" filter="url(#{uid}-soft)"></circle>
-		</mask>
-	</defs>
-
-	{#if w.render === 'photo'}
-		<image
-			href={w.image}
-			x="-100"
-			y={-photoHeight / 2}
-			width="200"
-			height={photoHeight}
-			preserveAspectRatio="xMidYMid meet"
-		></image>
-	{:else if w.render === 'star'}
-		<circle r="170" fill="url(#{uid}-corona)"></circle>
-		<g clip-path="url(#{uid}-disc)">
-			<image href={w.image} x="-100" y="-100" width="200" height="200" filter="url(#{uid}-tint)"></image>
-			<circle r="100" fill="url(#{uid}-limb)"></circle>
-			{#if amount < 1}
-				<rect x="-100" y="-100" width="200" height="200" fill="url(#{uid}-shade)"></rect>
-			{/if}
-		</g>
+	{#if gl === false && w.image}
+		<img class="flat" class:photo={w.render === 'photo'} src={w.image} alt="" />
 	{:else}
-		<g mask="url(#{uid}-lit)">
-			<!-- Invisible, but it widens the group's outline: WebKitGTK clips masked
-			     content to its outline *before* the blur, which cut the glow off
-			     in a straight line just outside the limb. -->
-			<rect x="-130" y="-130" width="260" height="260" fill="none"></rect>
-			{#if w.effect === 'haze'}
-				<circle r="104" fill="none" stroke={w.color} stroke-width="5" opacity="0.7" filter="url(#{uid}-halo)"></circle>
-				<circle r="104" fill="none" stroke="#e8a060" stroke-width="1.5" opacity="0.3"></circle>
-			{:else}
-				<circle r="100.4" fill="none" stroke={w.color} stroke-width="2.4" opacity="0.8" filter="url(#{uid}-halo)"></circle>
-			{/if}
-			{#if w.effect === 'split-rim'}
-				<circle cx="-1.6" cy="1" r="101" fill="none" stroke="#ff4a3a" stroke-width="1.4" opacity="0.8" filter="url(#{uid}-rim)"></circle>
-				<circle cx="1.6" cy="-1" r="101" fill="none" stroke="#3a7bff" stroke-width="1.4" opacity="0.8" filter="url(#{uid}-rim)"></circle>
-			{/if}
-		</g>
-		<g clip-path="url(#{uid}-disc)">
-			{#if w.image}
-				<image href={w.image} x="-100" y="-100" width="200" height="200"></image>
-			{:else}
-				<circle r="100" fill="#1a1a1a"></circle>
-			{/if}
-			{#if amount < 1}
-				<circle cx={occluder.x} cy={occluder.y} r="100" fill="#000" filter="url(#{uid}-soft)"></circle>
-			{/if}
-		</g>
+		<canvas bind:this={canvas}></canvas>
 	{/if}
-</svg>
+</div>
 
 <style>
-	/* The drawing reaches past the disc (the glow, to r = 170 of the disc's
-	   100), and WebKitGTK clips an SVG to its box whatever its overflow says.
-	   So the box holds all of it, and negative margins keep the element's
-	   layout size equal to the disc. */
 	.body {
-		display: block;
-		width: 170%;
-		max-width: none;
-		height: auto;
-		margin: -35%;
+		position: relative;
+		width: 100%;
 		aspect-ratio: 1;
-		animation: rise var(--rise, 900ms) var(--ease-out, ease) both;
+	}
+
+	/* The drawing reaches past the disc, to 1.7 of its radius. */
+	canvas {
+		position: absolute;
+		left: -35%;
+		top: -35%;
+		width: 170%;
+		height: 170%;
+	}
+
+	.flat {
+		width: 100%;
+		height: 100%;
+		border-radius: 50%;
+		object-fit: cover;
+	}
+
+	.flat.photo {
+		border-radius: 0;
+		object-fit: contain;
 	}
 
 	/* A body comes up out of the dark, a touch closer as it brightens. */
+	.rise > * {
+		animation: rise var(--rise, 900ms) var(--ease-out, ease) both;
+	}
+
 	@keyframes rise {
 		from {
 			opacity: 0;

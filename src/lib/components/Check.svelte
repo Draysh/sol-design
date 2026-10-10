@@ -58,6 +58,16 @@
 		cursor: default;
 	}
 
+	/* Focus: the box, a hairline round it that bends with its corners. */
+	.check:focus-visible {
+		outline: none;
+	}
+
+	.check:focus-visible .box {
+		outline: 1px solid var(--text-bright);
+		outline-offset: 4px;
+	}
+
 	.check[aria-busy='true'] {
 		cursor: progress;
 	}
@@ -68,7 +78,8 @@
 		place-items: center;
 		width: 16px;
 		height: 16px;
-		border: 1px solid rgb(255 255 255 / 0.6);
+		border: 1px solid rgb(var(--ink) / 0.6);
+		border-radius: var(--radius-s);
 		color: var(--space);
 		transition:
 			background var(--lock) var(--ease),

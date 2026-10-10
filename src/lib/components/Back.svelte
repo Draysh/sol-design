@@ -29,7 +29,8 @@
 		min-height: 32px;
 		padding: 0 12px 0 10px;
 		border: 1px solid var(--line-mid);
-		background: var(--space);
+		border-radius: var(--radius-m);
+		background: var(--deep);
 		color: var(--text-quiet);
 		font-family: var(--font);
 		font-size: var(--text-xs);
@@ -73,6 +74,6 @@
 		left: var(--s-3);
 		z-index: 20;
 		border-color: var(--line-strong);
-		box-shadow: 0 6px 24px rgb(0 0 0 / 0.5);
+		box-shadow: 0 6px 24px color-mix(in srgb, var(--veil) 50%, transparent);
 	}
 </style>

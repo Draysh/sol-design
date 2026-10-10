@@ -1,31 +1,53 @@
 /*
- * Sol · Observatory tokens. Every Sol app uses these and nothing else:
- * black space, one type family, hairlines, and colour that only comes from
- * the worlds themselves. DESIGN.md explains each rule.
+ * Sol · Observatory tokens, the same as sol-quick's Theme.qml. Every Sol app
+ * uses these and nothing else: a sky in three depths (the chrome deepest,
+ * the pane, then the panels raised off it), at night or by day, tinted a
+ * little by the world; one type family, hairlines, one scale of corners,
+ * and colour that only comes from the worlds themselves. DESIGN.md explains
+ * each rule.
+ *
+ * Night is the default. Day comes from the desktop's choice
+ * (prefers-color-scheme) or from `data-light="day"` on the root, which
+ * `light` (light.svelte.ts) sets from the person's choice; `data-light="night"`
+ * keeps the night whatever the desktop asks for.
  */
 :root {
 	color-scheme: dark;
 
-	/* Space and light */
-	--space: #000000;
-	--surface: rgb(255 255 255 / 0.03);
-	--surface-hover: rgb(255 255 255 / 0.06);
-	--line: rgb(255 255 255 / 0.08);
-	--line-mid: rgb(255 255 255 / 0.14);
-	--line-strong: rgb(255 255 255 / 0.45);
-	--tick: rgb(255 255 255 / 0.7);
+	/* The sky: a deep blue-black, never pure black, so what is raised off it shows. */
+	--night: #0c0e13;
+	/* The colour light things are drawn in over the sky; overlays use it at a low alpha. */
+	--ink: 255 255 255;
+	/* What dims the window under a dialog and tints glass. */
+	--veil: #000000;
 
-	--text: #f2f2f2;
+	--surface: rgb(var(--ink) / 0.04);
+	--surface-hover: rgb(var(--ink) / 0.07);
+	--line: rgb(var(--ink) / 0.07);
+	--line-mid: rgb(var(--ink) / 0.12);
+	--line-strong: rgb(var(--ink) / 0.36);
+	--tick: rgb(var(--ink) / 0.6);
+
+	--text: #e6e8ed;
 	--text-bright: #ffffff;
-	--text-value: #bdbdbd;
-	--text-quiet: #a8a8a8;
-	--text-faint: #5a5a5a;
+	--text-value: #c3c7cf;
+	--text-quiet: #8b919d;
+	--text-faint: #4f5561;
 
 	--danger: #ff6b5a;
 	--danger-text: #ff8a7a;
 	--ok: #8ee6b0;
 
-	/* The current world's colour, set by <Shell world="…">. Glow and icons only. */
+	/* How the depths are made from the sky (see the derived tokens below). */
+	--k-tint: 5%;
+	--k-deep: 69%;
+	--k-raised: 3.5%;
+	--k-raised-top: 6%;
+	--k-world-dark: 100%;
+	--k-world: 55%;
+	--k-grain: 0.14;
+
+	/* The current world's colour, set by <Shell world="…">. Glow and marks only. */
 	--world: #f2f2f2;
 
 	/* Type: one family, weight does the work */
@@ -60,6 +82,20 @@
 	--s-6: 64px;
 	--s-7: 112px;
 
+	/*
+	 * Corners, on one scale, so a thing inside another rounds with it (an
+	 * inner corner is about the outer one less the room between them).
+	 * Pills (a round button, a switch, a count) stay pills; hairlines stay square.
+	 */
+	/* Small marks: a checkbox, a progress head, a link's focus ticks. */
+	--radius-s: 4px;
+	/* Controls: a button, the way back, a sidebar row, a menu row. */
+	--radius-m: 6px;
+	/* A panel: a card, a notice. */
+	--radius: 10px;
+	/* A big surface on its own: the keys sheet, the sign-in panel. */
+	--radius-l: 14px;
+
 	/* The pane's side margin. An app's content sits close to its chrome. */
 	--margin: clamp(16px, 3vw, 40px);
 	/* Touch targets stay 44 px; pointer controls are 36 px. */
@@ -85,6 +121,96 @@
 	--ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 	/* Fast out, long soft landing: how things settle. */
 	--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/*
+ * The depths, made from the sky and the world's colour. Declared again on
+ * every element that sets its own world (`.sol-sky`: the Shell, a Sheet), so
+ * each app's sky is tinted by its own world.
+ */
+:root,
+.sol-sky {
+	/* The pane, where the work is: the sky with a touch of the world's own colour. */
+	--space: color-mix(in srgb, var(--world) var(--k-tint), var(--night));
+	/* The chrome (the sidebar, the band and toolbars over a page): a step deeper. */
+	--deep: color-mix(in srgb, var(--space) var(--k-deep), black);
+	/* A panel raised off the pane (a card): a step lighter, lit a little from above. */
+	--raised: color-mix(in srgb, white var(--k-raised), var(--space));
+	--raised-top: color-mix(in srgb, white var(--k-raised-top), var(--space));
+	/* A heading in the world's light: a panel's title (by day, the world's colour deepened to read on paper). */
+	--text-world: color-mix(in srgb, color-mix(in srgb, var(--world) var(--k-world-dark), black) var(--k-world), var(--text));
+	/* The world's light for small marks (a glyph, the current section's light). */
+	--accent: var(--world);
+}
+
+/* By day: a pale cool sky, ink in black. The same block twice: chosen, or the desktop's. */
+:root[data-light='day'] {
+	color-scheme: light;
+	--night: #eef1f5;
+	--ink: 0 0 0;
+	--veil: #eef1f5;
+	--surface: rgb(var(--ink) / 0.045);
+	--surface-hover: rgb(var(--ink) / 0.08);
+	--line: rgb(var(--ink) / 0.09);
+	--line-mid: rgb(var(--ink) / 0.15);
+	--text: #1b1f27;
+	--text-bright: #07080b;
+	--text-value: #3b414d;
+	--text-quiet: #666d7b;
+	--text-faint: #a6abb5;
+	--danger: #d9493a;
+	--danger-text: #b8352a;
+	--ok: #1f9a57;
+	--k-tint: 7%;
+	--k-deep: 95%;
+	--k-raised: 70%;
+	--k-raised-top: 90%;
+	--k-world-dark: 45%;
+	--k-world: 75%;
+	--k-grain: 0.04;
+}
+
+@media (prefers-color-scheme: light) {
+	:root:not([data-light]) {
+		color-scheme: light;
+		--night: #eef1f5;
+		--ink: 0 0 0;
+		--veil: #eef1f5;
+		--surface: rgb(var(--ink) / 0.045);
+		--surface-hover: rgb(var(--ink) / 0.08);
+		--line: rgb(var(--ink) / 0.09);
+		--line-mid: rgb(var(--ink) / 0.15);
+		--text: #1b1f27;
+		--text-bright: #07080b;
+		--text-value: #3b414d;
+		--text-quiet: #666d7b;
+		--text-faint: #a6abb5;
+		--danger: #d9493a;
+		--danger-text: #b8352a;
+		--ok: #1f9a57;
+		--k-tint: 7%;
+		--k-deep: 95%;
+		--k-raised: 70%;
+		--k-raised-top: 90%;
+		--k-world-dark: 45%;
+		--k-world: 75%;
+		--k-grain: 0.04;
+	}
+}
+
+/* By day a mark is no lighter than a mid-tone, so a white moon still shows on the pale sky. */
+@supports (color: hsl(from red h s l)) {
+	:root[data-light='day'],
+	:root[data-light='day'] .sol-sky {
+		--accent: hsl(from var(--world) h s min(l, 46));
+	}
+
+	@media (prefers-color-scheme: light) {
+		:root:not([data-light]),
+		:root:not([data-light]) .sol-sky {
+			--accent: hsl(from var(--world) h s min(l, 46));
+		}
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -27,12 +27,12 @@ body {
 	min-height: 100dvh;
 	background: var(--space);
 	scrollbar-width: thin;
-	scrollbar-color: rgb(255 255 255 / 0.18) transparent;
+	scrollbar-color: rgb(var(--ink) / 0.18) transparent;
 }
 
 * {
 	scrollbar-width: thin;
-	scrollbar-color: rgb(255 255 255 / 0.18) transparent;
+	scrollbar-color: rgb(var(--ink) / 0.18) transparent;
 }
 
 h1,
@@ -89,12 +89,85 @@ svg {
 
 ::selection {
 	background: var(--text);
-	color: var(--space);
+	color: var(--night);
 }
 
+/* Focus, where a control has no ticks of its own: a hairline 4 px out, rounded with what it marks. */
 :focus-visible {
 	outline: 1px solid var(--text);
 	outline-offset: 4px;
+}
+
+/*
+ * Focus ticks that follow the shape: two corner marks, bent round the
+ * control's own corner (`--tick-radius`) a few pixels out, that lock on
+ * while it has the keys. A control draws them with its ::before and
+ * ::after and the class `sol-ticks`.
+ */
+.sol-ticks {
+	--tick-out: 6px;
+	--tick-arm: 10px;
+	--tick-radius: var(--radius-m);
+	position: relative;
+}
+
+.sol-ticks::before,
+.sol-ticks::after {
+	content: '';
+	position: absolute;
+	width: calc(var(--tick-arm) + var(--tick-radius) / 2 + var(--tick-out) / 2);
+	height: calc(var(--tick-arm) + var(--tick-radius) / 2 + var(--tick-out) / 2);
+	border: 0 solid var(--text-bright);
+	opacity: 0;
+	pointer-events: none;
+	transition:
+		opacity var(--lock) var(--ease),
+		translate var(--lock) var(--ease-out);
+}
+
+.sol-ticks::before {
+	left: calc(-1 * var(--tick-out));
+	top: calc(-1 * var(--tick-out));
+	border-width: 1px 0 0 1px;
+	border-top-left-radius: calc(var(--tick-radius) + var(--tick-out));
+	translate: -4px -4px;
+}
+
+.sol-ticks::after {
+	right: calc(-1 * var(--tick-out));
+	bottom: calc(-1 * var(--tick-out));
+	border-width: 0 1px 1px 0;
+	border-bottom-right-radius: calc(var(--tick-radius) + var(--tick-out));
+	translate: 4px 4px;
+}
+
+.sol-ticks:focus-visible {
+	outline: none;
+}
+
+.sol-ticks:focus-visible::before,
+.sol-ticks:focus-visible::after,
+.sol-ticks:has(:focus-visible)::before,
+.sol-ticks:has(:focus-visible)::after {
+	opacity: 1;
+	translate: 0 0;
+}
+
+/* A world's colour as a small mark: as it is at night, no lighter than a mid-tone by day. */
+.sol-mark {
+	--mark: var(--c, var(--world));
+}
+
+@supports (color: hsl(from red h s l)) {
+	:root[data-light='day'] .sol-mark {
+		--mark: hsl(from var(--c, var(--world)) h s min(l, 46));
+	}
+
+	@media (prefers-color-scheme: light) {
+		:root:not([data-light]) .sol-mark {
+			--mark: hsl(from var(--c, var(--world)) h s min(l, 46));
+		}
+	}
 }
 
 /* App chrome (the sidebar, toolbars): not text, so not selectable. */

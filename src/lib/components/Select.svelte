@@ -64,7 +64,7 @@
 	}
 
 	select:hover {
-		border-color: rgb(255 255 255 / 0.7);
+		border-color: rgb(var(--ink) / 0.7);
 	}
 
 	select:focus-visible {
@@ -91,7 +91,7 @@
 	}
 
 	option {
-		background: #0b0b0b;
+		background: var(--raised);
 		color: var(--text);
 	}
 
