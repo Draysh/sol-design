@@ -226,13 +226,13 @@ blend mode, so scrolling under it is free.
 | `DataRows` | `Label: value` facts |
 | `Callout` | A short list leading from a body |
 | `MoonLink` | A link to a moon's app (or a moon's way to its planet); `onclick` opens the app itself |
-| `LinkStatus` | The bottom of a world app's sidebar: in sync, sending, or offline with what waits; `busy` names other work, `warn` something wrong beside Sol |
+| `LinkStatus` | Left from the Svelte world apps, unused: the world apps' sidebar line is sol-quick's `LinkStatus` (`../quick`) |
 | `Widget` | Drawing a `WidgetView` (Sol's overview does this for every world) |
 | `Notices` / `notices.show()` | Short in-app messages at the top edge |
 | `Loader` | The moment before data arrives |
 | `WorldGlyph` | A world's crescent icon in lists and navigation |
-| `AppUpdates` | A world app's Settings: installing itself, and its updates through Sol |
-| `WithPlanet` | A moon's Settings: running with its planet, without a window (`orbit::moons`) |
+| `AppUpdates` | Left from the Svelte world apps, unused: the world apps' card is sol-quick's `AppUpdates` |
+| `WithPlanet` | Left from the Svelte world apps, unused: a moon's Settings card is sol-quick's `WithPlanet` |
 
 Focus is visible everywhere and follows the shape it marks: buttons and links
 lock two corner ticks on, bent round their own corners a few pixels out
