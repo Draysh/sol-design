@@ -37,7 +37,8 @@ have to.
   that time. Look at a change in the brand book (`npm run build`, serve
   `build/`) and in Sol's web app, night and day, in a browser.
 
-Checks: `npm run check`, `npm run package`, `npm run build`. Release by
+Checks: `npm run check`, `npm test` (vitest, in Node: the client's pure helpers,
+`src/**/*.test.ts`, which the package leaves out), `npm run package`, `npm run build`. Release by
 bumping `package.json`'s version and tagging it (`v<version>`, e.g. `v1.1.0`), then point Sol
 at it with `scripts/worlds.sh use-tags <orbit> <design> <quick>` in Sol's
 repository.
