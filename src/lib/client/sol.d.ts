@@ -664,6 +664,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/pair/carried": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * A planet's app pairs a moon it carries, on the strength of its own
+         *     pairing: the person approved the planet, and the moon's pages are in the
+         *     same app, so there is no second code. Only a moon of the asking device's
+         *     world, for the same person.
+         */
+        post: operations["carried"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/pair/claim": {
         parameters: {
             query?: never;
@@ -1379,6 +1401,12 @@ export interface components {
         WorldManifest: {
             /** @description Things it can do when another world's event arrives. */
             actions?: components["schemas"]["Action"][];
+            /**
+             * @description The world whose app carries this one, for a moon that has no app of
+             *     its own (its pages are in its planet's): its `parent`. Sol offers no
+             *     download for it, and lets the planet's paired device pair it.
+             */
+            app?: string | null;
             /** @description What it keeps in Sol, for the data overview. */
             collections?: components["schemas"]["Collection"][];
             /**
@@ -2851,6 +2879,64 @@ export interface operations {
                 };
             };
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    carried: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PairRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Paired"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The world isn't a moon of the asking device's world */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The world isn't installed in Sol */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description No Sol-Protocol, or one Sol doesn't speak */
+            426: {
                 headers: {
                     [name: string]: unknown;
                 };

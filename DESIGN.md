@@ -232,7 +232,7 @@ blend mode, so scrolling under it is free.
 | `Loader` | The moment before data arrives |
 | `WorldGlyph` | A world's crescent icon in lists and navigation |
 | `AppUpdates` | Left from the Svelte world apps, unused: the world apps' card is sol-quick's `AppUpdates` |
-| `WithPlanet` | Left from the Svelte world apps, unused: a moon's Settings card is sol-quick's `WithPlanet` |
+| `WithPlanet` | Left from the Svelte world apps, unused: every moon is carried in its planet's app now |
 
 Focus is visible everywhere and follows the shape it marks: buttons and links
 lock two corner ticks on, bent round their own corners a few pixels out
@@ -342,9 +342,9 @@ light, not pictures of light):
    `toggle` can be ticked from the overview and arrive in the app's inbox.
 8. The app's Settings page has an `AppUpdates` card: the app installs
    itself from there and takes its updates through Sol (`orbit::updates`).
-9. A moon runs by itself whenever its planet runs (`orbit::moons`): nobody
-   has to open it for its work to happen. Its Settings page has a
-   `WithPlanet` card to turn that off on a computer.
+9. A moon runs whenever its planet runs: its planet's app carries it (its
+   pages in the planet's window, its work in the planet's process), so
+   nobody has to open it for its work to happen.
 10. The connections a world works best with are in its manifest
     (`connections`, with a `why` each): Sol offers them on the world's page
     and under Connections, to make in one click. A moon lists the ones to
