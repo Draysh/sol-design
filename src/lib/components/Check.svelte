@@ -64,7 +64,7 @@
 	}
 
 	.check:focus-visible .box {
-		outline: 1px solid var(--text-bright);
+		outline: 1px solid var(--hud-text);
 		outline-offset: 4px;
 	}
 
@@ -79,8 +79,7 @@
 		width: 16px;
 		height: 16px;
 		border: 1px solid rgb(var(--ink) / 0.6);
-		border-radius: var(--radius-s);
-		color: var(--space);
+		color: var(--ground);
 		transition:
 			background var(--lock) var(--ease),
 			border-color var(--lock) var(--ease),
@@ -88,7 +87,7 @@
 	}
 
 	.check:hover:not(:disabled) .box {
-		border-color: var(--text-bright);
+		border-color: var(--accent);
 	}
 
 	.check:active:not(:disabled) .box {
@@ -96,9 +95,9 @@
 	}
 
 	.box.on {
-		border-color: var(--text);
-		background: var(--text);
-		animation: lock var(--settle) var(--ease-out);
+		border-color: var(--accent);
+		background: var(--accent);
+		animation: lock var(--settle) var(--spring);
 	}
 
 	@keyframes lock {

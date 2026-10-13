@@ -1,4 +1,4 @@
-/** One `Label: value` fact. */
+/** One fact: a label and what it is now, a row of a ledger. */
 export interface Row {
 	label: string;
 	value: string;
@@ -44,6 +44,8 @@ export interface ShellLink {
 	hint?: string;
 	/** Shows the world's glyph before the label. */
 	world?: string;
+	/** Its name in Japanese, before the label in the title serif: "設定". */
+	jp?: string;
 	/** A small count after the label, e.g. waiting requests. */
 	badge?: number;
 	current?: boolean;
@@ -83,3 +85,12 @@ export type AppUpdateStatus = { current: string; here: AppHere; auto: boolean } 
 	| { state: 'ready'; version: string }
 	| { state: 'failed'; error: string }
 );
+
+/** One of a title card's big figures: "04" Worlds 世界. */
+export interface Figure {
+	value: string;
+	/** One to three words. */
+	label: string;
+	/** Its tag in Japanese. */
+	jp?: string;
+}

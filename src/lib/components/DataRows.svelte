@@ -1,20 +1,28 @@
-<!-- Facts as `Label: value`. Semibold says what it is; light says what it is now. A value that changes fades to the new one. -->
+<!--
+	Facts as a ledger, as the apps' Settings have them: each fact a line of
+	its own across the width, the label in quiet HUD capitals on the left
+	(capitals when it is one to three words), the value as written in the
+	sans at the right end, so the eye lands on it, hairlines between. A value
+	that changes fades to the new one.
+
+	<DataRows rows={[{ label: 'Version', value: '1.0.0' }, { label: 'Data folder', value: dir, keepCase: true }]} />
+-->
 <script lang="ts">
+	import { capsFor } from '../look.js';
 	import type { Row } from '../types.js';
 
 	interface Props {
 		rows: Row[];
-		align?: 'left' | 'center' | 'right';
 		size?: 's' | 'm';
 	}
 
-	let { rows, align = 'left', size = 's' }: Props = $props();
+	let { rows, size = 's' }: Props = $props();
 </script>
 
-<dl class="rows {size}" style:text-align={align}>
+<dl class="rows {size}">
 	{#each rows as row, i (i)}
-		<div>
-			<dt>{row.label}:</dt>
+		<div class="row">
+			<dt class:caps={capsFor(row.label)}>{row.label}</dt>
 			{#key row.value}<dd class="sol-fade" class:keep={row.keepCase}>{row.value}</dd>{/key}
 		</div>
 	{/each}
@@ -22,36 +30,59 @@
 
 <style>
 	.rows {
+		display: flex;
+		flex-direction: column;
 		margin: 0;
-		font-size: 11.5px;
-		line-height: 2;
-		letter-spacing: var(--track-rows);
-		text-transform: uppercase;
+		font-size: var(--text-s);
 	}
 
 	.m {
-		font-size: var(--text-s);
+		font-size: var(--text-m);
+	}
+
+	.row {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--s-3);
+		min-height: 36px;
+		padding: 8px 0;
+		border-bottom: 1px solid var(--line);
+	}
+
+	.row:last-child {
+		border-bottom: 0;
 	}
 
 	dt,
 	dd {
-		display: inline;
 		margin: 0;
 	}
 
 	dt {
+		flex: none;
+		max-width: 50%;
+		color: var(--hud-quiet);
+		font-weight: var(--weight-name);
+	}
+
+	dt.caps {
+		font-family: var(--font-caps);
+		font-size: var(--text-xs);
 		font-weight: var(--weight-label);
-		color: var(--text-bright);
+		letter-spacing: var(--track-hud);
+		text-transform: uppercase;
+		color: var(--hud-text);
 	}
 
 	dd {
-		font-weight: var(--weight-value);
-		color: var(--text-value);
+		min-width: 0;
+		text-align: right;
+		font-weight: var(--weight-name);
+		color: var(--text);
 	}
 
 	dd.keep {
-		text-transform: none;
-		letter-spacing: 0.02em;
 		overflow-wrap: anywhere;
 	}
 </style>

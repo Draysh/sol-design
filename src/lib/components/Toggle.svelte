@@ -1,4 +1,4 @@
-<!-- An on/off switch: a hairline track, a disc that moves into the light. -->
+<!-- An on/off switch: a square hairline track and a square that springs across into the light. -->
 <script lang="ts">
 	interface Props {
 		label: string;
@@ -64,7 +64,7 @@
 	}
 
 	button:focus-visible .track {
-		outline: 1px solid var(--text-bright);
+		outline: 1px solid var(--hud-text);
 		outline-offset: 4px;
 	}
 
@@ -74,12 +74,11 @@
 		width: 36px;
 		height: 18px;
 		border: 1px solid var(--line-strong);
-		border-radius: 9px;
 		transition: border-color var(--lock) var(--ease);
 	}
 
 	button:hover:not(:disabled) .track {
-		border-color: var(--text);
+		border-color: var(--accent);
 	}
 
 	.disc {
@@ -88,10 +87,9 @@
 		top: 3px;
 		width: 10px;
 		height: 10px;
-		border-radius: 50%;
-		background: var(--text-quiet);
+		background: var(--hud-quiet);
 		transition:
-			transform var(--settle) var(--ease-out),
+			transform var(--settle) var(--spring),
 			background var(--lock) var(--ease),
 			box-shadow var(--settle) var(--ease-out);
 	}
@@ -103,13 +101,14 @@
 	}
 
 	[aria-checked='true'] .track {
-		border-color: var(--text);
+		border-color: var(--accent);
+		background: color-mix(in srgb, var(--accent) 14%, transparent);
 	}
 
 	[aria-checked='true'] .disc {
 		transform: translateX(18px);
-		background: var(--text-bright);
-		box-shadow: 0 0 10px color-mix(in srgb, var(--world) 70%, transparent);
+		background: var(--accent);
+		box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 60%, transparent);
 	}
 
 	[aria-checked='true']:active:not(:disabled) .disc {

@@ -97,9 +97,13 @@
 		max-height: calc(100dvh - 2 * var(--s-4));
 		overflow-y: auto;
 		padding: 18px 20px 20px;
-		border-radius: var(--radius-l);
-		background: linear-gradient(to bottom, var(--raised-top), var(--raised));
+		clip-path: polygon(0 0, calc(100% - var(--hud-cut)) 0, 100% var(--hud-cut), 100% 100%, 0 100%);
+		background:
+			linear-gradient(to right, transparent, var(--highlight) 50%, transparent) top / 100% 1px no-repeat,
+			color-mix(in srgb, var(--frost) 92%, transparent);
 		box-shadow: inset 0 0 0 1px var(--line-mid);
+		backdrop-filter: blur(22px);
+		-webkit-backdrop-filter: blur(22px);
 		outline: none;
 	}
 

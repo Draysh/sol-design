@@ -1,102 +1,67 @@
 <!--
 	The living brand book: every rule in DESIGN.md, drawn with the real
-	components. `npm run dev` to browse it.
+	components, in each flavour (`?flavour=neptune` opens on one). `npm run dev`
+	to browse it.
 -->
 <script lang="ts">
 	import {
-		Body,
 		Button,
-		Callout,
 		Card,
 		Check,
 		DataRows,
 		Field,
-		LightChoice,
+		Ground,
+		HeroFigure,
+		HudLabel,
 		LinkStatus,
-		MoonLink,
 		Progress,
-		RingGauge,
-		Sheet,
 		Select,
+		Sheet,
+		SlantTicks,
 		Toggle,
 		Widget,
-		WorldGlyph,
-		count,
-		light,
-		moonsOf,
-		worlds,
-		type Row
+		flavourOf,
+		flavours,
+		jpOf,
+		moonsOf
 	} from '../lib/index.js';
+	import { HERE, type HereContext } from '../lib/here.js';
 	import { notices } from '../lib/client/notices.svelte.js';
+	import { setContext } from 'svelte';
 
-	const order = Object.keys(worlds);
-	let current = $state('neptune');
-	const w = $derived(worlds[current]);
+	const order = Object.keys(flavours);
+	const asked = typeof location === 'undefined' ? null : new URLSearchParams(location.search).get('flavour');
+	let current = $state(asked && order.includes(asked) ? asked : 'saturn');
+	const f = $derived(flavourOf(current));
+	setContext<HereContext>(HERE, {
+		get flavour() {
+			return current;
+		},
+		get name() {
+			return 'Design';
+		},
+		get section() {
+			return { number: 1, label: 'Design', jp: '意匠' };
+		}
+	});
 
-	const sheetRows: Record<string, Row[][]> = {
-		sol: [
-			[
-				{ label: 'Server', value: 'NAS · arm64' },
-				{ label: 'Uptime', value: '12 days' }
-			],
-			[
-				{ label: 'Worlds online', value: '4 of 4' },
-				{ label: 'Notices', value: '2 unread' }
-			],
-			[
-				{ label: 'Local time', value: '21:48' },
-				{ label: 'Desktop AI', value: 'idle' }
-			]
-		],
-		terra: [
-			[
-				{ label: 'Habits today', value: '2 of 3' },
-				{ label: 'Streak', value: '12 days' }
-			],
-			[{ label: 'Diary', value: '4 entries this week' }],
-			[
-				{ label: 'Next', value: 'journal before bed' },
-				{ label: 'Reminder', value: '22:30' }
-			]
-		],
-		neptune: [
-			[
-				{ label: 'Now playing', value: 'Tears in Rain' },
-				{ label: 'Artist', value: 'Vangelis' }
-			],
-			[
-				{ label: 'Position', value: '2:14 of 5:06' },
-				{ label: 'Room', value: 'living room' }
-			],
-			[
-				{ label: 'Source', value: 'Navidrome' },
-				{ label: 'Format', value: 'FLAC 24/96' }
-			]
-		]
+	const titles: Record<string, [string, string]> = {
+		saturn: ['続きから。', 'Pick up where you left off.'],
+		mercury: ['復習、十七枚。', '1 card due and 9 new wait at the gate.'],
+		neptune: ['雨音と、君の歌', 'Now playing · Grand Escape'],
+		terra: ['夏の午後。', 'A summer afternoon. Two done, two to go.'],
+		luna: ['今夜。', 'Bed by half past eleven, and the moon is waxing.']
 	};
-	const callouts: Record<string, string[]> = {
-		sol: ['Terra = 2 of 3', 'Mercury = 42 due', 'Neptune = playing'],
-		terra: ['Japanese = done', 'Walk = done', 'Journal = open'],
-		luna: ['Evening entry = open', 'Mood = 4 of 7'],
-		saturn: ['Season 2 = now', 'Films = 3 queued'],
-		titan: ['Because = Arrival', 'Suggestions = 3'],
-		mercury: ['New = 10', 'Learning = 6', 'Review = 26'],
-		neptune: ['Next = Blade Runner Blues', 'Then = Memories of Green', 'Queue = 14 tracks'],
-		triton: ['Station = Drift 01', 'Tracks = 50']
-	};
-	const fallbackRows = (id: string): Row[][] => [
-		[
-			{ label: 'World', value: worlds[id].name },
-			{ label: 'Kind', value: worlds[id].kind }
-		],
-		[{ label: 'Axial tilt', value: `${worlds[id].tilt}°` }],
-		[{ label: 'Glow', value: worlds[id].color }]
-	];
 
 	let habit = $state('15 minutes of Japanese');
+	let server = $state('sol.local');
 	let scrobble = $state(true);
-	let furigana = $state(false);
 	let room = $state('living');
+	let busy = $state(false);
+	let checks = $state([
+		{ label: '15 minutes of Japanese', meta: '12 d', done: true },
+		{ label: 'Walk outside', meta: '3 d', done: false }
+	]);
 	let widget = $state({
 		figure: '2 / 3',
 		caption: 'habits today',
@@ -106,274 +71,167 @@
 			{ id: 'walk', label: 'Walk outside', meta: '3 d', done: false, toggle: true }
 		]
 	});
-	let server = $state('sol.local');
-	let checks = $state([
-		{ label: '15 minutes of Japanese', meta: '12 d', done: true },
-		{ label: 'Walk outside', meta: '3 d', done: false },
-		{ label: 'Journal before bed', meta: '22:30', done: false }
-	]);
-
-	let motionKey = $state(0);
-	let busy = $state(false);
-	let figure = $state(1284);
-	let ring = $state({ value: 3, max: 12 });
 
 	const principles = [
-		['One light', 'Every body is lit from one side. Darkness is the default; light means attention.'],
-		['Night is space', 'The ground is a night sky in three depths, tinted by the world: the chrome deepest, the pane, and the panels raised off it. Nothing is filled but the screen’s main action.'],
-		['Name in the reticle', 'Every world names itself inside a reticle whose axis leans at that world’s real tilt.'],
-		['Label: value', 'Facts read as label and value. Semibold says what it is; light says what it is now.']
+		['A film’s sky', 'Every page stands on a still from an anime film under its world’s grade, or the world’s drawn sky. The words on it are white.'],
+		['Glass', 'Panels are glass with one corner cut at 45°, a hairline and a lit top edge; the page’s lead panel wears brackets.'],
+		['Two faces and a serif', 'HUD capitals for labels of one to three words, a sans for reading, the title serif for Japanese, never tracked.'],
+		['One mood a world', 'No day mode: each world keeps its own flavour all day. Sol wears Saturn’s dusk.']
 	];
 </script>
 
-<header class="top">
-	<span class="sol-label">Sol · Design language</span>
-	<span class="sol-quiet">Observatory · the apps’ look · {light.day ? 'day' : 'night'}</span>
-	<div class="mode"><LightChoice /></div>
-</header>
+<div class="book" data-flavour={f.id}>
+	<Ground world={current} />
+	<div class="content">
+		<nav class="picker" aria-label="Flavours">
+			{#each order as id (id)}
+				<button aria-pressed={current === id} onclick={() => (current = id)}>
+					<span class="jp" lang="ja">{jpOf(id)}</span>
+					{id}
+				</button>
+			{/each}
+		</nav>
 
-<Sheet
-	world={current}
-	callout={callouts[current]}
-	rows={sheetRows[current] ?? fallbackRows(current)}
-	moons={moonsOf(current).map((m) => ({ id: m.id, label: m.name, href: `#${m.id}` }))}
-/>
+		<Sheet
+			world={current}
+			jp={titles[current][0]}
+			hud="Design · {f.film}"
+			callout={[titles[current][1]]}
+			figures={[
+				{ value: '05', label: 'Flavours', jp: '風味' },
+				{ value: '28', label: 'Components', jp: '部品' },
+				{ value: '3', label: 'Faces', jp: '書体' }
+			]}
+			moons={moonsOf(current).map((m) => ({ id: m.id, label: m.name, href: `?flavour=${m.id}` }))}
+		/>
 
-<nav class="picker" aria-label="Worlds">
-	{#each order as id (id)}
-		<button aria-pressed={current === id} onclick={() => (current = id)}>
-			<WorldGlyph world={id} size={10} />
-			{worlds[id].name}
-		</button>
-	{/each}
-</nav>
-
-<section>
-	<h2 class="head"><span class="num">01</span><span class="sol-label">Principles</span></h2>
-	<div class="grid four">
-		{#each principles as [title, text] (title)}
-			<div class="principle">
-				<span class="sol-label">{title}</span>
-				<p class="sol-prose">{text}</p>
-			</div>
-		{/each}
-	</div>
-</section>
-
-<section>
-	<h2 class="head"><span class="num">02</span><span class="sol-label">Light</span></h2>
-	<p class="sol-prose lead">Colour comes only from the bodies. Each world’s glow is sampled from its own photograph and used for glow, marks and a panel’s title, never for fills; the sky of each app is tinted a little by its world. The bodies are lit as in the apps: the photograph on a sphere, a terminator soft where there is air, a rim of atmosphere on the sunny limb, Sol’s corona, Saturn’s photograph laid on as light.</p>
-	<div class="grid eight">
-		{#each order as id (id)}
-			<div class="swatch" id={id}>
-				<div class="disc"><Body world={id} phase={worlds[id].render === 'disc' ? 0.45 : 1} /></div>
-				<span class="sol-label">{worlds[id].name}</span>
-				<span class="sol-quiet">{worlds[id].color} · {worlds[id].tilt}°</span>
-			</div>
-		{/each}
-	</div>
-	<div class="grid three facts">
-		<DataRows rows={[{ label: 'Key light', value: 'one side only' }, { label: 'Terminator', value: 'soft with air, crisp on rock' }, { label: 'Atmosphere', value: 'a rim in the world’s colour' }]} />
-		<DataRows rows={[{ label: 'Night', value: '#0C0E13, 5 % world' }, { label: 'Day', value: '#EEF1F5, 7 % world' }, { label: 'Depths', value: 'deep · space · raised' }]} />
-		<DataRows rows={[{ label: 'Lines', value: 'ink at 7, 12 and 36 %' }, { label: 'Grain', value: 'dark specks, one layer' }, { label: 'This world', value: `${w.role} · ${w.tagline}` }]} />
-	</div>
-</section>
-
-<section>
-	<h2 class="head"><span class="num">03</span><span class="sol-label">Typography</span></h2>
-	<p class="sol-prose lead">One family, Outfit. Weight does the work other systems give to separate fonts.</p>
-	<div class="type">
-		<div class="spec"><DataRows rows={[{ label: 'Display', value: 'Outfit 200' }, { label: 'Tracking', value: '+10 %' }]} /></div>
-		<span class="display">Eight worlds</span>
-		<div class="spec"><DataRows rows={[{ label: 'Name', value: 'Outfit 400' }, { label: 'Tracking', value: '+8 %' }]} /></div>
-		<span class="name">Neptune</span>
-		<div class="spec"><DataRows rows={[{ label: 'Label · value', value: '600 · 300' }, { label: 'Size', value: '11.5 caps' }]} /></div>
-		<DataRows size="m" rows={[{ label: 'Orbital period', value: '164.8 years' }]} />
-		<div class="spec"><DataRows rows={[{ label: 'Reading', value: 'Outfit 300' }, { label: 'Case', value: 'sentence' }]} /></div>
-		<p class="sol-prose">Lists, messages and anything read in full stay in sentence case. Capitals are for names and labels, never for paragraphs.</p>
-	</div>
-</section>
-
-<section>
-	<h2 class="head"><span class="num">04</span><span class="sol-label">Components</span></h2>
-	<div class="grid three">
-		<Card title="Actions">
-			<div class="row">
-				<Button variant="primary">Start session</Button>
-				<Button>Later</Button>
-				<Button variant="quiet">Skip</Button>
-			</div>
-			<div class="row">
-				<Button disabled>Unavailable</Button>
-				<Button variant="round" aria-label="Next track">
-					<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M11 2v10M2 2l7 5-7 5z" fill="none" stroke="currentColor" stroke-width="1.1"></path></svg>
-				</Button>
-			</div>
-			<p class="note">One filled button per screen. Tab to a button to see the focus ticks lock on.</p>
-		</Card>
-
-		<Card title="Corners">
-			<div class="corners">
-				{#each [['S', 'var(--radius-s)', 'a check, a mark'], ['M', 'var(--radius-m)', 'a control, a row'], ['', 'var(--radius)', 'a panel'], ['L', 'var(--radius-l)', 'a sheet on its own']] as [size, radius, use] (radius)}
-					<div class="corner" style:border-radius={radius}><span class="sol-label">{size || 'Panel'}</span><span class="sol-quiet">{use}</span></div>
+		<section>
+			<h2 class="head"><HudLabel text="Principles" jp="原則" /></h2>
+			<div class="grid four">
+				{#each principles as [title, text] (title)}
+					<div class="principle">
+						<span class="sol-label">{title}</span>
+						<p class="sol-prose">{text}</p>
+					</div>
 				{/each}
 			</div>
-			<p class="note">One scale, so a thing inside another rounds with it. Pills stay pills; hairlines stay straight. Focus ticks bend round the corner they mark.</p>
-		</Card>
+		</section>
 
-		<Card title="Fields">
-			<Field label="New habit" bind:value={habit} />
-			<Field label="Server address" bind:value={server} error="Use an address that starts with https://" />
-		</Card>
+		<section>
+			<h2 class="head"><HudLabel text="Components" jp="部品" /></h2>
+			<div class="grid three">
+				<Card title="Actions" jp="操作" lead>
+					<div class="row">
+						<Button variant="primary">Start session</Button>
+						<Button>Later</Button>
+						<Button variant="quiet">Skip</Button>
+					</div>
+					<div class="row">
+						<Button variant="danger">Remove</Button>
+						<Button disabled>Unavailable</Button>
+						<Button variant="round" aria-label="Next track">
+							<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M11 2v10M2 2l7 5-7 5z" fill="none" stroke="currentColor" stroke-width="1.1"></path></svg>
+						</Button>
+						<Button busy={busy} onclick={() => {
+							busy = true;
+							setTimeout(() => (busy = false), 2400);
+						}}>Busy</Button>
+					</div>
+					<p class="note">One filled button per screen, slanted; what can’t be taken back is the same slant in vermilion.</p>
+				</Card>
 
-		<Card title="Choices" world="neptune">
-			<Select
-				label="Room"
-				bind:value={room}
-				options={[
-					{ value: 'living', label: 'Living room' },
-					{ value: 'office', label: 'Office' }
-				]}
-			/>
-			<Toggle label="Scrobble plays" bind:checked={scrobble} hint="Navidrome forwards them to ListenBrainz." />
-			<Toggle label="Show furigana" bind:checked={furigana} />
-		</Card>
+				<Card title="Fields" jp="入力">
+					<Field label="New habit" bind:value={habit} />
+					<Field label="Server address" bind:value={server} error="Use an address that starts with https://" />
+				</Card>
 
-		<Card title="Checklist" world="terra">
-			<div>
-				{#each checks as item, i (item.label)}
-					<Check label={item.label} meta={item.meta} checked={item.done} onchange={(done) => (checks[i].done = done)} />
-				{/each}
+				<Card title="Choices" jp="選択">
+					<Select
+						label="Room"
+						bind:value={room}
+						options={[
+							{ value: 'living', label: 'Living room' },
+							{ value: 'office', label: 'Office' }
+						]}
+					/>
+					<Toggle label="Scrobble plays" bind:checked={scrobble} hint="Navidrome forwards them to ListenBrainz." />
+					<div>
+						{#each checks as item, i (item.label)}
+							<Check label={item.label} meta={item.meta} checked={item.done} onchange={(done) => (checks[i].done = done)} />
+						{/each}
+					</div>
+				</Card>
+
+				<Card title="Progress" jp="進捗">
+					<Progress value={134} max={306} label="Position" start="2:14" end="5:06" />
+					<SlantTicks value={0.7} count={14} />
+					<DataRows rows={[{ label: 'Done', value: 'the light' }, { label: 'To go', value: 'faint' }, { label: 'Part done', value: 'the next tick part-way' }]} />
+				</Card>
+
+				<Card title="Notice and widget" jp="通知">
+					<Widget
+						world="terra"
+						view={widget}
+						ontoggle={(item, done) => {
+							widget.items = widget.items?.map((i) => (i.id === item ? { ...i, done } : i));
+						}}
+					/>
+					<Button onclick={() => notices.show({ world: 'terra', title: 'Terra · walk outside', body: 'Logged. Four days in a row.' })}>Show a notice</Button>
+				</Card>
+
+				<Card title="Status" jp="状態">
+					<div class="col">
+						<LinkStatus online unsent={0} />
+						<LinkStatus online={false} unsent={2} />
+					</div>
+					<div class="figures">
+						<HeroFigure value="06" label="Watching" jp="視聴中" lead />
+						<HeroFigure value="291" label="Episodes" jp="話" />
+					</div>
+				</Card>
 			</div>
-		</Card>
+		</section>
 
-		<Card title="Callout and moon link" world="saturn">
-			<Callout lines={['New = 10', 'Learning = 6', 'Review = 26']} />
-			<MoonLink href="#titan">Titan · 3 like Arrival</MoonLink>
-			<p class="note">Callouts summarise; moon links open another world.</p>
-		</Card>
-
-		<Card title="Status and keys" world="terra">
-			<div class="col">
-				<LinkStatus online unsent={0} />
-				<LinkStatus online unsent={3} />
-				<LinkStatus online={false} unsent={2} />
-				<LinkStatus online busy="Syncing library" warn="Navidrome · not answering" />
-			</div>
-			<p class="note">
-				The bottom of every sidebar. Under the sections, doors to Sol and to the world’s moons or planet; `?` opens
-				the keys, `/` the search, and every section says what it is for on hover.
-			</p>
-		</Card>
-
-		<Card title="Progress" world="neptune">
-			<Progress value={134} max={306} label="Position" start="2:14" end="5:06" />
-			<div class="row">
-				<RingGauge outer={{ value: 3, max: 12 }} inner={{ value: 1, max: 2 }} center="E03" label="Episode 3 of 12, season 1 of 2" />
-				<DataRows rows={[{ label: 'Ring', value: 'season' }, { label: 'Inner', value: 'show' }, { label: 'Centre', value: 'next episode' }]} />
-			</div>
-		</Card>
-
-		<Card title="Notice and widget" world="terra">
-			<Widget
-				world="terra"
-				view={widget}
-				ontoggle={(item, done) => {
-					widget.items = widget.items?.map((i) => (i.id === item ? { ...i, done } : i));
-				}}
-			/>
-			<Button onclick={() => notices.show({ world: 'terra', title: 'Terra · walk outside', body: 'Logged. Four days in a row.' })}>Show a notice</Button>
-		</Card>
+		<section>
+			<h2 class="head"><HudLabel text="Motion" jp="動き" /></h2>
+			<Card title="Tokens" jp="時間">
+				<DataRows
+					rows={[
+						{ label: 'Snap', value: '50 ms · a press' },
+						{ label: 'Fade', value: '240 ms · text, colour' },
+						{ label: 'Settle', value: '420 ms · taking a place, with the spring' },
+						{ label: 'Turn', value: '420 ms · a page arriving' },
+						{ label: 'Count', value: '720 ms · a figure counting up' },
+						{ label: 'Less motion', value: 'fades and instant changes only' }
+					]}
+				/>
+			</Card>
+		</section>
 	</div>
-	<div class="grid three facts">
-		<DataRows rows={[{ label: 'Steps', value: '8 · 16 · 24 · 40 · 64 · 112' }, { label: 'Margin', value: '16 to 96, fluid' }, { label: 'Targets', value: '44 px or more' }]} />
-		<DataRows rows={[{ label: 'Corners', value: '4 · 6 · 10 · 14' }, { label: 'Lines', value: '1 px, never thicker' }, { label: 'Panels', value: 'raised, lit from above' }]} />
-		<DataRows rows={[{ label: 'Chrome', value: 'the deep sky, never blurred' }, { label: 'Bars', value: 'stay put; the pane scrolls' }, { label: 'Focus', value: 'ticks round the corner' }]} />
-	</div>
-</section>
-
-<section>
-	<h2 class="head"><span class="num">05</span><span class="sol-label">Motion</span></h2>
-	<p class="sol-prose lead">
-		Things arrive; nothing moves for its own sake. A screen settles into the pane, a list comes a stagger at a time, a
-		figure counts up to its value, and the reticle finds its name. Only opacity and transforms move, so the pane
-		keeps scrolling at the monitor's full rate. Reduced motion sets every duration to zero.
-	</p>
-	<div class="grid three">
-		<Card title="Arriving">
-			{#key motionKey}
-				<ul class="sol-stagger demo-list">
-					{#each ['Blade Runner Blues', 'Memories of Green', 'Tears in Rain', 'Rachel’s Song', 'One More Kiss, Dear'] as line (line)}
-						<li>{line}</li>
-					{/each}
-				</ul>
-			{/key}
-			<div class="row">
-				<Button onclick={() => motionKey++}>Again</Button>
-				<Button busy={busy} onclick={() => {
-					busy = true;
-					setTimeout(() => (busy = false), 2400);
-				}}>Busy for a moment</Button>
-			</div>
-			<p class="note">A settle is 420 ms; each item comes 28 ms after the one before, never more than 400 ms late. A busy button sweeps a hairline until it is done.</p>
-		</Card>
-
-		<Card title="Figures" world="saturn">
-			{#key motionKey}
-				<p class="figure"><span class="big" use:count={{ value: figure }}>0</span><span class="sol-quiet">episodes</span></p>
-			{/key}
-			<div class="row">
-				<RingGauge outer={ring} inner={{ value: 1, max: 2 }} center="E{String(ring.value).padStart(2, '0')}" label="Episode of season" />
-				<Progress value={ring.value} max={ring.max} label="Season" start="E{ring.value}" end="of {ring.max}" />
-			</div>
-			<div class="row">
-				<Button onclick={() => (figure += 137)}>Another evening</Button>
-				<Button variant="quiet" onclick={() => (ring = { value: (ring.value % 12) + 1, max: 12 })}>Next episode</Button>
-			</div>
-			<p class="note">A figure counts up over the rise (900 ms); a progress line fills to its value and follows it after; an arc draws itself.</p>
-		</Card>
-
-		<Card title="Tokens">
-			<DataRows
-				rows={[
-					{ label: 'Fade', value: '240 ms · text, colour' },
-					{ label: 'Lock', value: '120 ms · ticks, switches' },
-					{ label: 'Settle', value: '420 ms · taking a place' },
-					{ label: 'Rise', value: '900 ms · a body, a figure' },
-					{ label: 'Stagger', value: '28 ms · between siblings' },
-					{ label: 'Ease out', value: 'fast out, soft landing' }
-				]}
-			/>
-			<p class="note">Use <code>.sol-settle</code> with <code>--i</code>, <code>.sol-stagger</code> on a list, <code>.sol-fade</code> on changed text, and <code>use:count</code> on a display figure.</p>
-		</Card>
-	</div>
-</section>
+</div>
 
 <style>
+	.book {
+		position: relative;
+		min-height: 100dvh;
+		color: var(--text);
+	}
+
+	.content {
+		position: relative;
+		z-index: 1;
+	}
+
 	.col {
 		display: grid;
 		gap: var(--s-2);
-	}
-
-	.top {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		justify-content: space-between;
-		gap: var(--s-3);
-		padding: var(--s-4) var(--margin);
-		background: var(--deep);
-	}
-
-	.mode {
-		width: 200px;
 	}
 
 	.picker {
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--s-2);
-		padding: var(--s-4) var(--margin);
+		padding: var(--s-4) var(--margin) 0;
 	}
 
 	.picker button {
@@ -382,25 +240,32 @@
 		gap: 8px;
 		min-height: var(--target);
 		padding: 0 14px;
-		border: 1px solid var(--line-mid);
-		border-radius: var(--radius-m);
+		border: 1px solid var(--art-line);
 		background: transparent;
+		font-family: var(--font-caps);
 		font-size: var(--text-xs);
-		letter-spacing: var(--track-caps);
+		font-weight: var(--weight-label);
+		letter-spacing: var(--track-hud);
 		text-transform: uppercase;
-		color: var(--text-quiet);
+		color: var(--art-quiet);
 		cursor: pointer;
 	}
 
+	.picker .jp {
+		font-family: var(--font-title);
+		font-weight: 800;
+		letter-spacing: 0;
+		color: var(--art-accent);
+	}
+
 	.picker button[aria-pressed='true'] {
-		border-color: var(--text);
-		color: var(--text-bright);
+		border-color: var(--art-accent);
+		color: #fff;
 	}
 
 	section {
-		padding: var(--s-7) var(--margin) 0;
-		border-top: 1px solid var(--line);
-		margin-top: var(--s-6);
+		max-width: var(--content);
+		padding: var(--s-6) var(--margin) 0;
 	}
 
 	section:last-of-type {
@@ -408,23 +273,17 @@
 	}
 
 	.head {
-		display: flex;
-		align-items: baseline;
-		gap: 28px;
-		margin-bottom: var(--s-5);
-		text-transform: none;
-		letter-spacing: 0;
+		margin-bottom: var(--s-4);
 	}
 
-	.num {
-		font-weight: var(--weight-display);
-		font-size: 72px;
-		line-height: 1;
-		letter-spacing: 0.06em;
+	/* The section headings stand on the still: white, as a title card's words. */
+	.head :global(.hud) {
+		color: var(--art-text);
 	}
 
-	.lead {
-		margin-bottom: var(--s-5);
+	.head :global(.sol-jp),
+	.head :global(.mark) {
+		color: var(--art-accent);
 	}
 
 	.grid {
@@ -439,16 +298,7 @@
 
 	.three {
 		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-	}
-
-	.eight {
-		grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-	}
-
-	.facts {
-		margin-top: var(--s-6);
-		padding-top: var(--s-4);
-		border-top: 1px solid var(--line-mid);
+		align-items: start;
 	}
 
 	.principle {
@@ -456,47 +306,15 @@
 		flex-direction: column;
 		gap: 14px;
 		padding-top: 18px;
-		border-top: 1px solid var(--line-strong);
+		border-top: 1px solid var(--art-line);
 	}
 
-	.swatch {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 10px;
-		text-align: center;
+	.principle .sol-label {
+		color: var(--art-accent);
 	}
 
-	.disc {
-		width: 96px;
-		margin: 24px 0 14px;
-	}
-
-	.type {
-		display: grid;
-		grid-template-columns: 260px 1fr;
-		align-items: center;
-		row-gap: 0;
-	}
-
-	.type > * {
-		padding: var(--s-4) 0;
-		border-top: 1px solid var(--line-mid);
-	}
-
-	.display {
-		font-weight: var(--weight-display);
-		font-size: var(--text-3xl);
-		line-height: 1;
-		letter-spacing: var(--track-display);
-		text-transform: uppercase;
-	}
-
-	.name {
-		font-weight: var(--weight-name);
-		font-size: var(--text-xl);
-		letter-spacing: var(--track-name);
-		text-transform: uppercase;
+	.principle .sol-prose {
+		color: var(--art-quiet);
 	}
 
 	.row {
@@ -506,71 +324,16 @@
 		gap: var(--s-3);
 	}
 
+	.figures {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--s-4);
+		padding: var(--s-3);
+		background: var(--ground);
+	}
+
 	.note {
 		font-size: var(--text-s);
 		color: var(--text-quiet);
-	}
-
-	.note code {
-		font-family: inherit;
-		color: var(--text-value);
-	}
-
-	.corners {
-		display: grid;
-		grid-template-columns: repeat(2, 1fr);
-		gap: var(--s-2);
-	}
-
-	.corner {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-		padding: 10px 12px;
-		border: 1px solid var(--line-mid);
-		background: var(--surface);
-	}
-
-	.demo-list {
-		margin: 0;
-		padding: 0;
-		list-style: none;
-		color: var(--text-value);
-	}
-
-	.demo-list li {
-		min-height: 36px;
-		display: flex;
-		align-items: center;
-		border-bottom: 1px solid var(--line);
-	}
-
-	.figure {
-		display: flex;
-		align-items: baseline;
-		gap: var(--s-3);
-	}
-
-	.big {
-		font-weight: var(--weight-display);
-		font-size: var(--text-2xl);
-		line-height: 1;
-		letter-spacing: var(--track-display);
-		font-variant-numeric: tabular-nums;
-	}
-
-	@media (max-width: 720px) {
-		.type {
-			grid-template-columns: 1fr;
-		}
-
-		.spec {
-			border-top: 1px solid var(--line-mid);
-			padding-bottom: 0;
-		}
-
-		.spec + * {
-			border-top: 0;
-		}
 	}
 </style>

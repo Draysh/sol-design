@@ -1,6 +1,5 @@
 <script lang="ts">
 	import '../lib/styles/index.css';
-	import Grain from '../lib/components/Grain.svelte';
 	import Notices from '../lib/components/Notices.svelte';
 	import type { Snippet } from 'svelte';
 
@@ -11,4 +10,3 @@
 
 {@render children()}
 <Notices />
-<Grain />

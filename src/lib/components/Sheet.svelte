@@ -1,283 +1,210 @@
 <!--
-	The band across the top of a world's first screen: the lit body, its name
-	in a reticle, a callout, moon links and data rows along the bottom. It is
-	a header, not a hero: the working surface starts right under it.
-	DESIGN.md, "The band", explains each part.
+	The band across the top of a world's first screen: a title card on the
+	still, as the apps' Sheet. A HUD line (what is on, else the world, the day
+	and the hour), the page's Japanese in the title serif (the world's name in
+	Japanese unless given), the callout as the English under it, then what
+	sits under the title (moon links, the screen's main action) beside two or
+	three big figures with their Japanese tags. Never a strip of "LABEL:
+	VALUE" facts. It is a header, not a hero: the working surface starts right
+	under it, and in a pane under about 1070 px it is a compact card, so the
+	page's first card shows in the first view.
 
-	The compositions are the apps' (Worlds.qml): a landscape frame 1600 × 900
-	(a 390-wide one 580 tall in portrait) spans the band's width, and the band
-	shows its middle. Once the band stops growing the bodies stop too, and the
-	frame widens instead, so a body is either whole beside the name or a
-	horizon rising from the band's bottom edge.
-
-	It arrives in order: the body rises, the reticle finds the name, the
-	callout and the strip of facts settle after it.
+	<Sheet world="saturn" jp="続きから。" callout={['Pick up where you left off']}
+		figures={[{ value: '06', label: 'Watching', jp: '視聴中' }]} />
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import type { Moon, Row } from '../types.js';
-	import { skyOf, world as worldFor, type Placement } from '../worlds.js';
-	import Body from './Body.svelte';
-	import Callout from './Callout.svelte';
-	import DataRows from './DataRows.svelte';
+	import { jpOf } from '../look.js';
+	import type { Figure, Moon } from '../types.js';
+	import { world as worldFor } from '../worlds.js';
+	import HeroFigure from './HeroFigure.svelte';
+	import HudLabel from './HudLabel.svelte';
 	import MoonLink from './MoonLink.svelte';
-	import Reticle from './Reticle.svelte';
 
 	interface Props {
 		world: string;
-		/** Defaults to the world's name. */
+		/** The world's name in English; defaults to its own. */
 		name?: string;
+		/** The title in Japanese: "おかえり。". The world's name in Japanese when not given. */
+		jp?: string;
+		/** The HUD line over the title, and its Japanese. The world and the day when not given. */
+		hud?: string;
+		hudJp?: string;
+		/** The English under the title: a sentence, or facts as "Walk = done". */
 		callout?: string[];
-		/** Up to three blocks: left, centre and right. */
-		rows?: Row[][];
-		/** Links to the world's moons, shown under the name. */
+		/** Two or three big figures beside what sits under the title. */
+		figures?: Figure[];
+		/** Links to the world's moons (or its planet), shown under the title. */
 		moons?: Moon[];
-		/** Extra content under the name, such as the screen's main action. */
+		/** Extra content under the title, such as the screen's main action. */
 		children?: Snippet;
 	}
 
-	let { world: id, name, callout = [], rows = [], moons = [], children }: Props = $props();
+	let { world: id, name, jp, hud, hudJp = '', callout = [], figures = [], moons = [], children }: Props = $props();
 
 	const w = $derived(worldFor(id));
-	const blocks = $derived.by(() => {
-		const kept = rows.slice(0, 3);
-		const at = kept.length === 3 ? (['left', 'center', 'right'] as const) : (['left', 'right'] as const);
-		return kept.map((block, i) => ({ block, at: at[i] }));
-	});
-
-	/** Where a body sits: across by the frame's width (`--u`), its size and height by `--v`. */
-	function place(p: Placement) {
-		return `left: calc(var(--u) * ${p.cx} - var(--v) * ${p.r}); top: calc(var(--v) * ${p.cy - p.r}); width: calc(var(--v) * ${p.r * 2});`;
-	}
-
-	/** The real sky where the world follows it, else where the sheet sets it. */
-	function lightOf(world: string, p: Placement) {
-		return skyOf(world) ?? p;
-	}
+	const title = $derived(jp ?? jpOf(id));
+	const line = $derived(callout.map((l) => l.replace(/\s*=\s*/, ': ')).join(' · '));
+	const day = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date());
+	const head = $derived(hud ?? `${name ?? w.name} · ${day}`);
 </script>
 
-<div class="wrap">
-	<section class="sheet sol-sky" style:--world={w.color} aria-label={name ?? w.name}>
-		<!-- The frame the placements are made for, centred on the band. -->
-		<div class="frame">
-			<div class="sky landscape" aria-hidden="true">
-				<div class="body" style={place(w.hero)}>
-					<Body world={id} light={lightOf(id, w.hero).light} phase={lightOf(id, w.hero).phase} label="" />
+<section class="sheet" aria-label={name ?? w.name}>
+	<div class="card">
+		<span class="hud-line"><HudLabel text={head} jp={hudJp} /></span>
+		<h1 class="title" lang="ja">{title}</h1>
+		{#if line}<p class="line">{line}</p>{/if}
+	</div>
+	{#if moons.length || children || figures.length}
+		<div class="under">
+			{#if moons.length || children}
+				<div class="links">
+					{#each moons as moon (moon.id)}
+						<MoonLink href={moon.href} jp={jpOf(moon.id)} onclick={moon.onclick} external={false}>{moon.label}</MoonLink>
+					{/each}
+					{@render children?.()}
 				</div>
-				{#each w.companions ?? [] as c (c.world)}
-					<div class="body" style={place(c)}>
-						<Body world={c.world} light={lightOf(c.world, c).light} phase={lightOf(c.world, c).phase} label="" />
-					</div>
-				{/each}
-			</div>
-			<div class="sky portrait" aria-hidden="true">
-				<div class="body" style={place(w.portrait)}>
-					<Body world={id} light={lightOf(id, w.portrait).light} phase={lightOf(id, w.portrait).phase} label="" />
-				</div>
-			</div>
-
-			<div class="center">
-				<Reticle tilt={w.tilt} size="var(--reticle)">
-					<h1 class="name">{name ?? w.name}</h1>
-				</Reticle>
-				{#if moons.length || children}
-					<div class="under">
-						{#each moons as moon (moon.id)}
-							<MoonLink href={moon.href} onclick={moon.onclick}>{moon.label}</MoonLink>
-						{/each}
-						{@render children?.()}
-					</div>
-				{/if}
-			</div>
-
-			{#if callout.length}
-				<!-- Where the world puts it (a flipped one ends there), kept inside the band. -->
-				<div
-					class="callout"
-					style={w.callout.flip
-						? `right: max(var(--margin), calc(100% - var(--u) * ${w.callout.x})); top: calc(var(--v) * ${w.callout.y});`
-						: `left: min(max(var(--margin), calc(var(--u) * ${w.callout.x})), calc(100% - var(--margin) - 160px)); top: calc(var(--v) * ${w.callout.y});`}
-				>
-					<Callout lines={callout} flip={w.callout.flip} />
+			{/if}
+			{#if figures.length}
+				<div class="figures">
+					{#each figures.slice(0, 3) as f, i (i)}
+						<span class="fig" style:--i={i + 3}><HeroFigure value={f.value} label={f.label} jp={f.jp} lead={i === 0} /></span>
+					{/each}
 				</div>
 			{/if}
 		</div>
-	</section>
-	{#if rows.length}
-		<!-- The facts, on a strip of their own under the band. -->
-		<div class="rows sol-sky" style:--world={w.color}>
-			{#each blocks as { block, at }, i (i)}
-				<div class="block at-{at}" style:--i={i}>
-					<DataRows rows={block} align={at} />
-				</div>
-			{/each}
-		</div>
 	{/if}
-</div>
+</section>
 
 <style>
-	.wrap {
-		container-type: inline-size;
-		width: 100%;
-	}
-
 	.sheet {
-		/* The frame's unit across, and for heights and sizes: as `--u` until the band stops growing. */
-		--u: calc(100cqw / 1600);
-		--v: min(var(--u), calc(400px / 470));
-		--reticle: clamp(140px, calc(var(--u) * 200), 210px);
+		container-type: inline-size;
 		position: relative;
-		width: 100%;
-		height: clamp(260px, calc(var(--u) * 470), 400px);
-		overflow: hidden;
-		background: var(--deep);
-		border-bottom: 1px solid var(--line);
-		isolation: isolate;
-	}
-
-	/* The frame keeps its shape; the band shows its middle. */
-	.frame {
-		position: absolute;
-		left: 0;
-		width: 100%;
-		top: calc(50% - var(--v) * 450);
-		height: calc(var(--v) * 900);
-		animation: breathe var(--drift) ease-in-out infinite;
-	}
-
-	/* A slow drift, so the scene breathes. */
-	@keyframes breathe {
-		50% {
-			transform: translateY(-4px);
-		}
-	}
-
-	.sky {
-		position: absolute;
-		inset: 0;
-		z-index: -1;
-	}
-
-	.portrait {
-		display: none;
-	}
-
-	.body {
-		position: absolute;
-	}
-
-	.center {
-		position: absolute;
-		left: 50%;
-		top: calc(var(--v) * 450);
 		display: flex;
 		flex-direction: column;
-		align-items: center;
-		translate: -50% calc(var(--reticle) / -2);
+		justify-content: center;
+		gap: var(--s-3);
+		min-height: clamp(260px, 30vw, 400px);
+		padding: var(--s-5) var(--margin) var(--s-4);
+		border-bottom: 1px solid var(--art-line);
 	}
 
-	/* The name comes into focus: from wide-spaced and faint to set. */
-	.name {
+	/* The words stand on the still: a soft dark glow behind them, so they read on a bright one. */
+	.card {
+		display: flex;
+		flex-direction: column;
+		gap: var(--s-1);
+		min-width: 0;
+		max-width: var(--content);
+		filter: drop-shadow(0 1px 2px color-mix(in srgb, var(--dim) 70%, transparent))
+			drop-shadow(0 2px 16px color-mix(in srgb, var(--dim) 85%, transparent));
+	}
+
+	.hud-line {
+		animation: sol-fade var(--fade) var(--ease) both;
+	}
+
+	.hud-line :global(.hud),
+	.hud-line :global(.sol-jp) {
+		color: var(--art-accent);
+	}
+
+	.hud-line :global(.mark) {
+		color: var(--art-accent);
+	}
+
+	/* The title in the heavy serif: a long one shrinks to its line before it is cut. */
+	.title {
+		overflow: hidden;
+		font-family: var(--font-title);
+		font-feature-settings: var(--title-features);
+		font-size: clamp(48px, 8cqw, calc(var(--text-hero) * 0.85));
+		font-weight: 800;
+		letter-spacing: 0;
+		text-transform: none;
+		line-height: 1.12;
 		white-space: nowrap;
-		font-weight: var(--weight-name);
-		font-size: clamp(20px, calc(var(--u) * 36), 34px);
-		letter-spacing: var(--track-name);
-		line-height: 1;
-		color: var(--text);
-		text-shadow: 0 0 18px color-mix(in srgb, var(--veil) 70%, transparent);
-		animation: focus var(--rise) var(--ease-out) both;
-		animation-delay: calc(var(--rise) / 4);
+		text-overflow: ellipsis;
+		color: #fff;
+		animation: sol-settle var(--settle) var(--spring) both;
+		animation-delay: calc(var(--stagger) * 2);
 	}
 
-	@keyframes focus {
-		from {
-			opacity: 0;
-			letter-spacing: 0.3em;
-		}
+	.line {
+		max-width: 62ch;
+		font-size: calc(var(--text-lede) * 0.8);
+		font-weight: var(--weight-name);
+		line-height: 1.35;
+		color: color-mix(in srgb, #fff 92%, transparent);
+		animation: sol-fade var(--fade) var(--ease) both;
+		animation-delay: calc(var(--stagger) * 4);
 	}
 
 	.under {
 		display: flex;
 		flex-wrap: wrap;
-		justify-content: center;
+		align-items: center;
+		gap: var(--s-3) var(--s-6);
+	}
+
+	.links {
+		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
 		gap: var(--s-1) var(--s-4);
-		margin-top: var(--s-2);
-		animation: sol-settle var(--settle) var(--ease-out) both;
+		animation: sol-settle var(--settle) var(--spring) both;
 		animation-delay: calc(var(--rise) / 2);
 	}
 
-	.callout {
-		position: absolute;
-		animation: sol-fade var(--fade) var(--ease) both;
-		animation-delay: calc(var(--rise) / 2);
+	.figures {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--s-3) var(--s-5);
 	}
 
-	.rows {
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		align-items: start;
-		gap: var(--s-4);
-		padding: var(--s-2) var(--margin);
-		background: var(--deep);
-		border-bottom: 1px solid var(--line);
+	.fig {
+		animation: sol-settle var(--settle) var(--spring) both;
+		animation-delay: calc(var(--i) * var(--stagger) * 2);
 	}
 
-	.block {
-		animation: sol-settle var(--settle) var(--ease-out) both;
-		animation-delay: calc(var(--rise) / 3 + var(--i, 0) * var(--stagger) * 3);
+	/* A compact card in a narrower pane, so the page's first card is in view. */
+	@container (max-width: 1070px) {
+		.title {
+			font-size: clamp(40px, 7cqw, 76px);
+		}
+
+		.figures :global(.figure) {
+			--size: calc(var(--text-figure) * 0.74);
+		}
 	}
 
-	.at-center {
-		grid-column: 2;
-	}
-
-	.at-right {
-		grid-column: 3;
-	}
-
-	@container (max-width: 700px) {
+	@media (max-width: 1300px) {
 		.sheet {
-			--u: calc(100cqw / 390);
-			--v: min(var(--u), calc(360px / 340));
-			--reticle: 140px;
-			height: clamp(240px, calc(var(--u) * 340), 360px);
-		}
-
-		.frame {
-			top: calc(50% - var(--v) * 290);
-			height: calc(var(--v) * 580);
-		}
-
-		.landscape,
-		.callout {
-			display: none;
-		}
-
-		.portrait {
-			display: block;
-		}
-
-		.center {
-			top: calc(var(--v) * 290);
-		}
-
-		.rows {
-			grid-template-columns: 1fr 1fr;
-		}
-
-		.at-center {
-			display: none;
-		}
-
-		.at-right {
-			grid-column: 2;
+			min-height: 200px;
+			padding-top: var(--s-4);
 		}
 	}
 
-	@media (prefers-reduced-motion: reduce) {
-		.frame {
-			animation: none;
+	@media (max-width: 700px) {
+		.sheet {
+			min-height: 0;
+			padding: var(--s-4) var(--margin) var(--s-3);
+		}
+
+		.title {
+			font-size: clamp(36px, 12cqw, 56px);
+		}
+
+		.line {
+			font-size: var(--text-m);
+		}
+
+		.figures {
+			gap: var(--s-3) var(--s-4);
+		}
+
+		.fig:nth-child(3) {
+			display: none;
 		}
 	}
 </style>

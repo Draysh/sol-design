@@ -1,4 +1,4 @@
-<!-- A label and room to write: underlined like a field, growing as you type. Focus lights the line from the left. -->
+<!-- A label in HUD capitals and room to write in a bracketed well, like a field, growing as you type. Focus lights the brackets and a line along the foot. -->
 <script lang="ts">
 	import type { HTMLTextareaAttributes } from 'svelte/elements';
 
@@ -15,8 +15,9 @@
 
 <div class="area">
 	<label class="sol-label" for={areaId}>{label}</label>
-	<span class="control">
+	<span class="sol-well">
 		<textarea id={areaId} bind:value {rows} aria-describedby={hint ? `${uid}-hint` : undefined} {...rest}></textarea>
+		<span class="sol-well-line" aria-hidden="true"></span>
 	</span>
 	{#if hint}<p class="hint" id="{uid}-hint">{hint}</p>{/if}
 </div>
@@ -28,22 +29,12 @@
 		gap: var(--s-2);
 	}
 
-	.sol-label {
-		font-size: var(--text-xs);
-	}
-
-	.control {
-		position: relative;
-		display: block;
-	}
-
 	textarea {
 		display: block;
 		width: 100%;
 		min-height: var(--target);
-		padding: 8px 0;
+		padding: 8px var(--s-3);
 		border: 0;
-		border-bottom: 1px solid var(--line-strong);
 		border-radius: 0;
 		background: transparent;
 		color: var(--text);
@@ -52,38 +43,14 @@
 		line-height: 1.6;
 		resize: vertical;
 		field-sizing: content;
-		transition: border-color var(--fade) var(--ease);
 	}
 
 	textarea::placeholder {
 		color: var(--text-faint);
 	}
 
-	textarea:hover {
-		border-color: rgb(var(--ink) / 0.7);
-	}
-
 	textarea:focus-visible {
 		outline: none;
-		border-color: var(--text-bright);
-	}
-
-	.control::after {
-		content: '';
-		position: absolute;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		height: 1px;
-		background: var(--text-bright);
-		transform: scaleX(0);
-		transform-origin: left;
-		transition: transform var(--settle) var(--ease-out);
-		pointer-events: none;
-	}
-
-	.control:focus-within::after {
-		transform: scaleX(1);
 	}
 
 	.hint {

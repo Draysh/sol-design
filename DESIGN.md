@@ -1,31 +1,61 @@
-# Sol design language: Observatory
+# Sol design language: Yozora (夜空)
 
-Every Sol app looks and behaves as if it came from one observatory. This page
-holds the rules. The components in this package already follow them, so the
-fastest way to obey a rule is to use the component instead of rebuilding it.
+Every Sol page looks as if it came from an anime film's evening. This page
+holds the rules for Sol's web app. The components in this package already
+follow them, so the fastest way to obey a rule is to use the component
+instead of rebuilding it.
 
-Sol's web app and the worlds' desktop apps share one look: the same night and
-day palettes (sol-quick's `Theme.qml`, this package's `tokens.css`), the same
-corners, the same raised panels, and the same lit bodies (sol-quick's
-`body.frag`, ported to WebGL in `body-gl.ts`) from the same world data
-(`Worlds.qml`, from which `worlds.gen.ts` is written).
-
-The visual reference is the brand canvas (direction 03C, "Observatory"):
-mission photographs of real bodies lit from one side on a night sky, a name
-inside a reticle, short callouts, and facts written as `Label: value`.
+Sol's web app and the worlds' desktop apps share one look, described in
+full in the workspace's `docs/yozora.md`: the same flavours, scale and
+motion (sol-quick's `Theme.qml`, from which `scripts/look-from-qml.mjs`
+writes this package's `tokens.css` and `look.gen.ts`), the same faces
+(sol-quick's fonts, cut for the web by `scripts/fonts-for-web.py`) and the
+same world data (`Worlds.qml`, from which `worlds.gen.ts` is written).
 
 ## Principles
 
-1. **One light.** Every body is lit from one side. Darkness is the default;
-   light means attention.
-2. **Night is space.** The ground is a night sky in three depths, tinted a
-   little by the world: the chrome deepest, the pane, and panels raised off
-   it. By day it is a pale sky. Nothing is filled except the screen's main
-   action.
-3. **Name in the reticle.** Every world names itself inside a reticle whose
-   axis leans at that world's real axial tilt.
-4. **Label: value.** Facts read as label and value. Semibold says what it is;
-   light says what it is now.
+1. **A film's sky.** Every page stands on a still from an anime film under
+   its world's grade, or the world's drawn sky when there is no still. Words
+   on the still are white (the `--art-…` tokens).
+2. **Glass.** Panels are glass: what is behind them blurred, a hairline,
+   one corner cut at 45° (top right), the top edge and the cut catching the
+   light. The page's lead panel wears brackets in the light; others light
+   theirs under the pointer.
+3. **Two faces and a serif.** HUD capitals (Chakra Petch, tracked wide) for
+   labels of one to three words and for figures; Outfit for reading; the
+   heavy title serif (Shippori Mincho B1) for titles and every Japanese tag.
+   Japanese is never in capitals or tracked.
+4. **One mood a world.** There is no day mode: each world keeps its
+   flavour all day. Nothing is filled except the screen's main action.
+
+## The flavours
+
+A flavour is a world's palette and its ground (`Theme.yozoraLooks`): Saturn's
+dusk (amber and cyan), Mercury's shrine at night (sakura, gold, vermilion
+seals), Neptune's neon rain (red and ice cyan), Terra's noon (frosted white
+glass with dark ink, ramune blue, a sunflower primary) and Luna's moonlit
+evening (indigo, moon yellow). A moon without one wears its planet's.
+
+An element wears a flavour with `data-flavour="<id>"`; everything inside it
+takes that flavour's tokens (`--ground`, `--glass`, `--edge`, `--accent`,
+`--second`, `--primary`, the `--text-…`, `--hud-…` and `--art-…` words, the
+`--sky-0…4` and `--grade-0…4` stops). The Shell sets it from its `flavour`
+(the app's world unless a page is about another). **Sol wears Saturn's
+dusk**, as `Theme.yozoraOf` gives any world without one, and a world's own
+page in Sol wears that world's flavour, the rail and every panel with it.
+`flavourOf`, `jpOf` and `capsFor` (`look.ts`) are the rules a script needs.
+
+## The ground
+
+`<Ground>` (the Shell draws it) is the flavour's drawn sky (its five stops
+top to bottom, stars at night, Terra's sun, Neptune's rain drawn once) and,
+over it, a still the page may show, faded in, framed as the flavour frames
+its stills, under the grade, a shade down the left where titles stand and a
+vignette. The stills are the person's own pictures from the films and are
+**never** part of this package or Sol's build: Sol serves its owner's
+`sol-yozora` folder to them signed in (`/api/sol/look`), and the Shell takes
+their addresses as `stills`, one per section in turn (`stillFor`, as the
+apps do). Signed out, or without a folder, it is the drawn sky.
 
 ## The frame
 
@@ -33,247 +63,77 @@ Every app is a window, not a page. `<Shell>` draws the frame:
 
 | Part | What it is | Rule |
 | --- | --- | --- |
-| Sidebar | The world's disc and name, its sections, its doors, its status at the bottom | 228 px, a rail of 60 px on narrow windows. Chrome: not selectable |
-| Current section | A line of the world's light down its left edge | Light means attention; nothing else in the chrome is coloured |
-| Doors | Under the sections: Sol, and the moons or planet this world works with, each a glyph and a name | Opening one opens that app (the Rust side does it, `orbit::doors`); only apps installed on this computer are doors |
-| Status | The bottom of the sidebar: `LinkStatus`, one line on where the app stands with Sol | In sync, sending, or offline with what waits |
-| Pane | The app's screens | Scrolls on its own; the window and the chrome never scroll |
-| Footer | A bar along the bottom of the pane | For what is always there, e.g. a player's transport |
+| Rail | Floating glass on the left: the world's kanji in a diamond, its name in Japanese over its name in HUD capitals, its sections, its doors, its status at the foot | 228 px; on a narrow window 60 px, each section its number and its Japanese. Its foot's corner is cut, brackets on its top corners. Chrome: not selectable |
+| Sections | Numbered 01, 02 … with their `jp` before the name | The current one has a 3 px bar in the light, which glides to the next |
+| Doors | Under the sections: Sol, and the moons or planet this world works with | Opening one opens that app |
+| Status | The rail's foot: `LinkStatus` or the app's own | One line |
+| Pane | The app's screens, on the ground | Scrolls on its own; the window and the chrome never scroll. Content is never wider than `--content` (1400 px) |
 
 `Ctrl` (or `⌘`) + `1`…`9` jumps to a section, `/` opens the app's search
-(give the Shell its path as `search`) and `?` opens a sheet of the keys:
-the Shell's own, then the app's (`shortcuts`), so nobody has to guess what
-`Space` does here. A new page starts at the top of the pane and settles
-into it, so give the Shell the current path. The light glides from the old
-section to the new.
-
-Every section carries a `hint`: one line on what it is for (`Timeline`:
-"What's on the way, week by week"), shown on hover and read out where the
-rail shows only a dot. The world's own tagline sits on its name at the top.
-Names alone are for people who know the app; the hint is for the day they
-don't.
+and `?` opens a sheet of the keys. Every section carries a `hint`: one line
+on what it is for, shown on hover.
 
 ### Going back
 
-A page whose path isn't a section's (a title from the library, an album)
-was opened from somewhere, and the Shell offers the way back by name:
-`← Library`. The `PageHead` shows it first in its bar; a page whose top is
-a picture (a backdrop, a hero) gets it floating over the pane's corner; a
-page with a header of its own places a `<WayBack />` there. `Alt` + `←` /
-`→` and the mouse's back and forward buttons go back and forth on every
-page (on Linux the app passes the buttons on: `orbit::mouse`).
+A page whose path isn't a section's was opened from somewhere, and the
+Shell offers the way back: always 「← 戻る」 BACK, the page it leads to in
+its hint. The `PageHead` shows it first; a page without one gets it floating
+over the pane's corner. Alt+← and the mouse's back button go back too, and
+going back lands where the page was left.
 
-Going back lands where you left off: the Shell keeps the pane's scroll for
-every step of the history and returns to it once the page is tall enough.
-So a page must come back the same height it was left at:
+## The title card
 
-- what someone typed or chose that shapes the page (a filter, a search, a
-  sort) is kept with SvelteKit's `snapshot()` from `$app/navigation`;
-- what was loaded bit by bit ("Show more", "Earlier") is kept in the
-  page's `<script module>` and shown again, not fetched from the start;
-- a change that only marks things (now tracked, now a favourite) marks
-  them in place and keeps what's loaded.
+A first page opens with a `Sheet`: the title card on the still. A HUD line
+(what is on, else the world and the day), the page's Japanese in the title
+serif (`jp`, the world's name unless given), the English line under it
+(`callout`), then what sits under it (moon links, the main action) beside
+two or three `HeroFigure`s with their Japanese tags (`figures`). Never a
+strip of "LABEL: VALUE" facts. In a pane under about 1070 px it is compact,
+so the first card is in the first view.
 
-## The band
-
-A world's first screen starts with a `<Sheet>`: a band across the top of
-the pane, 260–400 px tall, then a strip of facts. It is a header, not a
-hero: the working surface starts right under it.
-
-| Part | What it is | Rule |
-| --- | --- | --- |
-| Body | The world's photograph, lit from one side | Cropped so the light's edge crosses the band; never centred and whole |
-| Name and reticle | Centred | Two arcs and an axis at the real tilt (`worlds.ts`) |
-| Callout | Dotted leader and a short list | What comes next in this world; three lines at most, `Thing = state` |
-| Moon links and the main action | Under the name | Doors to the world's moons, or from a moon to its planet; shown only when that app is installed here |
-| Data rows | A strip under the band, two or three blocks | Seven lines at most in total |
-
-The band arrives in order: the body rises, the reticle draws itself around
-the name, then the callout and the strip of facts settle after it.
-
-Everything below is the app's working surface: `Card`s in a grid, each
-other page starting with a `<PageHead>` toolbar that stays put while the
-page scrolls. The toolbar is the deep sky (`--deep`) with a short fade under
-it, never a blur: what scrolls under it must cost the compositor nothing.
-
-On a phone the body rises from the bottom, lit from above, the callout
-drops out, and the strip keeps two blocks.
-
-## Type
-
-One family, **Outfit**, self-hosted from `@fontsource-variable/outfit`.
-Weight does the work that other systems give to separate fonts.
-
-| Role | Weight | Size | Case and tracking |
-| --- | --- | --- | --- |
-| Display (big numbers, covers) | 200 | 56–120 px | Capitals, +10 % |
-| World name, headings | 400 | 34 px (sheet), 19 px (cards) | Capitals, +8 % |
-| Label (what it is) | 600 | 11–11.5 px | Capitals, +5 to +14 % |
-| Value (what it is now) | 300 | 11–11.5 px | Capitals, +5 % |
-| Reading text | 300 | 15 px | Sentence case |
-
-Capitals are for names, labels and values. Anything read in full (messages,
-descriptions, diary entries) stays in sentence case. Japanese text in Mercury
-uses `--font-jp` (Shippori Mincho) at the same size as the text around it.
-
-## Light and colour
-
-The sky comes in three depths, at night or by day, as in the apps
-(`Theme.qml`): each is made from the sky and the world's colour, so each app's
-sky is tinted a little by its own world. Elements that set a world of their
-own (`--world` on the Shell, a Sheet) carry the class `sol-sky`, which works
-the depths out again from it.
-
-| Token | Night | Day | Use |
-| --- | --- | --- | --- |
-| `--night` | `#0C0E13` | `#EEF1F5` | The sky the depths are made from |
-| `--space` | night with 5 % of the world | day with 7 % | The pane, where the work is |
-| `--deep` | a step deeper (×0.69) | ×0.95 | The chrome: the sidebar, a Sheet's band and strip, a PageHead |
-| `--raised` / `--raised-top` | white at 3.5 / 6 % over the pane | white at 70 / 90 % | A panel off the pane: a Card, lit a little from above |
-| `--ink` | white | black | What overlays and hairlines are drawn in, at an alpha |
-| `--line` / `--line-mid` / `--line-strong` | ink at 7 / 12 / 36 % | 9 / 15 / 36 % | Hairlines |
-| `--text` / `--text-bright` | `#E6E8ED` / `#FFFFFF` | `#1B1F27` / `#07080B` | Text and values; names |
-| `--text-value` | `#C3C7CF` | `#3B414D` | Reading text |
-| `--text-quiet` / `--text-faint` | `#8B919D` / `#4F5561` | `#666D7B` / `#A6ABB5` | A fact's label, units, dates; disabled |
-| `--text-world` | text with 55 % of the world | the world deepened, 75 % | A panel's title, the world's role |
-| `--accent` | the world | no lighter than a mid-tone | Small marks: the current section's light, a glyph |
-| `--danger` / `--danger-text` | `#FF6B5A` / `#FF8A7A` | `#D9493A` / `#B8352A` | Errors only |
-| `--world` | the world's colour | | Glow, glyphs, one accent line. Never fills |
-
-**Night and day.** Night is the default. Day comes from the desktop
-(`prefers-color-scheme`), or from the person's choice in this browser:
-`light.mode` (`light.svelte.ts`, shown as `<LightChoice />` on Sol's
-Settings) is "system", "sun" (day from 07:00 to 19:00), "night" or "day",
-the same choices the apps offer under Settings → On this device, kept in
-`localStorage` as `sol.light`. What it comes to is set on the root as
-`data-light`; Sol's `app.html` sets it before anything paints.
-
-Colour comes only from the bodies. Each world's colour is sampled from its own
-photograph:
-
-| World | Colour | Tilt | Light from | App |
-| --- | --- | --- | --- | --- |
-| Sol | `#FF7A2E` | 7.25° | (the source) | The hub |
-| Terra | `#8EC5FF` | 23.44° | right | Habits, diary and wellbeing |
-| Luna | `#FFFFFF` | 6.68° | left | Terra's quieter twin |
-| Saturn | `#E6CF9E` | 26.73° | (photo) | Movies, series and anime |
-| Titan | `#FFB06A` | 0.3° | upper right | Recommendations, made at home |
-| Mercury | `#F2F2F2` | 0.03° | above | Japanese |
-| Neptune | `#6F9BFF` | 28.32° | upper left | Music through Navidrome |
-| Triton | `#E4D1DD` | 157° (retrograde) | upper left | Radio and discovery |
-
-The lighting (in `Body.svelte`, through `body-gl.ts`, the apps' `body.frag`
-in WebGL): each world's photograph is laid on a sphere (`fit` says where the
-disc is in the photograph, and turns one with a terminator of its own to face
-its light) and lit by a distant sun from `light` at `phase`. The terminator is
-soft where there is air (`air`) and crisp on rock; the night side is nearly
-black, and by day lets the sky through, as the moon does in daylight; a world
-with an atmosphere gets a thin rim of it on the sunny limb, and Titan's haze
-rings even its night side. Sol is a star: its photograph tinted, a darker
-limb, a corona. Saturn is its photograph used whole, laid on as light, so its
-black becomes the sky. Terra and Luna follow the real sky (`skyOf`): Luna
-shows tonight's phase, Terra the local hour. Clouds drift over Terra,
-Neptune and Titan and Sol's corona flickers, on a body at least 120 px wide
-while it is on screen. One hidden WebGL canvas draws every body on the page;
-without WebGL the photograph shows clipped to a circle.
-
-A film grain of dark specks covers everything: a fine texture over the night
-and over photographs, a touch only by day. It is one plain layer with no
-blend mode, so scrolling under it is free.
-
-## Layout
-
-- Content sits close to its chrome: the pane's margin is 16–40 px
-  (`--margin`), never the wide margins of a web page.
-- Spacing steps: 4, 8, 16, 24, 40, 64, 112 (`--s-1` … `--s-7`). A page
-  pads `var(--s-4) var(--margin) var(--s-6)`.
-- Cards sit in an auto-fit grid, `minmax(300px, 1fr)`, 24 px gaps.
-- Corners come from one scale, so a thing inside another rounds with it (an
-  inner corner is about the outer one less the room between them):
-  `--radius-s` 4 px (a check's box, a pairing code, a link's focus ticks),
-  `--radius-m` 6 px (a button, the way back, a sidebar row), `--radius` 10 px
-  (a card, a notice), `--radius-l` 14 px (a big surface on its own: the keys
-  sheet, the sign-in panel). Pills (a round button, a switch, a count) stay
-  pills; hairlines and rules stay straight.
-- Lines are 1 px, never thicker. No drop shadows on panels: they are raised
-  by their light (a gradient from `--raised-top`) and a hairline; light comes
-  from bodies.
-- Pointer controls (buttons, fields, sidebar rows) are 36 px (`--control`);
-  anything meant for a thumb stays 44 px (`--target`).
-- Headings in the chrome are small capitals; big type is for names in
-  reticles and for display figures, not for page titles.
+Other pages start with a `PageHead`: a glass band that stays put, the
+page's Japanese (`jp`, else its section's), its HUD line (the section's
+number and the world) over the English title, a quiet line and the page's
+actions.
 
 ## Components
 
-| Component | Use it for |
+| Component | Use |
 | --- | --- |
-| `Shell` | The frame of every app: the sidebar (sections, status at the bottom), the pane, an optional footer bar, notices and grain |
-| `Sheet` | The band at the top of a world's first screen, and its strip of facts |
-| `PageHead` | A page's toolbar: the way back on an opened page, title, a quiet line, the page's action; stays put while the page scrolls |
-| `WayBack` | The way back, on an opened page with a header of its own (`PageHead` has it already) |
-| `Body` | A lit world anywhere else, e.g. the dashboard's corner sun |
-| `Reticle` | Framing a name or one key figure |
-| `Card` | A group of related things: a raised panel, its title in the world's light over a hairline, ticks that lock on under the pointer |
-| `Button` | `primary` once per screen for the main action; `ghost` otherwise; `quiet` for low-stakes actions; `round` for icon-only controls (always with `aria-label`) |
-| `Field` | Text input with label; errors say what to do |
-| `Select` | A choice from a short list, underlined like a field |
-| `LightChoice` | Night or day in this browser: the apps' four choices |
-| `TextArea` | Writing more than a line, e.g. a diary; grows as you type |
-| `Toggle` | An on/off setting that applies at once or with its form |
-| `Check` | One checklist row |
-| `Progress` | A position in something (track, episode, deck) |
-| `RingGauge` | Part of a whole of a whole (episode of season of show) |
-| `DataRows` | `Label: value` facts |
-| `Callout` | A short list leading from a body |
-| `MoonLink` | A link to a moon's app (or a moon's way to its planet); `onclick` opens the app itself |
-| `LinkStatus` | Left from the Svelte world apps, unused: the world apps' sidebar line is sol-quick's `LinkStatus` (`../quick`) |
-| `Widget` | Drawing a `WidgetView` (Sol's overview does this for every world) |
-| `Notices` / `notices.show()` | Short in-app messages at the top edge |
-| `Loader` | The moment before data arrives |
-| `WorldGlyph` | A world's crescent icon in lists and navigation |
-| `AppUpdates` | Left from the Svelte world apps, unused: the world apps' card is sol-quick's `AppUpdates` |
-| `WithPlanet` | Left from the Svelte world apps, unused: every moon is carried in its planet's app now |
+| `Shell` | The frame of every app: the ground, the rail, the pane, an optional footer bar, notices |
+| `Ground` | The ground on its own (a page outside a Shell: sign-in) |
+| `Sheet`, `HeroFigure` | A first page's title card and its figures |
+| `PageHead` | The top of every other page |
+| `Card` | A group on glass, headed by a `HudLabel`; `lead` keeps its brackets on |
+| `HudLabel` | A heading of the look: the flavour's mark (Saturn's diamond, Mercury's seal, Neptune's slashes or lit sign, Terra's furin), the words, the Japanese tag |
+| `Button` | `primary` (a parallelogram in the light, once a screen), `ghost`, `quiet`, `round` (a diamond), `danger` (the slant outlined in vermilion: what can't be taken back) |
+| `Field`, `Select`, `TextArea` | A HUD label over a bracketed well ([ ]) that lights with the keys |
+| `Toggle`, `Check` | Square, filled in the light |
+| `Progress`, `SlantTicks` | How far along, as slanted ticks |
+| `DataRows` | Facts as a ledger: the label left, the value right, hairlines between |
+| `MoonLink` | A diamond, a moon's Japanese name and its words, under a title |
+| `Widget`, `Notices`, `Loader`, `WorldGlyph`, `Back` | A world's widget, notices on glass at the top right, waiting, a world's mark, the way back |
 
-Focus is visible everywhere and follows the shape it marks: buttons and links
-lock two corner ticks on, bent round their own corners a few pixels out
-(`.sol-ticks`, `--tick-radius`); a switch and a check get a hairline round
-the switch or the box; fields light their underline; anything else gets a
-1 px outline 4 px out, rounded with it.
+`Body`, `Reticle`, `Callout`, `RingGauge`, `AppUpdates`, `LinkStatus`,
+`WayBack` and `WithPlanet` are left from the Observatory look and the Svelte
+world apps.
+
+Glass is `.sol-glass` (an element first inside a positioned panel with
+`isolation: isolate`), brackets `.sol-brackets`, a field's well `.sol-well`,
+focus `.sol-ticks`, labels `.sol-label`, `.sol-quiet` and `.sol-jp`.
 
 ## Motion
 
-Things arrive; nothing moves for its own sake. Motion marks a change (a
-screen opening, a value changing, a tick locking on) and then stops. Only
-the Loader and a busy button keep moving, because the app is.
-
-| Name | Token | Duration | Used for |
-| --- | --- | --- | --- |
-| Fade | `--fade` | 240 ms | Text, notices, colour changes; `.sol-fade` on text that changed |
-| Lock | `--lock` | 120 ms | Focus ticks, checkboxes, switches, a press |
-| Settle | `--settle` | 420 ms | Something taking its place: a screen, a card, a row (`.sol-settle`) |
-| Rise | `--rise` | 900 ms | A body appearing, a figure counting up (`use:count`), an arc drawing |
-| Stagger | `--stagger` | 28 ms | Between things that arrive together (`.sol-stagger`), at most 400 ms late |
-
-The easing for settling and rising is `--ease-out`: fast out, a long soft
-landing. The components already move this way: the Shell's light glides to
-the new section and each screen settles into the pane; the Sheet's body
-rises and the Reticle draws itself; a Card's ticks lock on under the pointer; Check draws
-its tick; Progress fills to its value; RingGauge draws its arcs; a Field's
-line lights from the left on focus; a Notice drops in and a hairline runs
-out as its time does; DataRows fade a value that changed.
-
-Rules for an app's own motion:
-
-- Animate opacity and transforms only. Never width, height, filters or
-  blur: the pane must keep scrolling at the monitor's full rate (170 Hz on
-  a fast screen, 6 ms a frame).
-- A list staggers its first two dozen items and lets the rest appear at
-  once; a wall of covers must not take a second to fill.
-- Nothing loops, except the Loader and a busy control.
-- Moving between worlds is a page load, softened by a cross-document view
-  transition.
-- Respect `prefers-reduced-motion`: every token drops to zero, and
-  `use:count` sets its figure at once.
+Things arrive; nothing moves for its own sake and nothing moves while the
+page rests. Every length and curve is a token from `Theme.qml`: `--snap`
+(a press), `--lock`, `--fade` (text and colour), `--settle` (taking a
+place), `--turn` (a page arriving), `--count` (a figure counting up),
+`--rise`, `--stagger` between siblings (never past 400 ms), and the curves
+`--ease`, `--ease-out`, `--spring` (a tenth past its place and back) and
+`--ease-in-out`. Cards settle with the spring, buttons give under a press
+and spring back, figures count up on arrival, the rail's light glides.
+Only opacity and transforms move. With less motion (`prefers-reduced-motion`)
+only fades and instant changes are left, as the apps' `Theme.calm`.
 
 ## Writing
 
@@ -327,8 +187,8 @@ light, not pictures of light):
    `shortcuts`, and anything that is always there (a player) as `footer`.
    The doors (Sol, and its moons or planet, through `orbit::doors`) and the
    `LinkStatus` come by themselves.
-2. The first screen is a `Sheet` with the world's callout and data rows;
-   a planet's shows its installed moons under the name, a moon's its planet.
+2. The first screen is a `Sheet` with the world's title card and figures;
+   a planet's shows its installed moons under the title, a moon's its planet.
 3. Other pages are `Screen`s that start with a `PageHead`; everything else
    is `Card`s in the standard `Grid`, built from these components. No
    custom colours, fonts, shadows or corners: every token is in
@@ -355,7 +215,7 @@ light, not pictures of light):
 12. Lists arrive with the stagger (`Settle`); a card's figures count up
     (`Display`); bars grow from their baseline; a page's hero drifts a
     little with the scroll. Motion says what changed and no more: the
-    durations in `Theme` (`fade`, `lock`, `settle`, `rise`) are the only ones.
+    durations and curves in `Theme` are the only ones.
 
 Sol's own web app follows the same rules, with `world="sol"`, from this
 package's Svelte components.
@@ -393,8 +253,8 @@ saves the page as it renders, and `journalctl --user -S -1min | grep
 Sol's own web app runs in any browser: look at it on a Sol started on a
 throwaway data folder (`sol serve --data-dir <tmp> --bind 127.0.0.1:<port>`,
 an account made with `SMOKE_FRESH=1 SETUP_CODE=<code from its log>
-scripts/smoke.sh`), night and day, and at the brand book (`npm run build`,
-then serve `build/`). The rest of this section is from when the worlds' apps
+scripts/smoke.sh`), in each flavour (a world's page wears its own), and at the brand book (`npm run build`,
+then serve `build/`; `?flavour=<id>` opens it in one flavour). The rest of this section is from when the worlds' apps
 were Svelte pages in WebKitGTK, which clips and composites differently from
 Chromium: `scripts/shot.py URL out.png [W H [wait [js]]]` renders a page in
 WebKitGTK (on Wayland) and saves it.

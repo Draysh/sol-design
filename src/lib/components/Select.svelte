@@ -1,4 +1,4 @@
-<!-- A label and a choice, underlined like a field. Focus lights the line from the left. -->
+<!-- A label in HUD capitals and a choice in a bracketed well, like a field. Focus lights the brackets and a line along the foot. -->
 <script lang="ts">
 	import type { HTMLSelectAttributes } from 'svelte/elements';
 	import type { Option } from '../types.js';
@@ -19,7 +19,7 @@
 
 <div class="select">
 	<label class="sol-label" for={selectId}>{label}</label>
-	<div class="control">
+	<div class="sol-well">
 		<select id={selectId} bind:value aria-describedby={hint ? `${uid}-hint` : undefined} {...rest}>
 			{#if placeholder}<option value="" disabled>{placeholder}</option>{/if}
 			{#each options as option (option.value)}
@@ -27,6 +27,7 @@
 			{/each}
 		</select>
 		<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.1"></path></svg>
+		<span class="sol-well-line" aria-hidden="true"></span>
 	</div>
 	{#if hint}<p class="hint" id="{uid}-hint">{hint}</p>{/if}
 </div>
@@ -38,73 +39,43 @@
 		gap: var(--s-2);
 	}
 
-	.sol-label {
-		font-size: var(--text-xs);
-	}
-
-	.control {
-		position: relative;
+	.sol-well {
 		color: var(--text-quiet);
 	}
 
 	select {
+		display: block;
 		width: 100%;
 		height: var(--control);
-		padding: 0 24px 0 0;
+		padding: 0 36px 0 var(--s-3);
 		border: 0;
-		border-bottom: 1px solid var(--line-strong);
-		border-radius: 0;
 		background: transparent;
 		color: var(--text);
 		font-size: var(--text-m);
 		font-weight: var(--weight-value);
 		appearance: none;
 		cursor: pointer;
-		transition: border-color var(--fade) var(--ease);
-	}
-
-	select:hover {
-		border-color: rgb(var(--ink) / 0.7);
 	}
 
 	select:focus-visible {
 		outline: none;
-		border-color: var(--text-bright);
-	}
-
-	.control::after {
-		content: '';
-		position: absolute;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		height: 1px;
-		background: var(--text-bright);
-		transform: scaleX(0);
-		transform-origin: left;
-		transition: transform var(--settle) var(--ease-out);
-		pointer-events: none;
-	}
-
-	.control:focus-within::after {
-		transform: scaleX(1);
 	}
 
 	option {
-		background: var(--raised);
+		background: var(--frost);
 		color: var(--text);
 	}
 
 	svg {
 		position: absolute;
-		right: 4px;
+		right: var(--s-3);
 		top: 50%;
 		translate: 0 -50%;
 		pointer-events: none;
-		transition: transform var(--settle) var(--ease-out);
+		transition: transform var(--settle) var(--spring);
 	}
 
-	.control:hover svg {
+	.sol-well:hover svg {
 		transform: translateY(1px);
 	}
 

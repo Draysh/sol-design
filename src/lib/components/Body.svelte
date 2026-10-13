@@ -13,7 +13,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { animate, now, renderer, sideFor, type BodyLook } from '../body-gl.js';
-	import { light as daylight } from '../light.svelte.js';
 	import { skyOf, world as worldFor } from '../worlds.js';
 
 	interface Props {
@@ -57,7 +56,8 @@
 			fit: { x: fit.x, y: fit.y, r: fit.r, turn: fit.lit === undefined ? 0 : ((lit - fit.lit) * Math.PI) / 180 },
 			air: w.air ?? 0,
 			aspect: 774 / 1600,
-			day: daylight.day,
+			// The night always: the look has no day.
+			day: false,
 			disc
 		};
 	});

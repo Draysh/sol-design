@@ -1,16 +1,22 @@
 <!--
-	The frame around every screen: a sidebar on the left (the world, its
-	sections, its status at the bottom) and a pane on the right that scrolls
-	on its own. The window itself never scrolls, so the chrome stays put like
-	an app's, not a website's. Ctrl (or ⌘) + 1…9 jumps to a section, `/`
-	opens the app's search and `?` a sheet of the keys.
+	The frame around every screen, as the apps' Shell: the world's ground
+	(its film's still, or its drawn sky) behind everything, a floating glass
+	rail on the left (the world's kanji in a diamond and its name, its
+	sections numbered 01, 02 … with their Japanese, its status at the foot)
+	and a pane on the right that scrolls on its own. The window itself never
+	scrolls, so the chrome stays put like an app's, not a website's. Ctrl (or
+	⌘) + 1…9 jumps to a section, `/` opens the app's search and `?` a sheet
+	of the keys.
+
+	The window wears a flavour (`flavour`, the world's own unless given: a
+	page about another world may wear that one's), and stands on its stills
+	(`stills`, the addresses of the person's pictures, named as the apps name
+	them), one per section in turn; without one, the flavour's drawn sky.
 
 	Under the sections, doors: Sol, and the moons or planet this world works
-	with, each a glyph and a name that opens that app. Every section can
-	carry a `hint`, one line on what it is for, shown on hover.
-
-	The world's light marks the current section and glides to the next one
-	when it changes; each screen settles into the pane as it opens.
+	with. Every section can carry a `hint`, one line on what it is for, shown
+	on hover, and its `jp`. The light marks the current section and glides to
+	the next one when it changes; each screen settles into the pane as it opens.
 
 	A page opened from another (a title from the library) offers the way
 	back by name, in its PageHead or over the pane's corner; Alt+← and the
@@ -21,7 +27,7 @@
 	<Shell
 		world="saturn"
 		path={page.url.pathname}
-		links={[{ href: '/', label: 'Home', hint: 'What you are in the middle of', current: true }]}
+		links={[{ href: '/', label: 'Home', jp: 'ホーム', hint: 'What you are in the middle of', current: true }]}
 		doors={[{ world: 'sol', label: 'Sol', onclick: openSol }]}
 		search="/search"
 		shortcuts={[{ keys: 'Space', does: 'Play or pause' }]}
@@ -35,13 +41,13 @@
 	import { setContext, type Snippet } from 'svelte';
 	import { afterNavigate, beforeNavigate, goto } from '$app/navigation';
 	import { BACK, type BackContext, type BackTarget } from '../back.js';
-	import { light as daylight } from '../light.svelte.js';
+	import { HERE, type HereContext } from '../here.js';
+	import { flavourOf, jpOf, stillFor } from '../look.js';
 	import '../styles/index.css';
 	import type { Door, ShellLink, Shortcut } from '../types.js';
 	import { world as worldFor } from '../worlds.js';
 	import Back from './Back.svelte';
-	import Body from './Body.svelte';
-	import Grain from './Grain.svelte';
+	import Ground from './Ground.svelte';
 	import Notices from './Notices.svelte';
 	import Shortcuts from './Shortcuts.svelte';
 	import WorldGlyph from './WorldGlyph.svelte';
@@ -49,6 +55,10 @@
 	interface Props {
 		/** The world this app is; its colour becomes `--world`. */
 		world: string;
+		/** The world whose flavour the window wears: the app's own unless a page is about another. */
+		flavour?: string;
+		/** The person's stills the ground may show, by address (`<world>-ground-<n>.jpg`): none, the drawn sky. */
+		stills?: string[];
 		links?: ShellLink[];
 		/** Where the wordmark leads. */
 		home?: string;
@@ -67,11 +77,26 @@
 		children: Snippet;
 	}
 
-	let { world: id, links = [], home = '/', path, doors = [], search, shortcuts = [], actions, footer, children }: Props = $props();
-	// Night or day, as the person chose in this browser.
-	$effect(() => daylight.follow());
+	let { world: id, flavour, stills = [], links = [], home = '/', path, doors = [], search, shortcuts = [], actions, footer, children }: Props = $props();
 	let keys = $state(false);
 	const w = $derived(worldFor(id));
+	const wearing = $derived(flavour ?? id);
+	const f = $derived(flavourOf(wearing));
+	/** The open section, by its place among the links. */
+	const at = $derived(links.findIndex((l) => l.current));
+	const still = $derived(stillFor(wearing, stills, Math.max(0, at)));
+	setContext<HereContext>(HERE, {
+		get flavour() {
+			return wearing;
+		},
+		get name() {
+			return w.name;
+		},
+		get section() {
+			const l = links[at];
+			return l ? { number: at + 1, label: l.label, jp: l.jp } : null;
+		}
+	});
 	let nav = $state<HTMLElement>();
 	let list = $state<HTMLElement>();
 	let pane = $state<HTMLElement>();
@@ -204,13 +229,13 @@
 	// react to it: covers lifting and dropping as they pass read as the page
 	// jumping. Hover comes back a moment after the scroll stops.
 	let scrolling = $state(false);
-	let still: ReturnType<typeof setTimeout> | undefined;
+	let calm: ReturnType<typeof setTimeout> | undefined;
 	function scrolled() {
 		if (!scrolling) scrolling = true;
-		clearTimeout(still);
-		still = setTimeout(() => (scrolling = false), 180);
+		clearTimeout(calm);
+		calm = setTimeout(() => (scrolling = false), 180);
 	}
-	$effect(() => () => clearTimeout(still));
+	$effect(() => () => clearTimeout(calm));
 
 	// The light: one element that moves to the current section instead of
 	// a mark on each, so the change is seen as movement. It appears in place
@@ -292,11 +317,14 @@
 
 <svelte:window onkeydown={shortcut} onmouseup={mouse} />
 
-<div class="shell sol-sky" style:--world={w.color}>
+<div class="shell" data-flavour={f.id} style:--world={w.color}>
+	<Ground world={wearing} {still} />
 	<nav class="side sol-chrome" aria-label="Main" bind:this={nav}>
+		<span class="sol-glass rail-glass" aria-hidden="true"></span>
 		<a class="brand" href={home} title={w.tagline || undefined}>
-			<span class="disc" aria-hidden="true"><Body world={id} label="" animated={false} /></span>
+			<span class="diamond" aria-hidden="true"><span>{jpOf(id).charAt(0)}</span></span>
 			<span class="brand-text">
+				<span class="brand-jp" lang="ja">{jpOf(id)}</span>
 				<span class="brand-name">{w.name}</span>
 				{#if w.role}<span class="role">{w.role}</span>{/if}
 			</span>
@@ -320,11 +348,8 @@
 							aria-label={link.hint ? `${link.label}. ${link.hint}` : link.label}
 							title={[link.hint, i < 9 ? `Ctrl+${i + 1}` : null].filter(Boolean).join(' · ') || undefined}
 						>
-							{#if link.world}
-								<WorldGlyph world={link.world} size={10} />
-							{:else}
-								<span class="mark" aria-hidden="true"></span>
-							{/if}
+							<span class="number" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+							{#if link.jp}<span class="jp" lang="ja" aria-hidden="true">{link.jp}</span>{/if}
 							<span class="label">{link.label}</span>
 							{#if link.badge}
 								{#key link.badge}
@@ -361,7 +386,7 @@
 		{#if back && !claimed}
 			{#key back.label}<Back {...back} floating />{/key}
 		{/if}
-		<main bind:this={pane} class:scrolling onscroll={scrolled}>
+		<main bind:this={pane} class:scrolling class:backed={!!back && !claimed} onscroll={scrolled}>
 			{#key path}
 				<div class="screen">
 					{@render children()}
@@ -374,72 +399,142 @@
 		<Shortcuts {shortcuts} search={!!search} sections={links.length} onclose={() => (keys = false)} />
 	{/if}
 	<Notices />
-	<Grain />
 </div>
 
 <style>
 	.shell {
+		position: relative;
 		display: grid;
-		grid-template-columns: var(--sidebar) minmax(0, 1fr);
+		grid-template-columns: calc(var(--sidebar) + var(--s-3)) minmax(0, 1fr);
 		height: 100dvh;
 		overflow: hidden;
-		background: var(--space);
+		background: var(--ground);
 		color: var(--text);
 	}
 
-	/* The chrome: a step deeper than the pane. */
+	/* The rail: floating glass, its foot's corner cut, the light's brackets on its top corners. */
 	.side {
+		position: relative;
+		z-index: 1;
+		isolation: isolate;
 		display: flex;
 		flex-direction: column;
 		min-height: 0;
-		padding: var(--s-2) 0 var(--s-3);
-		border-right: 1px solid var(--line);
-		background: var(--deep);
+		margin: var(--s-3) 0 var(--s-3) var(--s-3);
+		padding: var(--s-3) 0 var(--s-3);
 	}
 
+	.rail-glass {
+		clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%);
+		background:
+			linear-gradient(to right, transparent, var(--highlight) 50%, transparent) top / 100% 1px no-repeat,
+			linear-gradient(to bottom, rgb(255 255 255 / 0.04), transparent 30%),
+			var(--deep);
+	}
+
+	.rail-glass::after {
+		top: calc(100% - var(--cut));
+		left: 100%;
+		rotate: 135deg;
+		background: var(--line-mid);
+	}
+
+	.side::before,
+	.side::after {
+		content: '';
+		position: absolute;
+		top: -1px;
+		width: var(--hud-bracket);
+		height: var(--hud-bracket);
+		border: 0 solid var(--accent);
+		pointer-events: none;
+	}
+
+	.side::before {
+		left: -1px;
+		border-width: 2px 0 0 2px;
+	}
+
+	.side::after {
+		right: -1px;
+		border-width: 2px 2px 0 0;
+	}
+
+	/* The world: its kanji in a diamond, its name in Japanese over its name in HUD capitals, and what it is for. */
 	.brand {
 		display: flex;
 		align-items: center;
 		gap: 12px;
 		flex: none;
-		height: var(--nav-height);
-		padding: 0 var(--s-3) 0 20px;
-		color: var(--text-bright);
-		font-size: var(--text-s);
-		font-weight: var(--weight-label);
-		letter-spacing: 0.28em;
-		text-transform: uppercase;
+		min-height: var(--nav-height);
+		padding: 0 var(--s-3) var(--s-2) 14px;
+		color: var(--hud-text);
 		text-decoration: none;
 	}
 
-	.disc {
-		display: block;
-		width: 22px;
+	.diamond {
+		display: grid;
+		place-items: center;
 		flex: none;
-		transition: transform var(--settle) var(--ease-out);
+		width: 30px;
+		height: 30px;
+	}
+
+	.diamond::before {
+		content: '';
+		grid-area: 1 / 1;
+		width: 21px;
+		height: 21px;
+		rotate: 45deg;
+		border: 1.5px solid var(--accent);
+		background: color-mix(in srgb, var(--accent) 12%, transparent);
+		transition: rotate var(--settle) var(--spring);
+	}
+
+	.brand:hover .diamond::before {
+		rotate: 135deg;
+	}
+
+	.diamond span {
+		grid-area: 1 / 1;
+		font-family: var(--font-title);
+		font-size: 13px;
+		font-weight: 800;
+		line-height: 1;
+		color: var(--hud-text);
 	}
 
 	.brand-text {
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
 		min-width: 0;
-		line-height: 1.2;
+		line-height: 1.25;
 	}
 
-	/* What the world is for, in its light, under its name. */
+	.brand-jp {
+		font-family: var(--font-title);
+		font-feature-settings: var(--title-features);
+		font-size: var(--text-l);
+		font-weight: 800;
+		line-height: 1.1;
+	}
+
+	.brand-name {
+		font-family: var(--font-caps);
+		font-size: var(--text-s);
+		font-weight: var(--weight-label);
+		letter-spacing: var(--track-hud);
+		text-transform: uppercase;
+	}
+
+	/* What the world is for, under its name. */
 	.role {
 		overflow: hidden;
-		font-size: 10px;
+		font-size: var(--text-xs);
 		font-weight: var(--weight-value);
-		letter-spacing: var(--track-caps);
 		text-overflow: ellipsis;
 		white-space: nowrap;
-		color: var(--text-world);
-	}
-
-	.brand:hover .disc {
-		transform: scale(1.08);
+		color: var(--hud-quiet);
 	}
 
 	ul {
@@ -460,17 +555,15 @@
 		animation-delay: calc(var(--i, 0) * var(--stagger));
 	}
 
-	/* The current section carries the world's light. */
+	/* The current section carries the flavour's light: a bar down its left and a light fading out to the right. */
 	.light {
 		position: absolute;
-		left: 0;
+		left: var(--s-2);
+		right: var(--s-2);
 		top: 0;
-		width: 2px;
-		margin: 9px 0;
-		height: calc(var(--control) - 18px);
-		border-radius: 1px;
-		background: var(--accent);
-		box-shadow: 0 0 8px var(--accent);
+		height: var(--control);
+		border-left: 3px solid var(--accent);
+		background: linear-gradient(to right, color-mix(in srgb, var(--accent) 16%, transparent), transparent 85%);
 		opacity: 0;
 		pointer-events: none;
 	}
@@ -481,7 +574,7 @@
 
 	.light.moved {
 		transition:
-			transform var(--settle) var(--ease-out),
+			transform var(--settle) var(--spring),
 			opacity var(--fade) var(--ease);
 	}
 
@@ -489,11 +582,10 @@
 		position: relative;
 		display: flex;
 		align-items: center;
-		gap: 12px;
+		gap: 10px;
 		height: var(--control);
-		padding: 0 12px;
-		border-radius: var(--radius-m);
-		color: var(--text-quiet);
+		padding: 0 12px 0 14px;
+		color: var(--hud-quiet);
 		font-size: var(--text-s);
 		text-decoration: none;
 		white-space: nowrap;
@@ -503,42 +595,42 @@
 	}
 
 	ul a:hover {
-		color: var(--text-bright);
+		color: var(--hud-text);
 		background: var(--surface);
 	}
 
 	ul a[aria-current='page'] {
-		color: var(--text-bright);
-		background: var(--surface-hover);
+		color: var(--hud-text);
 	}
 
-	.mark {
-		width: 6px;
-		height: 6px;
+	.number {
 		flex: none;
-		border: 1px solid var(--line-strong);
-		border-radius: 50%;
-		transition:
-			background var(--lock) var(--ease),
-			border-color var(--lock) var(--ease),
-			transform var(--settle) var(--ease-out);
+		width: 1.6em;
+		font-family: var(--font-hud);
+		font-size: var(--text-xs);
+		font-weight: 500;
+		letter-spacing: 0.08em;
+		color: var(--hud-faint);
+		transition: color var(--fade) var(--ease);
 	}
 
-	ul a:hover .mark {
-		border-color: var(--text-bright);
-		transform: scale(1.2);
+	ul a[aria-current='page'] .number {
+		color: var(--accent);
 	}
 
-	ul a[aria-current='page'] .mark {
-		border-color: var(--text-bright);
-		background: var(--text-bright);
-		transform: none;
+	.jp {
+		flex: none;
+		font-family: var(--font-title);
+		font-feature-settings: var(--title-features);
+		font-size: var(--text-s);
+		font-weight: 800;
+		color: inherit;
 	}
 
 	.label {
 		overflow: hidden;
 		text-overflow: ellipsis;
-		transition: transform var(--settle) var(--ease-out);
+		transition: transform var(--settle) var(--spring);
 	}
 
 	ul a:hover .label {
@@ -548,17 +640,18 @@
 	.badge {
 		display: inline-grid;
 		place-items: center;
-		min-width: 18px;
+		min-width: 20px;
 		height: 18px;
 		margin-left: auto;
-		padding: 0 5px;
-		border-radius: 9px;
-		background: var(--text-world);
-		color: var(--space);
+		padding: 0 6px;
+		clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%);
+		background: var(--accent);
+		color: var(--ground);
+		font-family: var(--font-hud);
 		font-size: 10px;
-		font-weight: var(--weight-label);
+		font-weight: 700;
 		letter-spacing: 0;
-		animation: sol-pop var(--settle) var(--ease-out) both;
+		animation: sol-pop var(--settle) var(--spring) both;
 	}
 
 	/* Doors to other apps: after the sections, before the status. */
@@ -566,8 +659,8 @@
 		display: grid;
 		gap: 2px;
 		flex: none;
-		margin: var(--s-3) 0 0;
-		padding: var(--s-2) var(--s-2) 0;
+		margin: var(--s-3) var(--s-3) 0;
+		padding: var(--s-2) 0 0;
 		border-top: 1px solid var(--line);
 		list-style: none;
 	}
@@ -586,9 +679,8 @@
 		height: var(--control);
 		padding: 0 12px;
 		border: 0;
-		border-radius: var(--radius-m);
 		background: transparent;
-		color: var(--text-quiet);
+		color: var(--hud-quiet);
 		font-family: var(--font);
 		font-size: var(--text-s);
 		font-weight: var(--weight-value);
@@ -603,7 +695,7 @@
 
 	.door a:hover,
 	.door button:hover {
-		color: var(--text-bright);
+		color: var(--hud-text);
 		background: var(--surface);
 	}
 
@@ -617,14 +709,15 @@
 		align-items: flex-start;
 		gap: var(--s-2);
 		flex: none;
-		margin-top: var(--s-3);
-		padding: var(--s-3) var(--s-3) 0 20px;
+		margin: var(--s-3) var(--s-3) 0;
+		padding: var(--s-3) 0 0 2px;
 		border-top: 1px solid var(--line);
 		font-size: var(--text-xs);
 	}
 
 	.pane {
 		position: relative;
+		z-index: 1;
 		display: flex;
 		flex-direction: column;
 		min-width: 0;
@@ -638,9 +731,9 @@
 		overscroll-behavior: contain;
 	}
 
-	/* A screen settles into the pane as it opens. */
+	/* A screen arrives as a page turns: it settles into the pane. */
 	.screen {
-		animation: sol-settle var(--settle) var(--ease-out) both;
+		animation: sol-settle var(--turn) var(--ease-out) both;
 	}
 
 	/* Scrolling: the content ignores the pointer until the pane is still.
@@ -649,20 +742,33 @@
 		pointer-events: none;
 	}
 
+	/* On a phone the way back floats where a title card's HUD line would be: the page starts under it. */
+	@media (max-width: 700px) {
+		.backed > .screen {
+			padding-top: 40px;
+		}
+	}
+
 	.foot {
 		flex: none;
 		border-top: 1px solid var(--line);
 		background: var(--deep);
 	}
 
+	/* A narrow window: the rail, each section its number and its Japanese. */
 	@media (max-width: 760px) {
 		.shell {
-			grid-template-columns: var(--rail) minmax(0, 1fr);
+			grid-template-columns: calc(var(--rail) + var(--s-2)) minmax(0, 1fr);
+		}
+
+		.side {
+			margin: var(--s-2) 0 var(--s-2) var(--s-2);
+			padding-top: var(--s-2);
 		}
 
 		.brand {
 			justify-content: center;
-			padding: 0;
+			padding: 0 0 var(--s-2);
 		}
 
 		.brand-text,
@@ -680,13 +786,35 @@
 			padding: 0 var(--s-1);
 		}
 
+		.light {
+			left: var(--s-1);
+			right: var(--s-1);
+		}
+
 		ul a {
+			flex-direction: column;
 			justify-content: center;
+			gap: 0;
+			height: 48px;
 			padding: 0;
+			line-height: 1.2;
+		}
+
+		ul li.light {
+			height: 48px;
+		}
+
+		.number {
+			width: auto;
+			font-size: 9px;
+		}
+
+		.jp {
+			font-size: var(--text-xs);
 		}
 
 		.doors {
-			padding: var(--s-2) var(--s-1) 0;
+			margin: var(--s-2) var(--s-1) 0;
 		}
 
 		.door a,

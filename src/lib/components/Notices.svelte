@@ -1,12 +1,15 @@
 <!--
-	Where in-app notices appear: the top edge, politely announced. Each
-	drops in, a hairline along its bottom runs out as its time does, and it
-	waits while the pointer is on it.
+	Where in-app notices appear: at the top right, clear of a page's title
+	card, politely announced. Each drops in on glass, a hairline along its
+	bottom runs out as its time does, and it waits while the pointer is on it.
 -->
 <script lang="ts">
 	import { fly } from 'svelte/transition';
 	import { LINGER_MS, notices } from '../client/notices.svelte.js';
 	import WorldGlyph from './WorldGlyph.svelte';
+
+	/** How long a notice takes to drop in: the `--settle` token (0 with less motion). */
+	const settle = typeof document === 'undefined' ? 0 : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--settle')) || 0;
 
 	// Each hold restarts the line when it is let go, as the timer is.
 	let cycles = $state<Record<number, number>>({});
@@ -31,7 +34,7 @@
 			class:error={notice.tone === 'error'}
 			role="group"
 			aria-label={notice.title}
-			transition:fly={{ y: -16, duration: 320 }}
+			transition:fly={{ y: -16, duration: settle }}
 			onmouseenter={() => hold(notice.id)}
 			onmouseleave={() => release(notice.id)}
 			onfocusin={() => hold(notice.id)}
@@ -58,13 +61,12 @@
 	.notices {
 		position: fixed;
 		top: var(--s-3);
-		left: 50%;
+		right: var(--s-3);
 		z-index: 50;
 		display: flex;
 		flex-direction: column;
 		gap: var(--s-2);
-		width: min(440px, calc(100vw - 32px));
-		translate: -50% 0;
+		width: min(400px, calc(100vw - 32px));
 		pointer-events: none;
 	}
 
@@ -74,9 +76,11 @@
 		align-items: flex-start;
 		gap: 14px;
 		padding: 14px 4px 14px 18px;
-		border-radius: var(--radius);
-		/* Glass: the page behind, blurred, under the sky's tint. */
-		background: color-mix(in srgb, var(--raised) 82%, transparent);
+		/* Glass: the page behind, blurred, under the flavour's frost, its top-right corner cut. */
+		clip-path: polygon(0 0, calc(100% - var(--hud-cut)) 0, 100% var(--hud-cut), 100% 100%, 0 100%);
+		background:
+			linear-gradient(to right, transparent, var(--highlight) 50%, transparent) top / 100% 1px no-repeat,
+			color-mix(in srgb, var(--frost) 86%, transparent);
 		box-shadow: inset 0 0 0 1px var(--line-mid);
 		backdrop-filter: blur(18px);
 		-webkit-backdrop-filter: blur(18px);
@@ -120,17 +124,17 @@
 	}
 
 	button:hover {
-		color: var(--text-bright);
+		color: var(--accent);
 	}
 
 	/* How long it stays: a line that runs out. */
 	.time {
 		position: absolute;
-		left: var(--radius);
-		right: var(--radius);
+		left: 1px;
+		right: 1px;
 		bottom: 1px;
 		height: 1px;
-		background: var(--line-strong);
+		background: var(--accent);
 		transform-origin: left;
 		animation: run var(--linger) linear both;
 	}

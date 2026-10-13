@@ -1,16 +1,20 @@
 <!--
-	Hairlines and capitals, with `--radius-m` corners (a `round` one is a
-	circle). `primary` is the only filled shape on a screen: use it once, for
-	the screen's main action; the world's light glows behind it. Focus locks
-	two corner ticks on, bent round the button's corners; a press gives a
-	little; while busy, a hairline sweeps along the bottom.
+	Hairlines and HUD capitals, square. `primary` is the only filled shape
+	on a screen: use it once, for the screen's main action; it is a
+	parallelogram in the flavour's light. `ghost` otherwise, `quiet` for
+	low-stakes actions, `round` for an icon alone (a diamond), `danger` for
+	what can't be taken back (removing, revoking): the same slant outlined in
+	vermilion, never the world's light. Focus locks two corner ticks on; a
+	press gives and springs back; while busy, a hairline sweeps along the bottom.
+
+	<Button variant="primary" onclick={save}>Save</Button>
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import type { HTMLAnchorAttributes, HTMLButtonAttributes } from 'svelte/elements';
 
 	type Common = {
-		variant?: 'primary' | 'ghost' | 'quiet' | 'round';
+		variant?: 'primary' | 'ghost' | 'quiet' | 'round' | 'danger';
 		busy?: boolean;
 		children: Snippet;
 	};
@@ -20,8 +24,14 @@
 	let { variant = 'ghost', busy = false, children, ...rest }: Props = $props();
 </script>
 
+{#snippet inside()}
+	<span class="face" aria-hidden="true"></span>
+	<span class="text">{@render children()}</span>
+	{#if busy}<span class="sweep" aria-hidden="true"></span>{/if}
+{/snippet}
+
 {#if rest.href !== undefined}
-	<a class="btn sol-ticks {variant}" {...rest as HTMLAnchorAttributes}>{@render children()}</a>
+	<a class="btn sol-ticks {variant}" {...rest as HTMLAnchorAttributes}>{@render inside()}</a>
 {:else}
 	{@const attrs = rest as HTMLButtonAttributes}
 	<button
@@ -31,91 +41,155 @@
 		disabled={attrs.disabled || busy}
 		aria-busy={busy || undefined}
 	>
-		{@render children()}
-		{#if busy}<span class="sweep" aria-hidden="true"></span>{/if}
+		{@render inside()}
 	</button>
 {/if}
 
 <style>
 	.btn {
 		position: relative;
+		isolation: isolate;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		gap: var(--s-2);
 		min-height: var(--control);
 		padding: 0 16px;
-		border: 1px solid rgb(var(--ink) / 0.4);
-		border-radius: var(--radius-m);
+		border: 0;
 		background: transparent;
 		color: var(--text);
-		font-family: var(--font);
+		font-family: var(--font-caps);
 		font-size: var(--text-xs);
-		font-weight: var(--weight-label);
-		letter-spacing: 0.16em;
+		font-weight: 700;
+		letter-spacing: var(--track-label);
 		text-transform: uppercase;
 		text-decoration: none;
 		white-space: nowrap;
 		cursor: pointer;
-		overflow: visible;
 		transition:
-			background var(--fade) var(--ease),
-			border-color var(--fade) var(--ease),
 			color var(--fade) var(--ease),
-			box-shadow var(--settle) var(--ease-out),
-			transform var(--lock) var(--ease);
+			transform var(--settle) var(--spring);
 	}
 
-	.btn:hover:not(:disabled) {
+	.text {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--s-2);
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	/* The shape the button is drawn in: a hairline square by default. */
+	.face {
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		border: 1px solid rgb(var(--ink) / 0.4);
+		background: transparent;
+		transition:
+			background var(--fade) var(--ease),
+			border-color var(--fade) var(--ease);
+	}
+
+	.btn:hover:not(:disabled) .face {
 		border-color: var(--text);
 		background: var(--surface-hover);
 	}
 
-	/* A press gives, like a real key. */
+	/* A press gives, like a real key, and springs back. */
 	.btn:active:not(:disabled) {
-		transform: translateY(1px);
-		transition-duration: 40ms;
+		transform: translateY(1px) scale(0.95);
+		transition-duration: var(--snap);
+		transition-timing-function: var(--ease-out);
+	}
+
+	/* The primary: a parallelogram in the flavour's light. */
+	.primary,
+	.danger {
+		padding: 0 calc(16px + var(--lean) / 2);
+	}
+
+	.primary .face,
+	.danger .face {
+		border: 0;
+		clip-path: polygon(var(--lean) 0, 100% 0, calc(100% - var(--lean)) 100%, 0 100%);
 	}
 
 	.primary {
-		border-color: var(--text);
-		background: var(--text);
-		color: var(--space);
-		box-shadow: 0 0 40px color-mix(in srgb, var(--world) 30%, transparent);
+		color: var(--ground);
 	}
 
-	.primary:hover:not(:disabled) {
-		background: var(--text-bright);
-		color: var(--space);
-		box-shadow: 0 0 56px color-mix(in srgb, var(--world) 50%, transparent);
+	.primary .face {
+		background: var(--primary);
+	}
+
+	.primary:hover:not(:disabled) .face {
+		background: color-mix(in srgb, var(--primary) 88%, white);
+	}
+
+	/* What can't be taken back: the same slant, outlined in vermilion. */
+	.danger {
+		color: var(--danger-text);
+	}
+
+	.danger .face {
+		border-top: 1px solid var(--danger);
+		border-bottom: 1px solid var(--danger);
+		background:
+			linear-gradient(to bottom right, transparent calc(50% - 0.7px), var(--danger) calc(50% - 0.7px), var(--danger) calc(50% + 0.7px), transparent calc(50% + 0.7px)) left / var(--lean) 100% no-repeat,
+			linear-gradient(to bottom right, transparent calc(50% - 0.7px), var(--danger) calc(50% - 0.7px), var(--danger) calc(50% + 0.7px), transparent calc(50% + 0.7px)) right / var(--lean) 100% no-repeat;
+	}
+
+	.danger:hover:not(:disabled) .face {
+		border-color: var(--danger);
+		background-color: color-mix(in srgb, var(--danger) 22%, transparent);
 	}
 
 	.quiet {
-		border-color: transparent;
 		padding: 0 10px;
-		color: var(--text-quiet);
+		color: var(--hud-quiet);
+	}
+
+	.quiet .face {
+		border-color: transparent;
 	}
 
 	.quiet:hover:not(:disabled) {
-		border-color: transparent;
-		background: transparent;
-		color: var(--text-bright);
+		color: var(--accent);
 	}
 
+	.quiet:hover:not(:disabled) .face {
+		border-color: transparent;
+		background: transparent;
+	}
+
+	/* An icon alone: a diamond. */
 	.round {
-		--tick-radius: calc(var(--control) / 2);
 		width: var(--control);
 		padding: 0;
+	}
+
+	.round .face {
+		inset: 14%;
+		rotate: 45deg;
 		border-color: rgb(var(--ink) / 0.35);
-		border-radius: 50%;
 	}
 
 	.btn:disabled {
-		border-color: var(--line-mid);
-		background: transparent;
 		color: var(--text-faint);
-		box-shadow: none;
 		cursor: default;
+	}
+
+	.btn:disabled .face {
+		border-color: var(--line-mid);
+	}
+
+	.primary:disabled .face {
+		background: color-mix(in srgb, var(--primary) 25%, transparent);
+	}
+
+	.primary:disabled {
+		color: var(--hud-text);
 	}
 
 	.btn[aria-busy='true'] {
@@ -123,11 +197,15 @@
 		cursor: progress;
 	}
 
+	.primary[aria-busy='true'] .face {
+		background: color-mix(in srgb, var(--primary) 55%, transparent);
+	}
+
 	/* Busy: a hairline sweeps along the bottom edge until the work is done. */
 	.sweep {
 		position: absolute;
-		left: var(--radius-m);
-		right: var(--radius-m);
+		left: var(--lean);
+		right: var(--lean);
 		bottom: -1px;
 		height: 1px;
 		overflow: hidden;
@@ -141,7 +219,7 @@
 		width: 40%;
 		height: 100%;
 		background: var(--text-bright);
-		animation: sweep 1.1s var(--ease) infinite;
+		animation: sweep var(--sweep) var(--ease) infinite;
 	}
 
 	@keyframes sweep {
@@ -154,8 +232,8 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.sweep::before {
-			animation-duration: 3s;
+		.btn:active:not(:disabled) {
+			transform: none;
 		}
 	}
 </style>

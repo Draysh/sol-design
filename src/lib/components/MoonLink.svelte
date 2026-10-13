@@ -1,17 +1,27 @@
-<!-- ( • ) and a name. Moons are doors to their own apps. -->
+<!--
+	A link to one of the world's moons (or, from a moon, to its planet),
+	under a title card: a small diamond in the second light, the moon's name
+	in Japanese, and its words in HUD capitals. It stands on the still.
+
+	<MoonLink href="/worlds/titan" jp="タイタン">Titan</MoonLink>
+-->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
 	interface Props {
 		href: string;
+		/** The name in Japanese: "タイタン". */
+		jp?: string;
 		/** Opens the app itself (through the Rust side) instead of following `href`. */
 		onclick?: () => void;
+		/** A link to another app reloads the page; false for a page of this one. */
+		external?: boolean;
 		/** One line on what is behind the door, shown on hover. */
 		title?: string;
 		children: Snippet;
 	}
 
-	let { href, onclick, title, children }: Props = $props();
+	let { href, jp = '', onclick, external = true, title, children }: Props = $props();
 
 	function go(event: MouseEvent) {
 		if (!onclick) return;
@@ -20,37 +30,60 @@
 	}
 </script>
 
-<!-- Every world is its own app, so moving between them is a full page load. -->
-<a class="moon" {href} {title} data-sveltekit-reload onclick={go}>
-	<svg width="22" height="10" viewBox="0 0 22 10" aria-hidden="true">
-		<path d="M4 1a6 6 0 0 0 0 8M18 1a6 6 0 0 1 0 8" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"></path>
-		<circle cx="11" cy="5" r="1.6" fill="currentColor"></circle>
-	</svg>
-	<span>{@render children()}</span>
+<a class="moon sol-ticks" {href} {title} data-sveltekit-reload={external ? '' : undefined} onclick={go}>
+	<span class="diamond" aria-hidden="true"></span>
+	{#if jp}<span class="jp" lang="ja">{jp}</span>{/if}
+	<span class="words">{@render children()}</span>
 </a>
 
 <style>
 	.moon {
+		--tick-out: 2px;
+		--tick-arm: 6px;
 		display: inline-flex;
 		align-items: center;
 		gap: 8px;
 		min-height: var(--target);
 		padding: 0 4px;
+		color: var(--art-text);
+		font-family: var(--font-caps);
 		font-size: var(--text-xs);
-		letter-spacing: var(--track-caps);
+		font-weight: var(--weight-label);
+		letter-spacing: var(--track-hud);
 		text-transform: uppercase;
 		text-decoration: none;
-		color: var(--text);
+		white-space: nowrap;
+		/* It stands on the still: a soft dark glow behind the words. */
+		text-shadow: 0 1px 8px color-mix(in srgb, var(--dim) 90%, transparent);
+	}
+
+	.diamond {
+		width: 7px;
+		height: 7px;
+		rotate: 45deg;
+		border: 1px solid var(--art-second);
+		transition: background var(--fade) var(--ease);
+	}
+
+	.moon:hover .diamond,
+	.moon:focus-visible .diamond {
+		background: var(--art-second);
+	}
+
+	.jp {
+		font-family: var(--font-title);
+		font-feature-settings: var(--title-features);
+		font-size: calc(var(--text-s) + 1px);
+		font-weight: 800;
+		letter-spacing: 0;
+		color: var(--art-second);
+	}
+
+	.words {
 		transition: color var(--fade) var(--ease);
 	}
 
-	.moon:hover {
-		color: var(--text-bright);
-	}
-
-	.moon:hover span {
-		text-decoration: underline;
-		text-decoration-thickness: 1px;
-		text-underline-offset: 4px;
+	.moon:hover .words {
+		color: #fff;
 	}
 </style>

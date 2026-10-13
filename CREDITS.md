@@ -20,3 +20,10 @@ tight to the disc and converted to WebP.
 
 [Outfit](https://github.com/Outfitio/Outfit-Fonts) by Rodrigo Fuenzalida, SIL
 Open Font License 1.1, installed from `@fontsource-variable/outfit`.
+
+[Chakra Petch](https://github.com/m4rc1e/Chakra-Petch) by Cadson Demak,
+[Shippori Mincho B1](https://github.com/fontdasu/ShipporiMincho) by FONTDASU and
+[Zen Kaku Gothic New](https://github.com/googlefonts/zen-kakugothic) by Yoshimichi
+Ohira, each under the SIL Open Font License 1.1 (their licences are beside them
+in `src/lib/assets/fonts/`). They are sol-quick's own copies, made WOFF2 and cut
+into slices for the web by `scripts/fonts-for-web.py`.

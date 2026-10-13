@@ -3,26 +3,30 @@
 The design language of [Sol](https://github.com/Draysh/sol), a self-hosted
 system of apps named after the solar system, for **Sol's own web app**. The
 worlds' desktop apps are Qt Quick and use the same language from
-[sol-quick](https://github.com/Draysh/sol-quick); both share one look: its
-night and day palettes (`qml/Theme.qml`), corners, raised panels, and the
-lit bodies of `shaders/body.frag`, from the same world data (`qml/Worlds.qml`).
+[sol-quick](https://github.com/Draysh/sol-quick); both share one look,
+Yozora (夜空): each world's flavour, the scale and the motion of
+`qml/Theme.qml`, its fonts, glass with one corner cut, and the same world
+data (`qml/Worlds.qml`).
 
-- **[DESIGN.md](DESIGN.md)**: the rules (principles, anatomy of a screen, type,
-  light, layout, components, motion, writing).
-- **Components** (Svelte 5): `Shell`, `Sheet`, `PageHead`, `Back`, `Body`,
-  `Reticle`, `Card`, `Button`, `Field`, `TextArea`, `Select`, `Toggle`,
-  `Check`, `Progress`, `RingGauge`, `DataRows`, `Callout`, `MoonLink`,
-  `Widget`, `Notices`, `Loader`, `WorldGlyph`, `Grain`, `LightChoice`. `AppUpdates`,
-  `LinkStatus`, `WayBack` and `WithPlanet` are left from when the worlds'
-  apps were Svelte too; Sol's web app doesn't use them.
+- **[DESIGN.md](DESIGN.md)**: the rules (principles, flavours, the ground,
+  the frame, the title card, components, motion, writing).
+- **Components** (Svelte 5): `Shell`, `Ground`, `Sheet`, `HeroFigure`,
+  `PageHead`, `Back`, `Card`, `HudLabel`, `Button`, `Field`, `TextArea`,
+  `Select`, `Toggle`, `Check`, `Progress`, `SlantTicks`, `DataRows`,
+  `MoonLink`, `Widget`, `Notices`, `Loader`, `WorldGlyph`. `Body`, `Reticle`,
+  `Callout`, `RingGauge`, `AppUpdates`, `LinkStatus`, `WayBack` and
+  `WithPlanet` are left from the Observatory look and the Svelte world apps.
+- **The look** (`look.ts`, `tokens.css`, `fonts.css`): the flavours and the
+  scale, written from sol-quick's `Theme.qml` by `node
+  scripts/look-from-qml.mjs`, and its fonts (Chakra Petch, Shippori Mincho
+  B1, Zen Kaku Gothic New, OFL) cut for the web by `python3
+  scripts/fonts-for-web.py`. Run them by hand after changing those, and
+  commit what they write.
 - **Worlds** (`worlds.ts`): each world's name, role, colour, real axial tilt,
   photo, lighting and composition, from `worlds.gen.ts`, which
   `node scripts/worlds-from-qml.mjs` writes from sol-quick's `Worlds.qml`
   (run it by hand after changing that file, and commit the result); the real
   sky (`skyOf`, `moonAt`).
-- **Night and day** (`light`): the person's choice for this browser, as the
-  apps have it ("system", "sun", "night", "day"), set on the root as
-  `data-light`.
 - **Bodies** (`Body`, `body-gl.ts`): sol-quick's body shader in WebGL, one
   shared context for the page.
 - **Client** (`@sol/design/client`): Sol's typed API, session and live event
@@ -56,7 +60,7 @@ npm 12 installs git dependencies only when the project allows it: add
 	import { Card, Sheet } from '@sol/design';
 </script>
 
-<Sheet world="terra" callout={['Walk = done']} rows={[[{ label: 'Streak', value: '12 days' }]]} />
+<Sheet world="terra" jp="夏の午後。" callout={['Two done, two to go.']} figures={[{ value: '12', label: 'Streak', jp: '連続' }]} />
 ```
 
 Sol's web app (`hub/web`) is the one app that uses it.

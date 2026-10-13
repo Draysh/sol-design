@@ -216,6 +216,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sol/look": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["look_stills"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sol/look/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["look_still"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sol/me": {
         parameters: {
             query?: never;
@@ -1050,6 +1082,11 @@ export interface components {
         LoginRequest: {
             password: string;
             username: string;
+        };
+        /** @description The stills there are, by file name. */
+        LookStills: {
+            /** @description Named as the apps name them: `saturn-ground-1.jpg`, `luna-ground-2.jpg`. */
+            stills: string[];
         };
         /** @description The signed-in person, as the browser sees them. */
         Me: {
@@ -1918,6 +1955,57 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    look_stills: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The film stills Sol may show the person signed in; none when it has no folder of them */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LookStills"];
+                };
+            };
+        };
+    };
+    look_still: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A still's file name, as the list gives it */
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The still */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": unknown;
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
             };
         };
     };
