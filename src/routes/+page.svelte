@@ -93,6 +93,7 @@
 		</nav>
 
 		<Sheet
+			slam
 			world={current}
 			jp={titles[current][0]}
 			hud="Design · {f.film}"
@@ -177,6 +178,7 @@
 						}}
 					/>
 					<Button onclick={() => notices.show({ world: 'terra', title: 'Terra · walk outside', body: 'Logged. Four days in a row.' })}>Show a notice</Button>
+					<Button variant="ghost" onclick={() => notices.show({ world: 'sol', title: 'Not installed', body: 'TypeError: Failed to fetch', tone: 'error' })}>Show a failure</Button>
 				</Card>
 
 				<Card title="Status" jp="状態">

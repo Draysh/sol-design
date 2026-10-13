@@ -114,7 +114,7 @@ actions.
 | `Progress`, `SlantTicks` | How far along, as slanted ticks |
 | `DataRows` | Facts as a ledger: the label left, the value right, hairlines between |
 | `MoonLink` | A diamond, a moon's Japanese name and its words, under a title |
-| `Widget`, `Notices`, `Loader`, `WorldGlyph`, `Back` | A world's widget, notices on glass at the top right, waiting, a world's mark, the way back |
+| `Widget`, `Notices`, `Loader`, `WorldGlyph`, `Back` | A world's widget, notices on glass at the bottom right, waiting, a world's mark, the way back |
 
 `Body`, `Reticle`, `Callout`, `RingGauge`, `AppUpdates`, `LinkStatus`,
 `WayBack` and `WithPlanet` are left from the Observatory look and the Svelte
@@ -130,10 +130,24 @@ Things arrive; nothing moves for its own sake and nothing moves while the
 page rests. Every length and curve is a token from `Theme.qml`: `--snap`
 (a press), `--lock`, `--fade` (text and colour), `--settle` (taking a
 place), `--turn` (a page arriving), `--count` (a figure counting up),
-`--rise`, `--stagger` between siblings (never past 400 ms), and the curves
-`--ease`, `--ease-out`, `--spring` (a tenth past its place and back) and
-`--ease-in-out`. Cards settle with the spring, buttons give under a press
-and spring back, figures count up on arrival, the rail's light glides.
+`--rise`, `--stagger` between siblings (never past 400 ms; the flavour's
+own, with its `--arrive`), `--hit` and `--beat-hold` (a big act's hit and
+its hold), and the curves `--ease`, `--ease-out`, `--spring` (a tenth past
+its place and back), `--ease-in` (what leaves) and `--ease-in-out`. Cards
+settle with the spring, buttons give under a press and spring back,
+figures count up on arrival, the rail's light glides.
+
+One perfect hit, then stillness: big motion only for a page turning and the
+overview's greeting. A page turns the flavour's way (the Shell, from its
+flavour's `turn`), all in one `--turn` of 420 ms: a wipe covers the pane by
+`--turn-cover`, holds to `--turn-reveal`, and the new screen lands as it
+goes (Neptune's slices torn across with a red and a cyan edge, Saturn's
+film bars closing to black on an amber line, Mercury's ink blooming from
+the title, Terra's sweep of sunlight), never in the way of a click. A
+`Sheet` with `slam` brings its title in as kinetic type, once (the
+overview's greeting, the first time a visit opens it). The web app has no
+opening.
+
 Only opacity and transforms move. With less motion (`prefers-reduced-motion`)
 only fades and instant changes are left, as the apps' `Theme.calm`.
 
@@ -167,7 +181,11 @@ only fades and instant changes are left, as the apps' `Theme.calm`.
   notice titled for what didn't happen (`Not saved`, `Not ticked`), with
   the reason as its body. A load that fails outside a handler reaches
   `watchUnhandled` (called once in the layout) and becomes a notice too, so
-  a blank card never stays silent.
+  a blank card never stays silent. A failure is said as a person would
+  (`notices.show` does it for any `tone: 'error'`): a known one in its line,
+  Japanese then English (「ソルに届かない…」 Can't reach Sol), a machine's
+  words as "Something went wrong on the way", the raw words folded under
+  "Details"; Sol's own short reasons stay as they are.
 - **Every list has an empty state** that says what would fill it and where
   that happens ("Nothing watched yet. Ticks appear here as you make them").
 - **A long piece of work shows its progress** (`Progress`) or at least that

@@ -70,15 +70,43 @@ const px = ['textXs', 'textS', 'textM', 'textL', 'textXl', 'text2xl', 'textHero'
 	'radiusS', 'radiusM', 'radius', 'radiusL', 'radiusSpeech', 'hudCut', 'hudBracket'];
 const plain = ['weightDisplay', 'weightValue', 'weightName', 'weightLabel'];
 const em = ['trackRows', 'trackName', 'trackDisplay', 'trackCaps', 'trackLabel', 'trackHud'];
-const ms = ['snap', 'flicker', 'lock', 'fade', 'settle', 'turn', 'count', 'rise', 'speak', 'wash', 'stagger',
+// (`hold`, a beat's hold, is `--beat-hold`: a flavour's `--hold` is how much of its still the grade keeps.)
+const ms = ['snap', 'flicker', 'lock', 'fade', 'settle', 'turn', 'count', 'rise', 'speak', 'wash', 'hit', 'hold',
 	'sweep', 'drift', 'crossing', 'scene'];
-const curves = ['ease', 'easeOut', 'spring', 'easeInOut'];
-const varName = (n) => (/^s\d$/.test(n) ? `s-${n.slice(1)}` : kebab(n));
+const curves = ['ease', 'easeOut', 'spring', 'easeInOut', 'easeIn'];
+const varName = (n) => (n === 'hold' ? 'beat-hold' : /^s\d$/.test(n) ? `s-${n.slice(1)}` : kebab(n));
+/** A page turn's own beats, a share of `turn`: `readonly property int <name>: Math.round(turn * <share>)`. */
+function share(name) {
+	const m = new RegExp(`readonly property int ${name}: Math\\.round\\(turn \\* ([0-9.]+)\\)`).exec(qml);
+	if (!m) throw new Error(`no "${name}" as a share of the turn in ${source}`);
+	return Math.round(scalar('turn') * Number(m[1]));
+}
+
+/**
+ * Each flavour's beat (`Theme.beat`), by its motif: how things arrive on its
+ * pages and which way its page turns. Read from the `if (m === "<motif>")
+ * return { … }` lines and the last `return { … }` (every other motif's).
+ */
+const beatText = (() => {
+	const start = qml.indexOf('readonly property var beat: {');
+	if (start < 0) throw new Error(`no "beat" in ${source}`);
+	return qml.slice(start, qml.indexOf('\n    }', start));
+})();
+const ms0 = (n) => n;
+function beatOf(motif) {
+	const own = new RegExp(`if \\(m === "${motif}"\\) return (\\{[^\\n]*\\})`).exec(beatText);
+	const rest = /\n\s*return (\{[^\n]*\})/.exec(beatText);
+	const body = (own ?? rest)?.[1];
+	if (!body) throw new Error(`no beat for "${motif}" in ${source}`);
+	return new Function('ms', 'easeOut', 'spring', `return (${body})`)(ms0, 'easeOut', 'spring');
+}
 const scale = [
 	...px.map((n) => `\t--${varName(n)}: ${scalar(n)}px;`),
 	...plain.map((n) => `\t--${varName(n)}: ${scalar(n)};`),
 	...em.map((n) => `\t--${varName(n)}: ${scalar(n)}em;`),
 	...ms.map((n) => `\t--${varName(n)}: ${scalar(n)}ms;`),
+	`\t--turn-cover: ${share('turnCover')}ms;`,
+	`\t--turn-reveal: ${share('turnReveal')}ms;`,
 	...curves.map((n) => `\t--${varName(n)}: ${curve(n)};`)
 ];
 
@@ -149,7 +177,10 @@ function flavour(f) {
 		pool: f.pool ?? 0,
 		haze: f.haze ? css(f.haze) : 'transparent',
 		'frame-zoom': f.frame ? f.frame[0] : 1,
-		'frame-across': f.frame ? f.frame[1] : 0.5
+		'frame-across': f.frame ? f.frame[1] : 0.5,
+		// Its beat: things arriving together come a stagger apart, each taking `arrive`.
+		stagger: `${beatOf(f.motif).stagger}ms`,
+		arrive: `${beatOf(f.motif).arrive}ms`
 	};
 	f.sky.forEach((c, i) => (p[`sky-${i}`] = css(c)));
 	f.grade.forEach(([r, g, b, a], i) => (p[`grade-${i}`] = css({ r, g, b, a })));
@@ -194,7 +225,8 @@ const pick = (f) => ({
 	stars: !!f.stars,
 	rain: f.rain ?? 0,
 	sky: f.sky.map((c) => css(c)),
-	frame: f.frame ?? null
+	frame: f.frame ?? null,
+	turn: beatOf(f.motif).turn
 });
 const ts = `// Written by scripts/look-from-qml.mjs from sol-quick's qml/Theme.qml; don't edit by hand.
 // The colours are in tokens.css; this is what a script needs of each flavour.
@@ -221,6 +253,8 @@ export interface FlavourData {
 	sky: string[];
 	/** How its stills are framed, \`[zoom, across]\`, or whole and centred. */
 	frame: [number, number] | null;
+	/** Which way its pages turn: "slice" (Neptune's glitch), "cut" (a film's), "ink" (Mercury's) or "sweep" (Terra's sunlight). */
+	turn: 'slice' | 'cut' | 'ink' | 'sweep';
 }
 
 export const flavours: Record<string, FlavourData> = ${JSON.stringify(Object.fromEntries(ids.map((id) => [id, pick(looks[id])])), null, '\t')};

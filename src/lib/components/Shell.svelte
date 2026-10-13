@@ -16,7 +16,14 @@
 	Under the sections, doors: Sol, and the moons or planet this world works
 	with. Every section can carry a `hint`, one line on what it is for, shown
 	on hover, and its `jp`. The light marks the current section and glides to
-	the next one when it changes; each screen settles into the pane as it opens.
+	the next one when it changes. A page turns the flavour's way, as the
+	apps' do, in one `--turn` (420 ms): a wipe covers the pane, holds, and
+	the new screen is revealed under it (Neptune's slices with a red and a
+	cyan edge, Saturn's film bars closing to black on an amber line,
+	Mercury's ink blooming from the title with a vermilion edge, Terra's
+	sweep of sunlight). Transforms and opacity only, over the pane and never
+	in the way of a click; with less motion, a fade. There is no opening: the
+	first screen simply settles in.
 
 	A page opened from another (a title from the library) offers the way
 	back by name, in its PageHead or over the pane's corner; Alt+← and the
@@ -118,6 +125,11 @@
 		return typeof index === 'number' ? index : null;
 	}
 
+	/** How many times a page has turned (the wipe plays for each), and whether the last went back. */
+	let turns = $state(0);
+	let turnBack = $state(false);
+	const turnWay = $derived(f.turn);
+
 	// The Shell can open after the app has (behind a sign-in, say), so it
 	// starts from the entry it opens on, not from the app's first.
 	let here = $state(entry() ?? 0);
@@ -133,6 +145,11 @@
 	});
 
 	afterNavigate((nav) => {
+		// A page turns when another page opens (not the first, nor the same page again).
+		if (nav.type !== 'enter' && nav.from && nav.from.url.pathname !== nav.to?.url.pathname) {
+			turns++;
+			turnBack = nav.type === 'popstate' && nav.delta !== undefined && nav.delta < 0;
+		}
 		here = entry() ?? (nav.type === 'popstate' ? here + nav.delta : nav.type === 'enter' ? 0 : here + 1);
 		if (nav.type === 'enter') start = here;
 		if (nav.type === 'popstate') restore(places.get(here) ?? 0);
@@ -386,13 +403,30 @@
 		{#if back && !claimed}
 			{#key back.label}<Back {...back} floating />{/key}
 		{/if}
-		<main bind:this={pane} class:scrolling class:backed={!!back && !claimed} onscroll={scrolled}>
-			{#key path}
-				<div class="screen">
-					{@render children()}
-				</div>
-			{/key}
-		</main>
+		<div class="pages">
+			<main bind:this={pane} class:scrolling class:backed={!!back && !claimed} class:turned={turns > 0} onscroll={scrolled}>
+				{#key path}
+					<div class="screen">
+						{@render children()}
+					</div>
+				{/key}
+			</main>
+			{#if turns > 0}
+				{#key turns}
+					<div class="turn" data-way={turnWay} class:back={turnBack} aria-hidden="true">
+						{#if turnWay === 'slice'}
+							{#each [0, 1, 2, 3, 4, 5, 6] as i (i)}<span class="band" style:--i={i} style:--n={[0.1, 0.7, 0.35, 0.9, 0.2, 0.55, 0.8][i]}></span>{/each}
+						{:else if turnWay === 'cut'}
+							<span class="bar top"></span><span class="bar bottom"></span>
+						{:else if turnWay === 'ink'}
+							<span class="ink"></span>
+						{:else}
+							<span class="sun"></span>
+						{/if}
+					</div>
+				{/key}
+			{/if}
+		</div>
 		{#if footer}<footer class="foot">{@render footer()}</footer>{/if}
 	</div>
 	{#if keys}
@@ -724,6 +758,15 @@
 		min-height: 0;
 	}
 
+	/* The pages, and the page turn over them (not over a footer). */
+	.pages {
+		position: relative;
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		min-height: 0;
+	}
+
 	main {
 		flex: 1;
 		min-height: 0;
@@ -731,9 +774,235 @@
 		overscroll-behavior: contain;
 	}
 
-	/* A screen arrives as a page turns: it settles into the pane. */
+	/* The first screen settles into the pane. */
 	.screen {
 		animation: sol-settle var(--turn) var(--ease-out) both;
+	}
+
+	/*
+	 * A page turning, in one --turn: the wipe covers the pane by --turn-cover
+	 * (after a --hit of anticipation), is held to --turn-reveal, and the new
+	 * screen lands as it goes. Each way is transforms and opacity only.
+	 */
+	.turned > .screen {
+		animation: turn-land var(--turn) var(--ease-out) both;
+	}
+
+	@keyframes turn-land {
+		0%,
+		67% {
+			opacity: 0;
+			transform: translateY(6px);
+		}
+		100% {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	.turn {
+		position: absolute;
+		inset: 0;
+		z-index: 2;
+		overflow: hidden;
+		pointer-events: none;
+		/* Gone once it has played: nothing over the pane stays. */
+		animation: turn-gone 0ms linear var(--turn) both;
+	}
+
+	@keyframes turn-gone {
+		to {
+			visibility: hidden;
+		}
+	}
+
+	.turn > span {
+		position: absolute;
+		will-change: transform, opacity;
+	}
+
+	/* Neptune's: the pane sliced into bands, each torn across in steps, a red edge and a cyan one split off it. */
+	.band {
+		left: 0;
+		width: 100%;
+		top: calc(var(--i) * 100% / 7);
+		height: calc(100% / 7 + 1px);
+		background: var(--ground);
+		box-shadow:
+			inset 3px 0 0 var(--accent),
+			inset -2px 0 0 var(--second);
+		animation: turn-slice var(--turn) steps(1, end) both;
+		animation-delay: calc(var(--n) * var(--flicker));
+	}
+
+	.band:nth-child(even) {
+		--from: 104%;
+	}
+
+	@keyframes turn-slice {
+		0% {
+			transform: translateX(var(--from, -104%));
+		}
+		12% {
+			transform: translateX(calc(var(--from, -104%) * 0.6));
+		}
+		24% {
+			transform: translateX(calc(var(--from, -104%) * 0.2));
+		}
+		36% {
+			transform: none;
+		}
+		52% {
+			transform: translateX(calc(var(--from, -104%) * -0.03));
+		}
+		58% {
+			transform: none;
+		}
+		70% {
+			transform: translateX(calc(var(--from, -104%) * -0.5));
+		}
+		82%,
+		100% {
+			transform: translateX(calc(var(--from, -104%) * -1));
+		}
+	}
+
+	/* Saturn's: a film's black bars slam in from the top and the bottom to black, an amber line on each; a black hold, a cut. */
+	.bar {
+		left: 0;
+		width: 100%;
+		height: 50.5%;
+		/* A film's black, whatever the flavour: not a token. */
+		background: #000;
+		animation: turn-bar var(--turn) var(--ease-in) both;
+	}
+
+	.bar.top {
+		top: 0;
+		box-shadow: inset 0 -2px 0 var(--accent);
+		--from: -100%;
+	}
+
+	.bar.bottom {
+		bottom: 0;
+		box-shadow: inset 0 2px 0 var(--accent);
+		--from: 100%;
+	}
+
+	@keyframes turn-bar {
+		0% {
+			transform: translateY(var(--from));
+		}
+		19% {
+			transform: translateY(calc(var(--from) * 0.86));
+		}
+		43%,
+		67% {
+			transform: none;
+			opacity: 1;
+		}
+		67.1%,
+		100% {
+			transform: none;
+			opacity: 0;
+		}
+	}
+
+	/* Mercury's: ink blooming from the title, edged in vermilion, then thinning away from the middle. */
+	.ink {
+		left: calc(var(--margin, 40px) + 120px);
+		top: 90px;
+		width: 300vmax;
+		height: 300vmax;
+		margin: -150vmax 0 0 -150vmax;
+		border-radius: 50%;
+		background: var(--ground);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--seal) 75%, transparent);
+		animation: turn-ink var(--turn) var(--ease-out) both;
+	}
+
+	@keyframes turn-ink {
+		0% {
+			transform: scale(0);
+			opacity: 1;
+		}
+		19% {
+			transform: scale(0.02);
+		}
+		43%,
+		67% {
+			transform: scale(1);
+			opacity: 1;
+		}
+		100% {
+			transform: scale(1);
+			opacity: 0;
+		}
+	}
+
+	/* Terra's: a sweep of sunlight across the pane, its sunflower edge leading, the page coming up into the light. */
+	.sun {
+		top: 0;
+		left: 0;
+		width: 160%;
+		height: 100%;
+		--dir: 1;
+		background: linear-gradient(
+			to right,
+			color-mix(in srgb, var(--sky-2) 96%, transparent) 0%,
+			color-mix(in srgb, var(--art-text) 94%, transparent) 80%,
+			color-mix(in srgb, var(--primary) 85%, var(--art-text)) 85%,
+			transparent 92%
+		);
+		animation: turn-sun var(--turn) var(--ease-out) both;
+	}
+
+	@keyframes turn-sun {
+		0% {
+			transform: translateX(calc(var(--dir) * -100%));
+		}
+		43%,
+		67% {
+			transform: translateX(calc(var(--dir) * -12%));
+			opacity: 1;
+		}
+		100% {
+			transform: translateX(calc(var(--dir) * -12%));
+			opacity: 0;
+		}
+	}
+
+	/* Back runs the other way. */
+	.turn.back .band {
+		--from: 104%;
+	}
+
+	.turn.back .band:nth-child(even) {
+		--from: -104%;
+	}
+
+	.turn.back .sun {
+		left: auto;
+		right: 0;
+		--dir: -1;
+		background: linear-gradient(
+			to left,
+			color-mix(in srgb, var(--sky-2) 96%, transparent) 0%,
+			color-mix(in srgb, var(--art-text) 94%, transparent) 80%,
+			color-mix(in srgb, var(--primary) 85%, var(--art-text)) 85%,
+			transparent 92%
+		);
+	}
+
+	/* With less motion, no wipe: the new screen fades in. */
+	@media (prefers-reduced-motion: reduce) {
+		.turn {
+			display: none;
+		}
+
+		.turned > .screen {
+			animation: sol-fade var(--turn) var(--ease) both;
+		}
 	}
 
 	/* Scrolling: the content ignores the pointer until the pane is still.

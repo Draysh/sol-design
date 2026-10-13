@@ -9,6 +9,11 @@
 	under it, and in a pane under about 1070 px it is a compact card, so the
 	page's first card shows in the first view.
 
+	With `slam`, the title comes in as the apps' openings and moments bring
+	theirs: kinetic type, slammed in from a little larger on a `--hit`, a
+	touch past its size and back, a slash of the world's light across it
+	(the overview's greeting, once a visit). With less motion, a fade.
+
 	<Sheet world="saturn" jp="続きから。" callout={['Pick up where you left off']}
 		figures={[{ value: '06', label: 'Watching', jp: '視聴中' }]} />
 -->
@@ -38,9 +43,11 @@
 		moons?: Moon[];
 		/** Extra content under the title, such as the screen's main action. */
 		children?: Snippet;
+		/** The title slams in (kinetic type), rather than settling. */
+		slam?: boolean;
 	}
 
-	let { world: id, name, jp, hud, hudJp = '', callout = [], figures = [], moons = [], children }: Props = $props();
+	let { world: id, name, jp, hud, hudJp = '', callout = [], figures = [], moons = [], children, slam = false }: Props = $props();
 
 	const w = $derived(worldFor(id));
 	const title = $derived(jp ?? jpOf(id));
@@ -52,7 +59,7 @@
 <section class="sheet" aria-label={name ?? w.name}>
 	<div class="card">
 		<span class="hud-line"><HudLabel text={head} jp={hudJp} /></span>
-		<h1 class="title" lang="ja">{title}</h1>
+		<h1 class="title" class:slam lang="ja">{title}</h1>
 		{#if line}<p class="line">{line}</p>{/if}
 	</div>
 	{#if moons.length || children || figures.length}
@@ -128,6 +135,71 @@
 		color: #fff;
 		animation: sol-settle var(--settle) var(--spring) both;
 		animation-delay: calc(var(--stagger) * 2);
+	}
+
+	/* Slammed in: from a third larger, landing on a hit a touch small, then its size; a slash of light across it. */
+	.title.slam {
+		position: relative;
+		transform-origin: 0 60%;
+		animation: sheet-slam calc(var(--hit) + var(--beat-hold) * 2) var(--ease-out) both;
+	}
+
+	.title.slam::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(105deg, transparent 38%, color-mix(in srgb, var(--art-accent) 70%, transparent) 50%, transparent 62%);
+		transform: translateX(-110%);
+		animation: sheet-slash calc(var(--beat-hold) * 1.5) var(--ease-in) var(--hit) both;
+		pointer-events: none;
+	}
+
+	/* Opened by a page turn, it slams in as the wipe reveals the page. */
+	:global(.turned) .title.slam {
+		animation-delay: var(--turn-reveal);
+	}
+
+	:global(.turned) .title.slam::after {
+		animation-delay: calc(var(--turn-reveal) + var(--hit));
+	}
+
+	@keyframes sheet-slam {
+		0% {
+			opacity: 0;
+			transform: scale(1.3);
+		}
+		20% {
+			opacity: 1;
+			transform: scale(0.97);
+		}
+		45% {
+			transform: scale(1.01);
+		}
+		100% {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	@keyframes sheet-slash {
+		0% {
+			opacity: 1;
+			transform: translateX(-110%);
+		}
+		100% {
+			opacity: 0;
+			transform: translateX(110%);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.title.slam {
+			animation: sol-fade var(--fade) var(--ease) both;
+		}
+
+		.title.slam::after {
+			display: none;
+		}
 	}
 
 	/* The English under the title: the subtitle, in the display face. */

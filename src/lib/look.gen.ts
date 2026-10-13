@@ -23,6 +23,8 @@ export interface FlavourData {
 	sky: string[];
 	/** How its stills are framed, `[zoom, across]`, or whole and centred. */
 	frame: [number, number] | null;
+	/** Which way its pages turn: "slice" (Neptune's glitch), "cut" (a film's), "ink" (Mercury's) or "sweep" (Terra's sunlight). */
+	turn: 'slice' | 'cut' | 'ink' | 'sweep';
 }
 
 export const flavours: Record<string, FlavourData> = {
@@ -46,7 +48,8 @@ export const flavours: Record<string, FlavourData> = {
 		"frame": [
 			1.22,
 			0
-		]
+		],
+		"turn": "cut"
 	},
 	"mercury": {
 		"id": "mercury",
@@ -65,7 +68,8 @@ export const flavours: Record<string, FlavourData> = {
 			"#7a2a3c",
 			"#c94a35"
 		],
-		"frame": null
+		"frame": null,
+		"turn": "ink"
 	},
 	"neptune": {
 		"id": "neptune",
@@ -84,7 +88,8 @@ export const flavours: Record<string, FlavourData> = {
 			"#3a1c46",
 			"#a32a48"
 		],
-		"frame": null
+		"frame": null,
+		"turn": "slice"
 	},
 	"terra": {
 		"id": "terra",
@@ -103,7 +108,8 @@ export const flavours: Record<string, FlavourData> = {
 			"#cfe4fa",
 			"#eef6ff"
 		],
-		"frame": null
+		"frame": null,
+		"turn": "sweep"
 	},
 	"luna": {
 		"id": "luna",
@@ -122,7 +128,8 @@ export const flavours: Record<string, FlavourData> = {
 			"#2b2f74",
 			"#3d3a86"
 		],
-		"frame": null
+		"frame": null,
+		"turn": "sweep"
 	}
 };
 

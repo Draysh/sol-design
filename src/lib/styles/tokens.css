@@ -64,15 +64,19 @@
 	--rise: 900ms;
 	--speak: 900ms;
 	--wash: 2400ms;
-	--stagger: 28ms;
+	--hit: 80ms;
+	--beat-hold: 160ms;
 	--sweep: 1400ms;
 	--drift: 12000ms;
 	--crossing: 14000ms;
 	--scene: 5200ms;
+	--turn-cover: 181ms;
+	--turn-reveal: 281ms;
 	--ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 	--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 	--spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 	--ease-in-out: cubic-bezier(0.37, 0, 0.63, 1);
+	--ease-in: cubic-bezier(0.7, 0, 0.84, 0);
 }
 
 /* The flavours (Theme.yozoraLooks): each world's, a moon's own; Saturn's is Sol's and the default. */
@@ -115,6 +119,8 @@
 	--haze: transparent;
 	--frame-zoom: 1.22;
 	--frame-across: 0;
+	--stagger: 30ms;
+	--arrive: 120ms;
 	--sky-0: #0b0e2a;
 	--sky-1: #2b2468;
 	--sky-2: #8a3c7e;
@@ -165,6 +171,8 @@
 	--haze: transparent;
 	--frame-zoom: 1;
 	--frame-across: 0.5;
+	--stagger: 70ms;
+	--arrive: 360ms;
 	--sky-0: #05061a;
 	--sky-1: #121848;
 	--sky-2: #2e1e4e;
@@ -215,6 +223,8 @@
 	--haze: #ff4a5a;
 	--frame-zoom: 1;
 	--frame-across: 0.5;
+	--stagger: 40ms;
+	--arrive: 160ms;
 	--sky-0: #040814;
 	--sky-1: #0a1730;
 	--sky-2: #14284f;
@@ -265,6 +275,8 @@
 	--haze: transparent;
 	--frame-zoom: 1;
 	--frame-across: 0.5;
+	--stagger: 40ms;
+	--arrive: 300ms;
 	--sky-0: #1f6fd6;
 	--sky-1: #4a90e2;
 	--sky-2: #8fbdf0;
@@ -315,6 +327,8 @@
 	--haze: transparent;
 	--frame-zoom: 1;
 	--frame-across: 0.5;
+	--stagger: 40ms;
+	--arrive: 300ms;
 	--sky-0: #05061a;
 	--sky-1: #0d1238;
 	--sky-2: #1c2160;
@@ -405,15 +419,19 @@
  * moves into place or counts, nothing springs (Theme.calm).
  */
 @media (prefers-reduced-motion: reduce) {
-	:root {
+	:root,
+	[data-flavour] {
 		--snap: 0ms;
 		--flicker: 0ms;
 		--lock: 0ms;
+		--hit: 0ms;
+		--beat-hold: 0ms;
 		--settle: var(--fade);
 		--turn: var(--fade);
 		--rise: var(--fade);
 		--count: 0ms;
 		--stagger: 0ms;
+		--arrive: 0ms;
 		--spring: var(--ease);
 	}
 }

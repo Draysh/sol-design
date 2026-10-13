@@ -29,6 +29,11 @@ keep the rules so the app doesn't have to.
   again on every `[data-flavour]`. There is no day mode. Components that
   draw a flavour's mark read it from the Shell's `HERE` context
   (`here.ts`), which also gives a PageHead its section's number and `jp`.
+- Motion follows the apps' (`docs/yozora.md`, "Direction"): the Shell turns
+  a page the flavour's way (`turn` in `look.gen.ts`, from `Theme.beat`),
+  `Sheet.slam` is the one kinetic title, there is no opening; transforms and
+  opacity only, a fade with less motion. A failure's notice is said as a
+  person would by `notices.show` (`said`, `lineFor`: the apps' lines).
 - The stills are the person's own and never enter this package: `Ground`
   shows an address it is given, and the Shell picks one from `stills`
   (`stillFor`), else the drawn sky.
