@@ -102,9 +102,9 @@
 	/* The number keeps the room its value takes while it counts. */
 	.value {
 		display: grid;
-		font-family: var(--font-hud);
+		font-family: var(--font-display);
 		font-size: var(--size);
-		font-weight: 500;
+		font-weight: 700;
 		line-height: 1;
 		text-transform: uppercase;
 		color: #fff;

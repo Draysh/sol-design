@@ -21,10 +21,12 @@ same world data (`Worlds.qml`, from which `worlds.gen.ts` is written).
    one corner cut at 45° (top right), the top edge and the cut catching the
    light. The page's lead panel wears brackets in the light; others light
    theirs under the pointer.
-3. **Two faces and a serif.** HUD capitals (Chakra Petch, tracked wide) for
-   labels of one to three words and for figures; Outfit for reading; the
-   heavy title serif (Shippori Mincho B1) for titles and every Japanese tag.
-   Japanese is never in capitals or tracked.
+3. **Faces by role.** HUD capitals (Chakra Petch, tracked wide) for labels
+   of one to three words; Outfit for reading; each world's title face for
+   titles and every Japanese tag (Corporate Logo, Mercury's Yuji Syuku,
+   Terra's and Luna's Keifont; Neptune's Makinas 4 is the apps' alone, so
+   Neptune's pages here keep Corporate Logo); Corporate Logo Bold for
+   subtitles and big figures. Japanese is never in capitals or tracked.
 4. **One mood a world.** There is no day mode: each world keeps its
    flavour all day. Nothing is filled except the screen's main action.
 

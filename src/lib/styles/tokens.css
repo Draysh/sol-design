@@ -85,7 +85,7 @@
 	--accent: #ffc07e;
 	--second: #7fe3ff;
 	--seal: #f07a6a;
-	--bubble: #f4f2ff;
+	--bubble: rgb(9 11 34 / 0.9);
 	--primary: #ffc07e;
 	--dim: #0b0e2a;
 	--deep: rgb(11 14 42 / 0.86);
@@ -135,7 +135,7 @@
 	--accent: #ff8fa8;
 	--second: #ffd58a;
 	--seal: #e2412e;
-	--bubble: #fff4da;
+	--bubble: rgb(7 8 28 / 0.9);
 	--primary: #ff8fa8;
 	--dim: #07081c;
 	--deep: rgb(7 8 28 / 0.86);
@@ -185,7 +185,7 @@
 	--accent: #ff4a5a;
 	--second: #8fe7ff;
 	--seal: #ff4a5a;
-	--bubble: #eef6ff;
+	--bubble: rgb(4 9 22 / 0.9);
 	--primary: #ff4a5a;
 	--dim: #0a1426;
 	--deep: rgb(10 20 38 / 0.86);
@@ -235,7 +235,7 @@
 	--accent: #1157ab;
 	--second: #3b3f9e;
 	--seal: #9fc4f0;
-	--bubble: #fbf8ee;
+	--bubble: rgb(246 250 255 / 0.92);
 	--primary: #ffb81c;
 	--dim: #0a3a85;
 	--deep: rgb(246 250 255 / 0.92);
@@ -285,7 +285,7 @@
 	--accent: #ffe08a;
 	--second: #b7c2ff;
 	--seal: #ffe08a;
-	--bubble: #fbf6e6;
+	--bubble: rgb(12 14 46 / 0.9);
 	--primary: #ffe08a;
 	--dim: #0b0d2a;
 	--deep: rgb(11 13 42 / 0.86);
@@ -333,14 +333,19 @@
 	/* The current world's own colour (Worlds.qml), set by the Shell: a world's glyph, nothing else. */
 	--world: #f2f2f2;
 
-	/* Type. Titles and every Japanese tag in the heavy serif; HUD capitals and figures in the squared sans; reading in Outfit. */
+	/*
+	 * Type. Titles and every Japanese tag in the flavour's title face (Corporate Logo, or the
+	 * world's own below); subtitles and big figures in Corporate Logo; HUD capitals in the
+	 * squared sans; reading in Outfit.
+	 */
 	--font: 'Outfit Variable', 'Outfit', 'Zen Kaku Gothic New', 'Helvetica Neue', Arial, sans-serif;
-	--font-title: 'Shippori Mincho B1', 'Noto Serif CJK JP', 'Noto Serif JP', 'Hiragino Mincho ProN', serif;
+	--font-title: 'Corporate Logo ver3', 'Zen Kaku Gothic New', 'Noto Sans CJK JP', sans-serif;
+	--font-display: 'Corporate Logo ver3', 'Zen Kaku Gothic New', 'Noto Sans CJK JP', sans-serif;
 	--font-hud: 'Chakra Petch', 'Zen Kaku Gothic New', 'Outfit Variable', sans-serif;
 	/* Words set in capitals (labels, buttons, tabs, quiet facts): the HUD face. */
 	--font-caps: var(--font-hud);
 	/* Japanese words to read closely, and Japanese set in a sans on its own. */
-	--font-jp: 'Shippori Mincho', 'Shippori Mincho B1', 'Noto Serif CJK JP', serif;
+	--font-jp: 'Shippori Mincho', 'Noto Serif CJK JP', serif;
 	--font-jp-sans: 'Zen Kaku Gothic New', 'Noto Sans CJK JP', sans-serif;
 	/* Tabular numbers only, where digits stand in columns (the pairing code). */
 	--font-mono: 'JetBrains Mono', ui-monospace, monospace;
@@ -351,6 +356,19 @@
 	--margin: clamp(16px, 3vw, 40px);
 	/* Content is never wider than this; a wider window centres it. */
 	--content: 1400px;
+}
+
+/*
+ * A world's own title face, as its app has it: Mercury's brush, Terra's and Luna's
+ * Keifont. Neptune's (Makinas 4) may not be handed on, so its pages keep Corporate Logo.
+ */
+[data-flavour='mercury'] {
+	--font-title: 'Yuji Syuku', 'Shippori Mincho', 'Noto Serif CJK JP', serif;
+}
+
+[data-flavour='terra'],
+[data-flavour='luna'] {
+	--font-title: 'Keifont', 'Zen Kaku Gothic New', 'Noto Sans CJK JP', sans-serif;
 }
 
 /*

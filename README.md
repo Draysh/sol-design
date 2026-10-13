@@ -18,8 +18,9 @@ data (`qml/Worlds.qml`).
   `WithPlanet` are left from the Observatory look and the Svelte world apps.
 - **The look** (`look.ts`, `tokens.css`, `fonts.css`): the flavours and the
   scale, written from sol-quick's `Theme.qml` by `node
-  scripts/look-from-qml.mjs`, and its fonts (Chakra Petch, Shippori Mincho
-  B1, Zen Kaku Gothic New, OFL) cut for the web by `python3
+  scripts/look-from-qml.mjs`, and its fonts (Chakra Petch, Corporate Logo,
+  Zen Kaku Gothic New from sol-quick; Keifont and Yuji Syuku from Terra's
+  and Mercury's checkouts; all openly licensed) cut for the web by `python3
   scripts/fonts-for-web.py`. Run them by hand after changing those, and
   commit what they write.
 - **Worlds** (`worlds.ts`): each world's name, role, colour, real axial tilt,

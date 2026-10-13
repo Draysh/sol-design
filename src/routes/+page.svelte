@@ -75,7 +75,7 @@
 	const principles = [
 		['A film’s sky', 'Every page stands on a still from an anime film under its world’s grade, or the world’s drawn sky. The words on it are white.'],
 		['Glass', 'Panels are glass with one corner cut at 45°, a hairline and a lit top edge; the page’s lead panel wears brackets.'],
-		['Two faces and a serif', 'HUD capitals for labels of one to three words, a sans for reading, the title serif for Japanese, never tracked.'],
+		['Faces by role', 'HUD capitals for labels of one to three words, a sans for reading, the world’s title face for titles and Japanese (never tracked), Corporate Logo for subtitles and big figures.'],
 		['One mood a world', 'No day mode: each world keeps its own flavour all day. Sol wears Saturn’s dusk.']
 	];
 </script>

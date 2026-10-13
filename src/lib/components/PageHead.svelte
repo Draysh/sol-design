@@ -127,7 +127,9 @@
 		color: var(--accent);
 	}
 
+	/* The English title: the subtitle, in the display face. */
 	h1 {
+		font-family: var(--font-display);
 		font-size: var(--text-s);
 		color: var(--hud-text);
 	}

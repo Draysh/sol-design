@@ -1,14 +1,21 @@
 #!/usr/bin/env python3
 """The apps' type, cut for the web: writes src/lib/assets/fonts/ and src/lib/styles/fonts.css.
 
-The faces are sol-quick's own (`../quick/assets/fonts`, under the SIL Open
-Font License, their licences copied beside them), made WOFF2 and cut so a
-page fetches little:
+The faces are the apps' own, made WOFF2 and cut so a page fetches little,
+their licences copied beside them: sol-quick's (`../quick/assets/fonts`) and
+two worlds' title faces from their checkouts beside the kit
+(`../../worlds/<world>/assets/fonts`), both openly licensed:
 
-- Chakra Petch (Regular, Medium, SemiBold): HUD capitals and figures; Latin
-  only, about 12 KB a weight.
-- Shippori Mincho B1 (ExtraBold): titles and every Japanese tag.
+- Chakra Petch (Regular, Medium, SemiBold): HUD capitals; Latin only, about
+  12 KB a weight.
+- Corporate Logo Bold: titles (Saturn's flavour, and any without a face of
+  its own here), subtitles and big figures.
+- Keifont: Terra's and Luna's titles. Yuji Syuku: Mercury's titles.
 - Zen Kaku Gothic New (Medium): Japanese in the sans.
+
+Neptune's title face (Makinas 4) may not be handed on, so it is not here:
+Neptune's pages set their titles in Corporate Logo. The title faces have one
+weight each, declared for every weight so no page draws them thickened.
 
 Each Japanese face is sliced the way Google Fonts slices them, and the
 browser fetches a slice only when a page shows one of its characters
@@ -36,18 +43,29 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 KIT = HERE.parent
 SOURCE = KIT.parent / "quick" / "assets" / "fonts"
+WORLDS = KIT.parent.parent / "worlds"
 OUT = KIT / "src" / "lib" / "assets" / "fonts"
 CSS = KIT / "src" / "lib" / "styles" / "fonts.css"
 
-# The CSS family, the file, its weights in CSS, Latin only or Japanese.
+# The CSS family, the file (in its folder), its weights in CSS, Latin only or Japanese.
 FACES = [
-    ("Chakra Petch", "ChakraPetch-Regular", "400", False),
-    ("Chakra Petch", "ChakraPetch-Medium", "500", False),
-    ("Chakra Petch", "ChakraPetch-SemiBold", "600 900", False),
-    ("Shippori Mincho B1", "ShipporiMinchoB1-ExtraBold", "600 900", True),
-    ("Zen Kaku Gothic New", "ZenKakuGothicNew-Medium", "300 700", True),
+    ("Chakra Petch", SOURCE / "ChakraPetch-Regular.ttf", "400", False),
+    ("Chakra Petch", SOURCE / "ChakraPetch-Medium.ttf", "500", False),
+    ("Chakra Petch", SOURCE / "ChakraPetch-SemiBold.ttf", "600 900", False),
+    ("Corporate Logo ver3", SOURCE / "CorporateLogo-Bold.otf", "100 900", True),
+    ("Keifont", WORLDS / "terra" / "assets" / "fonts" / "Keifont.ttf", "100 900", True),
+    ("Yuji Syuku", WORLDS / "mercury" / "assets" / "fonts" / "YujiSyuku-Regular.ttf", "100 900", True),
+    ("Zen Kaku Gothic New", SOURCE / "ZenKakuGothicNew-Medium.ttf", "300 700", True),
 ]
-LICENCES = ["OFL-ChakraPetch.txt", "OFL-ShipporiMinchoB1.txt", "OFL-ZenKakuGothicNew.txt"]
+LICENCES = [
+    SOURCE / "OFL-ChakraPetch.txt",
+    SOURCE / "OFL-CorporateLogo.txt",
+    SOURCE / "OFL-ZenKakuGothicNew.txt",
+    WORLDS / "terra" / "assets" / "fonts" / "LICENSE-Keifont-Apache-2.0.txt",
+    WORLDS / "terra" / "assets" / "fonts" / "LICENSE-Keifont-M+.txt",
+    WORLDS / "terra" / "assets" / "fonts" / "Keifont-readme-ja.txt",
+    WORLDS / "mercury" / "assets" / "fonts" / "OFL-YujiSyuku.txt",
+]
 
 # Latin, its punctuation, arrows and the few signs the HUD uses.
 LATIN = [(0x20, 0x7E), (0xA0, 0x17F), (0x2000, 0x206F), (0x20AC, 0x20AC), (0x2190, 0x21FF), (0x2212, 0x2212),
@@ -115,8 +133,8 @@ def main():
     if OUT.exists():
         shutil.rmtree(OUT)
     OUT.mkdir(parents=True)
-    for name in LICENCES:
-        shutil.copy(SOURCE / name, OUT / name)
+    for licence in LICENCES:
+        shutil.copy(licence, OUT / licence.name)
 
     ours = written(folders)
     first = expand(LATIN) | expand(KANA) | ours
@@ -125,11 +143,11 @@ def main():
     slices = [first] + [set(rest[i:i + size]) for i in range(0, len(rest), size)]
 
     rules = []
-    for family, stem, weight, japanese in FACES:
+    for family, font, weight, japanese in FACES:
         parts = slices if japanese else [expand(LATIN)]
         for n, codes in enumerate(parts):
-            file = f"{stem}.woff2" if not japanese else f"{stem}-{n}.woff2"
-            cut(SOURCE / f"{stem}.ttf", codes, OUT / file)
+            file = f"{font.stem}.woff2" if not japanese else f"{font.stem}-{n}.woff2"
+            cut(font, codes, OUT / file)
             rules.append(
                 "@font-face {\n"
                 f"\tfont-family: '{family}';\n"
@@ -144,8 +162,9 @@ def main():
     CSS.write_text(
         "/*\n"
         " * The apps' type for the web, written by scripts/fonts-for-web.py; don't edit by hand.\n"
-        " * Chakra Petch, Shippori Mincho B1 and Zen Kaku Gothic New under the SIL Open Font\n"
-        " * License (assets/fonts/OFL-*.txt). A Japanese face comes in slices, each fetched only\n"
+        " * Chakra Petch, Corporate Logo, Yuji Syuku and Zen Kaku Gothic New under the SIL Open\n"
+        " * Font License (assets/fonts/OFL-*.txt), Keifont under the Apache License 2.0 and the\n"
+        " * M+ licence (assets/fonts/LICENSE-Keifont-*.txt). A Japanese face comes in slices, each fetched only\n"
         " * when a page shows one of its characters; the first has the kana and Sol's own words.\n"
         " */\n\n" + "\n".join(rules)
     )

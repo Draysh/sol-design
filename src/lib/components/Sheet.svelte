@@ -130,10 +130,12 @@
 		animation-delay: calc(var(--stagger) * 2);
 	}
 
+	/* The English under the title: the subtitle, in the display face. */
 	.line {
 		max-width: 62ch;
+		font-family: var(--font-display);
 		font-size: calc(var(--text-lede) * 0.8);
-		font-weight: var(--weight-name);
+		font-weight: 700;
 		line-height: 1.35;
 		color: color-mix(in srgb, #fff 92%, transparent);
 		animation: sol-fade var(--fade) var(--ease) both;

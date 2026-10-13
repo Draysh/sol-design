@@ -22,8 +22,15 @@ tight to the disc and converted to WebP.
 Open Font License 1.1, installed from `@fontsource-variable/outfit`.
 
 [Chakra Petch](https://github.com/m4rc1e/Chakra-Petch) by Cadson Demak,
-[Shippori Mincho B1](https://github.com/fontdasu/ShipporiMincho) by FONTDASU and
+[Corporate Logo Bold](https://logotype.jp/) (ver3) by LOGOTYPE.JP, its
+kanji and Latin from Source Han Sans (© 2014-2020 Adobe),
+[Yuji Syuku](https://github.com/Kinutafontfactory/Yuji) by the Yuji Project Authors and
 [Zen Kaku Gothic New](https://github.com/googlefonts/zen-kakugothic) by Yoshimichi
-Ohira, each under the SIL Open Font License 1.1 (their licences are beside them
-in `src/lib/assets/fonts/`). They are sol-quick's own copies, made WOFF2 and cut
-into slices for the web by `scripts/fonts-for-web.py`.
+Ohira, each under the SIL Open Font License 1.1; and
+[Keifont](https://font.sumomo.ne.jp/) by Do-Font (its kana; its other
+glyphs from Source Han Sans, © 2014 Adobe, M+ OUTLINE FONTS, © 2014 M+ FONTS
+PROJECT, and Genshin Gothic, © 2014 Jikasei Font Kobo), under the Apache License 2.0
+and the M+ licence. Their licences are beside them in `src/lib/assets/fonts/`.
+They are the apps' own copies (sol-quick's, Terra's and Mercury's, cut down and
+given proportional punctuation there), made WOFF2 and cut into slices for the web
+by `scripts/fonts-for-web.py`.

@@ -83,10 +83,10 @@
 		gap: var(--s-3);
 	}
 
-	/* The figure in the HUD face, as a title card's. */
+	/* The figure in the display face, as a title card's. */
 	.number {
-		font-family: var(--font-hud);
-		font-weight: 500;
+		font-family: var(--font-display);
+		font-weight: 700;
 		font-size: var(--text-figure);
 		line-height: 1;
 		color: var(--hud-text);
