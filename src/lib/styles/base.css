@@ -164,6 +164,11 @@ svg {
  * from the top, a hairline round it and one corner cut at 45° (top right,
  * `--hud-cut`); a highlight runs along the top edge and the cut, brightest
  * half-way along. `--cut: 0px` keeps every corner square.
+ *
+ * A flavour with panels (`surface: "panel"`, every flavour's now, after SSS
+ * by applibot) makes it a panel instead: near-opaque, nothing blurred and no
+ * sheen, its hairline in the light (`--glass-line`), brighter under the
+ * pointer (`--glass-line-lit`, on a `.sol-lit` parent or one hovered).
  */
 .sol-glass {
 	--cut: var(--hud-cut);
@@ -174,11 +179,17 @@ svg {
 	clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
 	background:
 		linear-gradient(to right, transparent, var(--highlight) 50%, transparent) top / 100% 1px no-repeat,
-		linear-gradient(to bottom, rgb(255 255 255 / 0.05), transparent 38%),
+		linear-gradient(to bottom, var(--glass-sheen), transparent 38%),
 		linear-gradient(to bottom, color-mix(in srgb, var(--glass) 88%, transparent), var(--glass));
-	box-shadow: inset 0 0 0 1px var(--line);
-	backdrop-filter: blur(22px) saturate(1.15);
-	-webkit-backdrop-filter: blur(22px) saturate(1.15);
+	box-shadow: inset 0 0 0 1px var(--glass-line);
+	backdrop-filter: var(--glass-blur);
+	-webkit-backdrop-filter: var(--glass-blur);
+	transition: box-shadow var(--fade) var(--ease);
+}
+
+.sol-lit > .sol-glass,
+:hover > .sol-glass {
+	box-shadow: inset 0 0 0 1px var(--glass-line-lit);
 }
 
 /* The cut's own hairline, lit like the top edge. */
@@ -339,7 +350,66 @@ svg {
 	font-size: calc(var(--text-xs) + 2px);
 	letter-spacing: 0;
 	text-transform: none;
-	color: var(--accent);
+	color: var(--accent-text);
+}
+
+/*
+ * An outline title, as SSS by applibot sets one: thin, stroke-only capitals
+ * in the HUD face over whatever is behind them, for display sizes only
+ * (about 30 px and up). A browser that can't stroke text draws them solid.
+ * `.sol-draw` draws them on as they arrive (a reveal from the left, over
+ * `--draw`, after `--draw-wait`); with less motion they fade in.
+ */
+.sol-outline {
+	font-family: var(--font-hud);
+	font-weight: 500;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	line-height: 1;
+	color: var(--hud-text);
+}
+
+@supports (-webkit-text-stroke: 1px black) {
+	.sol-outline {
+		-webkit-text-stroke: var(--stroke, 1.25px) currentColor;
+		-webkit-text-fill-color: transparent;
+	}
+}
+
+.sol-draw {
+	animation: sol-draw var(--draw, var(--settle)) var(--ease-in-out) var(--draw-wait, 0ms) both;
+}
+
+@keyframes sol-draw {
+	from {
+		clip-path: inset(-10% 100% -10% 0);
+	}
+	to {
+		clip-path: inset(-10% 0 -10% 0);
+	}
+}
+
+/* A page opened by a turn draws its titles on as the curtain lifts. */
+.turned .sol-draw {
+	--draw-wait: var(--turn-reveal);
+}
+
+/* A HUD line written as a caption: lowercase, underscores, the HUD face tracked a little. */
+.sol-caption {
+	font-family: var(--font-hud);
+	font-size: calc(var(--text-xs) + 1px);
+	font-weight: 500;
+	letter-spacing: 0.04em;
+	text-transform: none;
+	color: var(--accent-text);
+}
+
+/* Long Japanese to read (a line said, a description): the light mincho, with room between the lines. */
+.sol-long {
+	font-family: var(--font-long);
+	font-weight: 300;
+	line-height: 1.9;
+	letter-spacing: 0.02em;
 }
 
 /* Reading text stays in sentence case. */
@@ -437,7 +507,8 @@ svg {
 
 @media (prefers-reduced-motion: reduce) {
 	.sol-settle,
-	.sol-stagger > * {
+	.sol-stagger > *,
+	.sol-draw {
 		animation-name: sol-fade;
 		animation-timing-function: var(--ease);
 	}

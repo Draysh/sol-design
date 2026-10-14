@@ -84,6 +84,6 @@
 	}
 
 	.moon:hover .words {
-		color: #fff;
+		color: var(--art-bright);
 	}
 </style>

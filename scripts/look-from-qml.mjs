@@ -5,9 +5,12 @@
 // - in src/lib/styles/tokens.css, between its two "look-from-qml" lines: the
 //   scale (type sizes, weights, tracking, spacing, sizes, corners, motion) and
 //   every flavour (`yozoraLooks`: each world's, a moon's own, the light one)
-//   as custom properties on `[data-flavour='<id>']`, Saturn's on :root too;
+//   as custom properties on `[data-flavour='<key>']`, Saturn's on :root too,
+//   with what its SSS keys make (panels, the columns' hairlines, the emblem's
+//   grey, the curtain's ink);
 // - src/lib/look.gen.ts: what a script needs of each flavour (its sky, stars,
-//   motif, framing, Japanese name and kanji) and every world's name in Japanese.
+//   motif, framing, Japanese name and kanji, its turn and SSS keys, the
+//   colours its stills are graded in) and every world's name in Japanese.
 //
 // Run it by hand after changing Theme.qml and commit what it writes:
 //
@@ -84,8 +87,9 @@ function share(name) {
 
 /**
  * Each flavour's beat (`Theme.beat`), by its motif: how things arrive on its
- * pages and which way its page turns. Read from the `if (m === "<motif>")
- * return { … }` lines and the last `return { … }` (every other motif's).
+ * pages and which way its page turns (its own `turn` when it has one, as
+ * Theme's `hud.turn`). Read from the `if (m === "<motif>") return { … }`
+ * lines and the last `return { … }` (every other motif's).
  */
 const beatText = (() => {
 	const start = qml.indexOf('readonly property var beat: {');
@@ -93,12 +97,12 @@ const beatText = (() => {
 	return qml.slice(start, qml.indexOf('\n    }', start));
 })();
 const ms0 = (n) => n;
-function beatOf(motif) {
-	const own = new RegExp(`if \\(m === "${motif}"\\) return (\\{[^\\n]*\\})`).exec(beatText);
+function beatOf(f) {
+	const own = new RegExp(`if \\(m === "${f.motif}"\\) return (\\{[^\\n]*\\})`).exec(beatText);
 	const rest = /\n\s*return (\{[^\n]*\})/.exec(beatText);
 	const body = (own ?? rest)?.[1];
-	if (!body) throw new Error(`no beat for "${motif}" in ${source}`);
-	return new Function('ms', 'easeOut', 'spring', `return (${body})`)(ms0, 'easeOut', 'spring');
+	if (!body) throw new Error(`no beat for "${f.motif}" in ${source}`);
+	return new Function('ms', 'easeOut', 'spring', 'hud', `return (${body})`)(ms0, 'easeOut', 'spring', f);
 }
 const scale = [
 	...px.map((n) => `\t--${varName(n)}: ${scalar(n)}px;`),
@@ -138,6 +142,11 @@ function tint(under, over, alpha) {
 /** One flavour's custom properties, worked out as Theme.qml works its tokens out. */
 function flavour(f) {
 	const light = !!f.light;
+	// A light flavour whose stills are graded into paper (Terra's): the still is as light as its
+	// panels, so the words on it are ink too, the glass's (`Theme.paperArt`).
+	const paperArt = light && !!f.duotone;
+	const paper = light && f.dim ? f.dim : '#ffffff';
+	const panel = f.surface === 'panel';
 	const p = {
 		'color-scheme': light ? 'light' : 'dark',
 		ground: css(f.ground),
@@ -166,12 +175,33 @@ function flavour(f) {
 		danger: light ? '#c8361f' : '#ff6b5a',
 		'danger-text': light ? '#b3301b' : '#ff8a7a',
 		ok: light ? '#1d7442' : '#8ee6b0',
-		'art-text': light ? '#ffffff' : css(f.text),
-		'art-quiet': light ? css('#ffffff', 0.86) : css(f.quiet),
-		'art-faint': light ? css('#ffffff', 0.66) : css(f.faint),
+		'art-bright': paperArt ? css(f.bright) : '#ffffff',
+		'art-text': paperArt ? css(f.text) : light ? '#ffffff' : css(f.text),
+		'art-quiet': paperArt ? css(f.quiet) : light ? css('#ffffff', 0.86) : css(f.quiet),
+		'art-faint': paperArt ? css(f.faint) : light ? css('#ffffff', 0.66) : css(f.faint),
 		'art-accent': css(f.artAccent ?? f.accent),
 		'art-second': css(f.artSecond ?? f.second),
-		'art-line': light ? css('#ffffff', 0.3) : css(f.edge, 0.2),
+		'art-line': paperArt ? css(f.edge, 0.2) : light ? css('#ffffff', 0.3) : css(f.edge, 0.2),
+		// Small words in the light, and the colour the navigator signs in.
+		'accent-text': css(f.accentText ?? f.accent),
+		pen: css(f.pen ?? f.accent),
+		// The paper a light flavour stands on; white otherwise.
+		paper: css(paper),
+		// The darkest ink (an eyecatch's ground, what is drawn on the light), a hit's flash, a title card's slam.
+		'card-ink': css(f.cardInk ?? f.ground),
+		impact: css(f.impact ?? f.accent),
+		slam: css(f.slam ?? f.impact ?? f.accent),
+		// Panels rather than glass (`surface: "panel"`): near-opaque, no blur or sheen, a hairline in the light.
+		'glass-blur': panel ? 'none' : 'blur(22px) saturate(1.15)',
+		'glass-sheen': panel ? 'transparent' : 'rgb(255 255 255 / 0.05)',
+		'glass-line': panel ? css(f.accent, 0.42) : css(f.edge, 0.2),
+		'glass-line-lit': panel ? css(f.accent, 0.9) : css(f.edge, 0.2),
+		// The light glass's top edge and cut catch; a panel catches none.
+		highlight: panel ? 'transparent' : css(f.edge, 0.45),
+		// The columns' hairlines (`grid`), and the emblem behind the pages (`scaffold`): its grey, top to foot.
+		rule: f.grid ? css(f.accent, 0.12) : 'transparent',
+		'scaffold-top': f.scaffold ? (paperArt ? css(tint(paper, f.ground, 0.08), 0.5) : css('#ffffff', 0.14)) : 'transparent',
+		'scaffold-foot': f.scaffold ? (paperArt ? css(tint(paper, f.ground, 0.08), 0.14) : css('#ffffff', 0.05)) : 'transparent',
 		hold: f.hold ?? 0,
 		shade: f.shade ?? 0,
 		pool: f.pool ?? 0,
@@ -179,8 +209,8 @@ function flavour(f) {
 		'frame-zoom': f.frame ? f.frame[0] : 1,
 		'frame-across': f.frame ? f.frame[1] : 0.5,
 		// Its beat: things arriving together come a stagger apart, each taking `arrive`.
-		stagger: `${beatOf(f.motif).stagger}ms`,
-		arrive: `${beatOf(f.motif).arrive}ms`
+		stagger: `${beatOf(f).stagger}ms`,
+		arrive: `${beatOf(f).arrive}ms`
 	};
 	f.sky.forEach((c, i) => (p[`sky-${i}`] = css(c)));
 	f.grade.forEach(([r, g, b, a], i) => (p[`grade-${i}`] = css({ r, g, b, a })));
@@ -226,7 +256,19 @@ const pick = (f) => ({
 	rain: f.rain ?? 0,
 	sky: f.sky.map((c) => css(c)),
 	frame: f.frame ?? null,
-	turn: beatOf(f.motif).turn
+	turn: beatOf(f).turn,
+	key: Object.keys(looks).find((k) => looks[k] === f),
+	tear: f.tear ?? '',
+	duotone: !!f.duotone,
+	panels: f.surface === 'panel',
+	outline: !!f.outline,
+	captions: !!f.captions,
+	scaffold: !!f.scaffold,
+	grid: !!f.grid,
+	tag: f.tag ?? '',
+	accent: css(f.accent),
+	paper: css(f.light && f.dim ? f.dim : '#ffffff'),
+	tones: f.tones ? f.tones.map((c) => css(c)) : null
 });
 const ts = `// Written by scripts/look-from-qml.mjs from sol-quick's qml/Theme.qml; don't edit by hand.
 // The colours are in tokens.css; this is what a script needs of each flavour.
@@ -253,8 +295,31 @@ export interface FlavourData {
 	sky: string[];
 	/** How its stills are framed, \`[zoom, across]\`, or whole and centred. */
 	frame: [number, number] | null;
-	/** Which way its pages turn: "slice" (Neptune's glitch), "cut" (a film's), "ink" (Mercury's) or "sweep" (Terra's sunlight). */
-	turn: 'slice' | 'cut' | 'ink' | 'sweep';
+	/** Which way its pages turn: "slice" (a glitch), "cut" (a film's), "ink", "sweep" (sunlight), or "curtain", a flat curtain of its light. */
+	turn: 'slice' | 'cut' | 'ink' | 'sweep' | 'curtain';
+	/** Its key among the flavours, which \`data-flavour\` names (Titan's own, though its \`id\` is Saturn's). */
+	key: string;
+	/** A curtain's one torn frame: "" (a glitch), "bars", "brush", "flare" or "moon". */
+	tear: string;
+	/** Its stills graded as one colour: black into its light, or (light) its light into paper, or through its \`tones\`. */
+	duotone: boolean;
+	/** Near-opaque panels with a hairline in its light instead of glass. */
+	panels: boolean;
+	/** Big English titles in outline capitals. */
+	outline: boolean;
+	/** HUD lines written as lowercase captions: "neptune_music / albums". */
+	captions: boolean;
+	/** Its emblem huge and cropped behind the pages. */
+	scaffold: boolean;
+	/** The content's columns as hairlines in its light. */
+	grid: boolean;
+	/** The world's word at the head of a caption when its role is too long ("terra_days"), else "". */
+	tag: string;
+	/** Its light, and the paper a light flavour stands on (white otherwise), for grading a still. */
+	accent: string;
+	paper: string;
+	/** Shadow, middle and highlight, when its stills are graded through three colours (Luna's). */
+	tones: string[] | null;
 }
 
 export const flavours: Record<string, FlavourData> = ${JSON.stringify(Object.fromEntries(ids.map((id) => [id, pick(looks[id])])), null, '\t')};

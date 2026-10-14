@@ -6,12 +6,18 @@
 	beside them, and the page's main action on the right. On a page opened
 	from another, the way back comes first (the Shell's).
 
+	With a flavour's `outline`, the section's number stands first, large, in
+	outline figures of the light, and the English title in outline capitals
+	(both drawn on as the page lands); with its `captions` the HUD line is a
+	caption, "sol_hub / connections".
+
 	<PageHead title="Worlds" jp="世界" lead="Each world is an app of its own.">…</PageHead>
 -->
 <script lang="ts">
 	import { getContext, onMount, type Snippet } from 'svelte';
 	import { BACK, type BackContext } from '../back.js';
-	import { HERE, type HereContext } from '../here.js';
+	import { HERE, hereFlavour, type HereContext } from '../here.js';
+	import { caption, outlined, tagOf } from '../look.js';
 	import Back from './Back.svelte';
 
 	interface Props {
@@ -30,21 +36,31 @@
 	const here = getContext<HereContext | undefined>(HERE);
 	onMount(() => nav?.claim());
 
+	const flavour = hereFlavour();
+	const f = $derived(flavour());
+
 	const section = $derived(here?.section ?? null);
 	const name = $derived(jp ?? section?.jp ?? '');
+	const number = $derived(section ? String(section.number).padStart(2, '0') : '');
+	/** The number stands large on its own: the HUD line doesn't repeat it. */
+	const big = $derived(f.outline && number !== '');
 	const hud = $derived(
-		[section ? String(section.number).padStart(2, '0') : '', eyebrow ?? here?.name ?? ''].filter(Boolean).join(' · ')
+		f.captions
+			? caption(eyebrow ?? section?.label ?? title, tagOf(here?.flavour ?? 'sol'))
+			: [big ? '' : number, eyebrow ?? here?.name ?? ''].filter(Boolean).join(' · ')
 	);
+	const outline = $derived(outlined(title, f));
 </script>
 
 <header class="head sol-chrome">
 	<span class="sol-glass" aria-hidden="true"></span>
 	<div class="text">
 		{#if nav?.back}<span class="back"><Back {...nav.back} /></span>{/if}
+		{#if big}<span class="number sol-outline sol-draw" aria-hidden="true">{number}</span>{/if}
 		{#if name}<span class="jp" lang="ja">{name}</span><span class="bar" aria-hidden="true"></span>{/if}
 		<span class="names">
-			<span class="hud">{hud}</span>
-			<h1>{title}</h1>
+			<span class="hud" class:sol-caption={f.captions}>{hud}</span>
+			<h1 class:sol-outline={outline} class:sol-draw={outline} class:outline>{title}</h1>
 		</span>
 		{#if lead}
 			{#key lead}<span class="lead sol-fade">{lead}</span>{/key}
@@ -124,7 +140,7 @@
 		font-weight: var(--weight-label);
 		letter-spacing: var(--track-hud);
 		text-transform: uppercase;
-		color: var(--accent);
+		color: var(--accent-text);
 	}
 
 	/* The English title: the subtitle, in the display face. */
@@ -132,6 +148,31 @@
 		font-family: var(--font-display);
 		font-size: var(--text-s);
 		color: var(--hud-text);
+	}
+
+	/* The section's number, large, in outline figures of the light. */
+	.number {
+		--stroke: 1.5px;
+		--draw: var(--fade);
+		font-size: 60px;
+		color: var(--accent);
+	}
+
+	/* In outline capitals, as large as the band allows. */
+	h1.outline {
+		--draw: var(--fade);
+		margin-top: 3px;
+		font-family: var(--font-hud);
+		font-size: clamp(28px, 3vw, 40px);
+		letter-spacing: 0.02em;
+		color: var(--hud-text);
+	}
+
+	.hud.sol-caption {
+		font-size: calc(var(--text-xs) + 1px);
+		letter-spacing: 0.04em;
+		text-transform: none;
+		color: var(--accent-text);
 	}
 
 	.lead {
@@ -156,6 +197,19 @@
 	@media (max-width: 700px) {
 		.jp {
 			font-size: 22px;
+		}
+
+		.number {
+			font-size: 40px;
+		}
+
+		/* The title wraps under the Japanese here: no divider left hanging after it. */
+		.bar {
+			display: none;
+		}
+
+		h1.outline {
+			font-size: 28px;
 		}
 
 		.lead {

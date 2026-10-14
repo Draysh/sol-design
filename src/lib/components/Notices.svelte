@@ -8,6 +8,7 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
 	import { LINGER_MS, notices } from '../client/notices.svelte.js';
+	import { longJp } from '../look.js';
 	import WorldGlyph from './WorldGlyph.svelte';
 
 	/** How long a notice takes to drop in: the `--settle` token (0 with less motion). */
@@ -45,7 +46,7 @@
 			<WorldGlyph world={notice.world} size={14} />
 			<div class="text">
 				<span class="sol-label">{notice.title}</span>
-				{#if notice.jp}<span class="jp" lang="ja">{notice.jp}</span>{/if}
+				{#if notice.jp}<span class="jp" class:sol-long={longJp(notice.jp)} lang="ja">{notice.jp}</span>{/if}
 				{#if notice.body}<span class="body">{notice.body}</span>{/if}
 				{#if notice.detail}
 					<details ontoggle={(e) => ((e.currentTarget as HTMLDetailsElement).open ? hold(notice.id) : release(notice.id))}>
@@ -119,12 +120,17 @@
 		color: var(--text-value);
 	}
 
-	/* A failure's line in the world's voice, in the title face. */
+	/* A failure's line in the world's voice, in the title face; a longer one in the light mincho. */
 	.jp {
 		font-family: var(--font-title);
 		font-feature-settings: var(--title-features);
 		font-size: var(--text-m);
 		color: var(--text-bright);
+	}
+
+	.jp.sol-long {
+		font-family: var(--font-long);
+		font-weight: 300;
 	}
 
 	details {
@@ -173,7 +179,7 @@
 	}
 
 	button:hover {
-		color: var(--accent);
+		color: var(--accent-text);
 	}
 
 	/* How long it stays: a line that runs out. */

@@ -127,7 +127,7 @@
 
 	.open:hover,
 	.open:focus-visible {
-		color: var(--accent);
+		color: var(--accent-text);
 	}
 
 	.open:hover svg {

@@ -6,7 +6,9 @@
 	flavour's: Saturn's diamond, Mercury's vermilion seal (the tag's first
 	kanji), Neptune's neon slashes, Terra's and Luna's furin. Neptune's
 	Japanese comes first instead, lit as a sign, the way a street's signs read.
-	Card heads with one; a page may use it for any heading of its own.
+	Card heads with one; a page may use it for any heading of its own. A
+	`caption` (a flavour's `captions`: a Sheet's HUD line) is written as
+	given, lowercase, in the HUD face tracked a little.
 
 	<HudLabel text="In orbit" jp="軌道" />
 -->
@@ -22,18 +24,20 @@
 		mark?: boolean;
 		/** The heading level it is, or none for a plain label. */
 		level?: 2 | 3 | null;
+		/** Written as a caption: "neptune_music / now_playing". */
+		caption?: boolean;
 		class?: string;
 	}
 
-	let { text, jp = '', mark = true, level = null, class: className = '' }: Props = $props();
+	let { text, jp = '', mark = true, level = null, caption = false, class: className = '' }: Props = $props();
 	const flavour = hereFlavour();
 	const f = $derived(flavour());
 	const sign = $derived(f.motif === 'neon' && jp !== '');
-	const caps = $derived(capsFor(text));
+	const caps = $derived(!caption && capsFor(text));
 	const tag = $derived(level ? `h${level}` : 'span');
 </script>
 
-<svelte:element this={tag} class="hud {className}" class:caps>
+<svelte:element this={tag} class="hud {className}" class:caps class:caption>
 	{#if sign}
 		<span class="sign">{jp}</span>
 	{:else if mark}
@@ -79,6 +83,16 @@
 		text-transform: uppercase;
 	}
 
+	.caption {
+		font-family: var(--font-caps);
+		font-weight: 500;
+		letter-spacing: 0.04em;
+	}
+
+	.caption .words {
+		white-space: normal;
+	}
+
 	.words {
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -93,7 +107,7 @@
 		display: inline-grid;
 		place-items: center;
 		flex: none;
-		color: var(--accent);
+		color: var(--accent-text);
 	}
 
 	.dusk::before {

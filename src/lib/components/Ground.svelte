@@ -6,6 +6,13 @@
 	over it, still, and a red neon glow low on the right. A new still fades
 	in over the last. Nothing on it moves while the page rests.
 
+	A `duotone` flavour's still is graded as one colour, as SSS by applibot
+	grades the room behind each member: black into the flavour's light,
+	Terra's blue into paper, Luna's through its three tones (`gradeStill`,
+	once a still). Over it, a flavour with `scaffold` stands its emblem: the
+	rail's diamond, solid, huge and cropped at the window's right, in a soft
+	grey fading from its top, the world's kanji cut out of it.
+
 	The stills are the person's own and are never part of this package: the
 	page passes an address it may show (Sol serves them to the person signed
 	in), or nothing.
@@ -13,6 +20,7 @@
 	<Ground world="saturn" still="/api/sol/look/saturn-ground-1.jpg" />
 -->
 <script lang="ts">
+	import { gradeStill } from '../grade.js';
 	import { flavourOf } from '../look.js';
 
 	interface Props {
@@ -25,12 +33,26 @@
 	let { world, still = '' }: Props = $props();
 	const f = $derived(flavourOf(world));
 
+	// The still as it is shown: graded in the flavour's colours once it has been.
+	let source = $state('');
+	$effect(() => {
+		const want = still;
+		const look = f;
+		if (!want) {
+			source = '';
+			return;
+		}
+		gradeStill(want, look).then((url) => {
+			if (still === want && f === look) source = url;
+		});
+	});
+
 	// Two pictures, so the next fades in over the one on show once it has loaded.
 	let shown = $state<string[]>(['', '']);
 	let front = $state(0);
 	let loaded = $state<boolean[]>([false, false]);
 	$effect(() => {
-		const want = still;
+		const want = source;
 		if (shown[front] === want) return;
 		const back = 1 - front;
 		if (shown[back] === want && loaded[back]) {
@@ -42,9 +64,9 @@
 	});
 	function ready(i: number) {
 		loaded[i] = true;
-		if (shown[i] === still) front = i;
+		if (shown[i] === source) front = i;
 	}
-	const lit = $derived(still !== '' && loaded[front] && shown[front] === still);
+	const lit = $derived(source !== '' && loaded[front] && shown[front] === source);
 
 	/** A number from 0 to 1 for `i`, always the same one (as the apps' stars). */
 	function noise(i: number) {
@@ -101,6 +123,21 @@
 	{/if}
 	<div class="haze"></div>
 	<div class="vignette"></div>
+	{#if f.scaffold && f.glyph}
+		<svg class="scaffold" viewBox="0 0 100 100">
+			<defs>
+				<linearGradient id="scaffold-grey" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0" style:stop-color="var(--scaffold-top)" />
+					<stop offset="1" style:stop-color="var(--scaffold-foot)" />
+				</linearGradient>
+				<mask id="scaffold-cut">
+					<polygon points="50,0 100,50 50,100 0,50" fill="#fff" />
+					<text x="50" y="50" text-anchor="middle" dominant-baseline="central" font-size="41" fill="#000">{f.glyph}</text>
+				</mask>
+			</defs>
+			<polygon points="50,0 100,50 50,100 0,50" fill="url(#scaffold-grey)" mask="url(#scaffold-cut)" />
+		</svg>
+	{/if}
 </div>
 
 <style>
@@ -213,6 +250,20 @@
 			color-mix(in srgb, var(--haze) 7%, transparent) 21%,
 			transparent 42%
 		);
+	}
+
+	/* The emblem: a diamond 1.2 windows tall, its middle at the window's right edge, so the window crops it. */
+	.ground > .scaffold {
+		inset: auto;
+		top: -10vh;
+		left: calc(98vw - 60vh);
+		width: 120vh;
+		height: 120vh;
+	}
+
+	.scaffold text {
+		font-family: var(--font-title);
+		font-weight: 800;
 	}
 
 	.vignette {

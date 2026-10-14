@@ -14,13 +14,16 @@ same world data (`Worlds.qml`, from which `worlds.gen.ts` is written).
 
 ## Principles
 
-1. **A film's sky.** Every page stands on a still from an anime film under
-   its world's grade, or the world's drawn sky when there is no still. Words
-   on the still are white (the `--art-…` tokens).
-2. **Glass.** Panels are glass: what is behind them blurred, a hairline,
-   one corner cut at 45° (top right), the top edge and the cut catching the
-   light. The page's lead panel wears brackets in the light; others light
-   theirs under the pointer.
+1. **A film's sky, in one colour.** Every page stands on a still from an
+   anime film, graded as one colour the way SSS by applibot grades the room
+   behind each member (black into the flavour's light; Terra's blue into
+   paper; Luna's through three tones), or the world's drawn sky when there
+   is no still. Words on the still take the `--art-…` tokens (white, or
+   ink on Terra's paper).
+2. **Panels.** Panels are near-opaque, with a hairline in the flavour's
+   light (brighter under the pointer) and one corner cut at 45° (top
+   right); nothing behind them is blurred. The page's lead panel wears
+   brackets in the light; others light theirs under the pointer.
 3. **Faces by role.** HUD capitals (Chakra Petch, tracked wide) for labels
    of one to three words; Outfit for reading; each world's title face for
    titles and every Japanese tag (Corporate Logo, Mercury's Yuji Syuku,
@@ -29,23 +32,37 @@ same world data (`Worlds.qml`, from which `worlds.gen.ts` is written).
    subtitles and big figures. Japanese is never in capitals or tracked.
 4. **One mood a world.** There is no day mode: each world keeps its
    flavour all day. Nothing is filled except the screen's main action.
+5. **Outline type and a scaffold.** A page's big English title is thin,
+   stroke-only capitals in the HUD face (`.sol-outline`, drawn on as the
+   page lands: `.sol-draw`), the section's number large beside it in
+   outline figures of the light; one outline title a page, display sizes
+   only. HUD lines over a title are lowercase captions (`sol_hub /
+   connections`). Long Japanese is in the computer's light mincho
+   (`.sol-long`, `--font-long`). Behind the pages the world's emblem stands
+   huge and cropped, and the card grid's columns run down the pane as
+   hairlines of the light.
 
 ## The flavours
 
-A flavour is a world's palette and its ground (`Theme.yozoraLooks`): Saturn's
-dusk (amber and cyan), Mercury's shrine at night (sakura, gold, vermilion
-seals), Neptune's neon rain (red and ice cyan), Terra's noon (frosted white
-glass with dark ink, ramune blue, a sunflower primary) and Luna's moonlit
-evening (indigo, moon yellow). A moon without one wears its planet's.
+A flavour is a world's palette and its ground (`Theme.yozoraLooks`), each
+one colour on its ground, as its navigator wears it: Saturn's gold (Yoko's
+eyes) on black, Titan's deep amber, Mercury's crimson (Ryuko's; small words
+in a lighter crimson, `--accent-text`, to keep 4.5:1), Neptune's mint
+(Rebecca's, her tattoo's pink the small second light: `--second`, `--pen`,
+the impact's flash), Terra's ramune blue on paper with ink for the words,
+and Luna's moon yellow on indigo. A moon without one wears its planet's.
 
-An element wears a flavour with `data-flavour="<id>"`; everything inside it
+An element wears a flavour with `data-flavour="<key>"` (its key among the
+flavours: Titan's is its own, though it stands on Saturn's stills); everything inside it
 takes that flavour's tokens (`--ground`, `--glass`, `--edge`, `--accent`,
 `--second`, `--primary`, the `--text-…`, `--hud-…` and `--art-…` words, the
 `--sky-0…4` and `--grade-0…4` stops). The Shell sets it from its `flavour`
 (the app's world unless a page is about another). **Sol wears Saturn's
 dusk**, as `Theme.yozoraOf` gives any world without one, and a world's own
 page in Sol wears that world's flavour, the rail and every panel with it.
-`flavourOf`, `jpOf` and `capsFor` (`look.ts`) are the rules a script needs.
+`flavourOf`, `jpOf`, `capsFor`, `outlined`, `caption`, `tagOf` and `longJp`
+(`look.ts`) are the rules a script needs; `gradeStill` (`grade.ts`) grades a
+still in a flavour's colours, once.
 
 ## The ground
 
@@ -91,12 +108,16 @@ serif (`jp`, the world's name unless given), the English line under it
 (`callout`), then what sits under it (moon links, the main action) beside
 two or three `HeroFigure`s with their Japanese tags (`figures`). Never a
 strip of "LABEL: VALUE" facts. In a pane under about 1070 px it is compact,
-so the first card is in the first view.
+so the first card is in the first view. A `lede` (a few English words)
+stands under the title in outline capitals; a `hero`, the navigator's
+cut-out (the person's own picture, which Sol serves to them signed in),
+stands at the right cropped by the band's foot, from 1300 px wide.
 
-Other pages start with a `PageHead`: a glass band that stays put, the
-page's Japanese (`jp`, else its section's), its HUD line (the section's
-number and the world) over the English title, a quiet line and the page's
-actions.
+Other pages start with a `PageHead`: a band that stays put, the section's
+number large in outline figures, the page's Japanese (`jp`, else its
+section's), its caption over the English title in outline capitals, a
+quiet line and the page's actions. A page marks its card grid
+`sol-columns`, and the Shell draws its columns' hairlines.
 
 ## Components
 
@@ -141,9 +162,14 @@ One perfect hit, then stillness: big motion only for a page turning and the
 overview's greeting. A page turns the flavour's way (the Shell, from its
 flavour's `turn`), all in one `--turn` of 420 ms: a wipe covers the pane by
 `--turn-cover`, holds to `--turn-reveal`, and the new screen lands as it
-goes (Neptune's slices torn across with a red and a cyan edge, Saturn's
-film bars closing to black on an amber line, Mercury's ink blooming from
-the title, Terra's sweep of sunlight), never in the way of a click. A
+goes, never in the way of a click. Every flavour's way is the curtain: a
+flat sheet of the light sweeps in, holds the arriving page's kanji and name
+in the darkest ink (`--card-ink`), tears for one `--flicker` in the
+flavour's own way (Neptune's glitch, Saturn's film bars shutting,
+Mercury's brush, Terra's flare of sunlight, Luna's moonlit rip) and sweeps
+off; to a page of another flavour it covers the whole window in the
+colours it leaves, and the window takes the new flavour while covered.
+Outline titles draw on as it lifts. A
 `Sheet` with `slam` brings its title in as kinetic type, once (the
 overview's greeting, the first time a visit opens it). The web app has no
 opening.

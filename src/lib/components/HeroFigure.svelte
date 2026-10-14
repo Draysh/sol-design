@@ -107,7 +107,7 @@
 		font-weight: 700;
 		line-height: 1;
 		text-transform: uppercase;
-		color: #fff;
+		color: var(--art-bright);
 	}
 
 	.room,
@@ -136,7 +136,7 @@
 		font-weight: var(--weight-label);
 		letter-spacing: var(--track-hud);
 		text-transform: uppercase;
-		color: #fff;
+		color: var(--art-bright);
 		white-space: nowrap;
 	}
 

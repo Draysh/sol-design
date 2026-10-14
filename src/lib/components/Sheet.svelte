@@ -14,12 +14,21 @@
 	touch past its size and back, a slash of the world's light across it
 	(the overview's greeting, once a visit). With less motion, a fade.
 
-	<Sheet world="saturn" jp="続きから。" callout={['Pick up where you left off']}
+	With a flavour's `outline`, the `lede` (a few English words) stands under
+	the title in outline capitals, drawn on as the page lands; with its
+	`captions` the HUD line is a caption after the world's tag
+	("saturn_films / tue_14_oct / 22:40"). A `hero` (the address of the
+	navigator's cut-out, the person's own picture) stands at the right,
+	cropped by the band's foot, in a window from 1300 px wide; under that
+	there is no room for her beside the words, and she isn't shown.
+
+	<Sheet world="saturn" jp="続きから。" lede="Pick up where you left off"
 		figures={[{ value: '06', label: 'Watching', jp: '視聴中' }]} />
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { jpOf } from '../look.js';
+	import { hereFlavour } from '../here.js';
+	import { caption, jpOf, outlined, tagOf } from '../look.js';
 	import type { Figure, Moon } from '../types.js';
 	import { world as worldFor } from '../worlds.js';
 	import HeroFigure from './HeroFigure.svelte';
@@ -32,11 +41,15 @@
 		name?: string;
 		/** The title in Japanese: "おかえり。". The world's name in Japanese when not given. */
 		jp?: string;
-		/** The HUD line over the title, and its Japanese. The world and the day when not given. */
+		/** The HUD line over the title, after the world's name or tag, and its Japanese. The day when not given. */
 		hud?: string;
 		hudJp?: string;
-		/** The English under the title: a sentence, or facts as "Walk = done". */
+		/** A few English words under the title, in outline capitals where the flavour has them. */
+		lede?: string;
+		/** The English under that: a sentence, or facts as "Walk = done". */
 		callout?: string[];
+		/** The navigator's cut-out, standing at the right in a wide window: its address, or "" for none. */
+		hero?: string;
 		/** Two or three big figures beside what sits under the title. */
 		figures?: Figure[];
 		/** Links to the world's moons (or its planet), shown under the title. */
@@ -47,19 +60,28 @@
 		slam?: boolean;
 	}
 
-	let { world: id, name, jp, hud, hudJp = '', callout = [], figures = [], moons = [], children, slam = false }: Props = $props();
+	let { world: id, name, jp, hud, hudJp = '', lede = '', callout = [], hero = '', figures = [], moons = [], children, slam = false }: Props = $props();
+	const flavour = hereFlavour();
+	const f = $derived(flavour());
+	let heroGone = $state('');
+	const showHero = $derived(hero !== '' && heroGone !== hero);
 
 	const w = $derived(worldFor(id));
 	const title = $derived(jp ?? jpOf(id));
 	const line = $derived(callout.map((l) => l.replace(/\s*=\s*/, ': ')).join(' · '));
 	const day = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date());
-	const head = $derived(hud ?? `${name ?? w.name} · ${day}`);
+	const head = $derived(f.captions ? caption(hud ?? day, tagOf(id)) : `${name ?? w.name} · ${hud ?? day}`);
+	const outline = $derived(outlined(lede, f));
 </script>
 
-<section class="sheet" aria-label={name ?? w.name}>
+<section class="sheet" class:heroed={showHero} aria-label={name ?? w.name}>
+	{#if showHero}
+		<img class="hero" src={hero} alt="" decoding="async" onerror={() => (heroGone = hero)} />
+	{/if}
 	<div class="card">
-		<span class="hud-line"><HudLabel text={head} jp={hudJp} /></span>
+		<span class="hud-line"><HudLabel text={head} jp={hudJp} caption={f.captions} /></span>
 		<h1 class="title" class:slam lang="ja">{title}</h1>
+		{#if lede}<p class="lede" class:sol-outline={outline} class:sol-draw={outline}>{lede}</p>{/if}
 		{#if line}<p class="line">{line}</p>{/if}
 	</div>
 	{#if moons.length || children || figures.length}
@@ -132,7 +154,7 @@
 		line-height: 1.12;
 		white-space: nowrap;
 		text-overflow: ellipsis;
-		color: #fff;
+		color: var(--art-bright);
 		animation: sol-settle var(--settle) var(--spring) both;
 		animation-delay: calc(var(--stagger) * 2);
 	}
@@ -202,6 +224,76 @@
 		}
 	}
 
+	/* A few English words under the title: outline capitals, as large as the column allows. */
+	.lede {
+		--draw: var(--settle);
+		--stroke: 1.5px;
+		max-width: 100%;
+		margin-top: var(--s-1);
+		font-family: var(--font-display);
+		font-size: clamp(30px, 4.6cqw, 60px);
+		line-height: 1.05;
+		color: var(--art-bright);
+		overflow-wrap: anywhere;
+	}
+
+	.lede.sol-outline {
+		font-family: var(--font-hud);
+		font-weight: 500;
+	}
+
+	/*
+	 * The navigator: her cut-out at the right, from a little under the band's top,
+	 * cropped by its foot (never at her sides), stepping in once she has loaded.
+	 */
+	.hero {
+		position: absolute;
+		right: var(--margin);
+		top: var(--s-3);
+		z-index: 0;
+		height: 165%;
+		max-width: min(34%, 440px);
+		object-fit: contain;
+		object-position: right top;
+		pointer-events: none;
+		animation: hero-in var(--settle) var(--ease-out) both;
+	}
+
+	:global(.turned) .hero {
+		animation-delay: var(--turn-reveal);
+	}
+
+	@keyframes hero-in {
+		from {
+			opacity: 0;
+			transform: translateX(16px);
+		}
+	}
+
+	.heroed > :not(.hero) {
+		position: relative;
+		z-index: 1;
+	}
+
+	@media (min-width: 1300px) {
+		.heroed {
+			overflow: hidden;
+			padding-right: calc(var(--margin) + min(34%, 440px));
+		}
+	}
+
+	@media (max-width: 1299px) {
+		.hero {
+			display: none;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.hero {
+			animation-name: sol-fade;
+		}
+	}
+
 	/* The English under the title: the subtitle, in the display face. */
 	.line {
 		max-width: 62ch;
@@ -209,7 +301,7 @@
 		font-size: calc(var(--text-lede) * 0.8);
 		font-weight: 700;
 		line-height: 1.35;
-		color: color-mix(in srgb, #fff 92%, transparent);
+		color: var(--art-text);
 		animation: sol-fade var(--fade) var(--ease) both;
 		animation-delay: calc(var(--stagger) * 4);
 	}

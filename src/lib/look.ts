@@ -4,7 +4,8 @@ import { table } from './worlds.gen.js';
 /*
  * The Yozora look's rules that need a script, as sol-quick's Theme.qml has
  * them: which flavour a world wears, its name in Japanese, which still a
- * page stands on, and when words are set in capitals. The colours are CSS
+ * page stands on, when words are set in capitals, in outline capitals or
+ * as a caption, and when Japanese is long. The colours are CSS
  * (`tokens.css`, `data-flavour`); `look.gen.ts` is written from Theme.qml.
  */
 
@@ -58,4 +59,44 @@ export function stillFor(world: string, stills: string[], section = 0): string {
 /** A still's number (`saturn-ground-2.jpg` is 2), so ten comes after nine. */
 function order(s: string): number {
 	return Number(/-ground-(\d+)\.\w+$/.exec(s)?.[1] ?? 0);
+}
+
+/** Whether `s` is set as an outline title in `f`: the flavour has them and it has no Japanese (the title face keeps that). */
+export function outlined(s: string, f: FlavourData): boolean {
+	return f.outline && s.trim() !== '' && !hasJp(s);
+}
+
+/** Whether Japanese `s` is long enough to be set in the light mincho: more than eight characters. */
+export function longJp(s: string): boolean {
+	return hasJp(s) && s.length > 8;
+}
+
+/**
+ * A world's tag at the head of a caption: its flavour's own `tag` ("terra_days"),
+ * else its id and the first part of its role: "neptune_music", "titan_what_to_watch", "sol_hub".
+ */
+export function tagOf(id: string): string {
+	const own = flavours[id];
+	if (own?.tag) return own.tag;
+	const word = (table[id]?.role ?? '').split(',')[0].trim().toLowerCase().replace(/\s+/g, '_');
+	return id + (word ? `_${word}` : '');
+}
+
+/**
+ * A HUD line as a caption: its parts (" · " apart) in lowercase, words
+ * joined by underscores, a count "03 / 14" as "03_of_14", the parts " / "
+ * apart, after the world's tag when given: "neptune_music / albums".
+ */
+export function caption(line: string, tag = ''): string {
+	const parts = line
+		.split(' · ')
+		.map((p) =>
+			p
+				.trim()
+				.toLowerCase()
+				.replace(/(\d+)\s*\/\s*(\d+)/g, '$1_of_$2')
+				.replace(/\s+/g, '_')
+		)
+		.filter(Boolean);
+	return [...(tag ? [tag] : []), ...parts].join(' / ');
 }

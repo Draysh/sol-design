@@ -55,7 +55,7 @@
 		font-size: calc(var(--text-xs) + 2px);
 		font-weight: 800;
 		letter-spacing: 0;
-		color: var(--accent);
+		color: var(--accent-text);
 	}
 
 	.back:active {

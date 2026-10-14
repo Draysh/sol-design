@@ -32,7 +32,8 @@ export { default as WorldGlyph } from './components/WorldGlyph.svelte';
 
 export { count, type Count } from './actions/count.js';
 export { worlds, world, moonsOf, kin, moonAt, skyOf, type World, type WorldData, type Placement, type Companion, type Light } from './worlds.js';
-export { flavourOf, planetOf, jpOf, hasJp, capsFor, stillFor, flavours, type FlavourData } from './look.js';
+export { flavourOf, planetOf, jpOf, hasJp, capsFor, stillFor, outlined, longJp, tagOf, caption, flavours, type FlavourData } from './look.js';
+export { gradeStill, toneOf } from './grade.js';
 export { HERE, type HereContext } from './here.js';
 export { BACK, type BackContext, type BackTarget } from './back.js';
 export type { Row, Figure, Moon, Door, Shortcut, ShellLink, Option, AppHere, AppOffer, AppUpdateStatus } from './types.js';

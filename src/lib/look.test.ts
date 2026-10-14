@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { capsFor, flavourOf, hasJp, jpOf, planetOf, stillFor } from './look.js';
+import { caption, capsFor, flavourOf, hasJp, jpOf, longJp, outlined, planetOf, stillFor, tagOf } from './look.js';
 
 describe('flavourOf', () => {
 	it('gives a planet its own, a moon its own or its planet’s, and Sol Saturn’s', () => {
@@ -56,5 +56,33 @@ describe('stillFor', () => {
 	it('is the drawn sky without one', () => {
 		expect(stillFor('neptune', stills)).toBe('');
 		expect(stillFor('saturn', [])).toBe('');
+	});
+});
+
+describe('the SSS keys', () => {
+	it('writes a HUD line as a caption after the world’s tag', () => {
+		expect(caption('Albums', tagOf('neptune'))).toBe('neptune_music / albums');
+		expect(caption('Now playing · 03 / 14')).toBe('now_playing / 03_of_14');
+		expect(tagOf('terra')).toBe('terra_days');
+		expect(tagOf('titan')).toBe('titan_what_to_watch');
+		expect(tagOf('sol')).toBe('sol_hub');
+	});
+
+	it('sets English in outline capitals and leaves Japanese to the title face', () => {
+		expect(outlined('Worlds', flavourOf('saturn'))).toBe(true);
+		expect(outlined('世界', flavourOf('saturn'))).toBe(false);
+		expect(outlined('  ', flavourOf('saturn'))).toBe(false);
+	});
+
+	it('knows long Japanese', () => {
+		expect(longJp('こんにちは。')).toBe(false);
+		expect(longJp('VOICEVOXが寝てやがる。起こしてやれ。')).toBe(true);
+		expect(longJp('A long English sentence')).toBe(false);
+	});
+
+	it('wears Titan’s own flavour by its key', () => {
+		expect(flavourOf('titan').key).toBe('titan');
+		expect(flavourOf('triton').key).toBe('neptune');
+		expect(flavourOf('sol').key).toBe('saturn');
 	});
 });

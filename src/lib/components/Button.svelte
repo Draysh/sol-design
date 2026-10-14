@@ -155,7 +155,7 @@
 	}
 
 	.quiet:hover:not(:disabled) {
-		color: var(--accent);
+		color: var(--accent-text);
 	}
 
 	.quiet:hover:not(:disabled) .face {

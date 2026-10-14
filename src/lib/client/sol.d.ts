@@ -1085,6 +1085,8 @@ export interface components {
         };
         /** @description The stills there are, by file name. */
         LookStills: {
+            /** @description The navigators' cut-outs there are: `saturn-hero.png`. */
+            heroes: string[];
             /** @description Named as the apps name them: `saturn-ground-1.jpg`, `luna-ground-2.jpg`. */
             stills: string[];
         };
@@ -1967,7 +1969,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The film stills Sol may show the person signed in; none when it has no folder of them */
+            /** @description The film stills and the navigators' cut-outs Sol may show the person signed in; none when it has no folder of them */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -1983,14 +1985,14 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description A still's file name, as the list gives it */
+                /** @description A still's or a cut-out's file name, as the list gives it */
                 name: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description The still */
+            /** @description The still, or the cut-out (a PNG) */
             200: {
                 headers: {
                     [name: string]: unknown;

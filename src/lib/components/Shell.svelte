@@ -18,12 +18,19 @@
 	on hover, and its `jp`. The light marks the current section and glides to
 	the next one when it changes. A page turns the flavour's way, as the
 	apps' do, in one `--turn` (420 ms): a wipe covers the pane, holds, and
-	the new screen is revealed under it (Neptune's slices with a red and a
-	cyan edge, Saturn's film bars closing to black on an amber line,
-	Mercury's ink blooming from the title with a vermilion edge, Terra's
-	sweep of sunlight). Transforms and opacity only, over the pane and never
-	in the way of a click; with less motion, a fade. There is no opening: the
-	first screen simply settles in.
+	the new screen is revealed under it. Every flavour's way is now the
+	curtain (SSS by applibot's): a flat sheet of the light sweeps across,
+	holds the arriving page's kanji and name in the darkest ink, tears for
+	one frame in the flavour's own way (Neptune's glitch, Saturn's film bars
+	shutting, Mercury's brush, Terra's flare of sunlight, Luna's moonlit
+	rip) and sweeps off. A page in another flavour (a world's own page) turns
+	under one curtain over the whole window, in the colours it leaves; the
+	window takes the new flavour while it is covered. Transforms and opacity
+	only, never in the way of a click; with less motion, a fade. There is no
+	opening: the first screen simply settles in.
+
+	With a flavour's `grid`, the columns of the page's card grid (the one
+	marked `sol-columns`) run down the pane as hairlines in its light.
 
 	A page opened from another (a title from the library) offers the way
 	back by name, in its PageHead or over the pane's corner; Alt+← and the
@@ -45,11 +52,11 @@
 	</Shell>
 -->
 <script lang="ts">
-	import { setContext, type Snippet } from 'svelte';
+	import { setContext, tick, untrack, type Snippet } from 'svelte';
 	import { afterNavigate, beforeNavigate, goto } from '$app/navigation';
 	import { BACK, type BackContext, type BackTarget } from '../back.js';
 	import { HERE, type HereContext } from '../here.js';
-	import { flavourOf, jpOf, stillFor } from '../look.js';
+	import { flavourOf, hasJp, jpOf, stillFor } from '../look.js';
 	import '../styles/index.css';
 	import type { Door, ShellLink, Shortcut } from '../types.js';
 	import { world as worldFor } from '../worlds.js';
@@ -88,13 +95,59 @@
 	let keys = $state(false);
 	const w = $derived(worldFor(id));
 	const wearing = $derived(flavour ?? id);
-	const f = $derived(flavourOf(wearing));
+
+	/**
+	 * The world whose flavour the window wears now: the one asked for, or,
+	 * while a curtain crosses from one flavour to another, the one it leaves
+	 * until the curtain covers the window.
+	 */
+	let worn = $state(untrack(() => flavour ?? id));
+	/** The flavour a curtain over the whole window leaves, while one crosses. */
+	let crossing = $state<{ from: string; n: number } | null>(null);
+	let crossTimers: ReturnType<typeof setTimeout>[] = [];
+	/** A token's length in ms, as the page has it now (less motion shortens them). */
+	function msOf(name: string): number {
+		const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+		return parseFloat(v) * (v.endsWith('ms') ? 1 : 1000) || 0;
+	}
+	$effect(() => {
+		const want = wearing;
+		const now = untrack(() => worn);
+		if (want === now) return;
+		const from = flavourOf(now).key;
+		const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+		if (from === flavourOf(want).key || calm) {
+			worn = want;
+			return;
+		}
+		for (const t of crossTimers) clearTimeout(t);
+		crossing = { from, n: (untrack(() => crossing)?.n ?? 0) + 1 };
+		crossTimers = [
+			setTimeout(() => (worn = want), msOf('--turn-cover')),
+			setTimeout(() => (crossing = null), msOf('--turn'))
+		];
+	});
+	$effect(() => () => {
+		for (const t of crossTimers) clearTimeout(t);
+	});
+
+	const f = $derived(flavourOf(worn));
 	/** The open section, by its place among the links. */
 	const at = $derived(links.findIndex((l) => l.current));
-	const still = $derived(stillFor(wearing, stills, Math.max(0, at)));
+	const still = $derived(stillFor(worn, stills, Math.max(0, at)));
+	/** What a curtain holds as it turns to a page: its kanji and its name (a world's own page, the world's). */
+	const arriving = $derived.by(() => {
+		if (wearing !== id) {
+			const jp = jpOf(wearing).charAt(0);
+			return { glyph: /[\u3400-\u9fff]/.test(jp) ? jp : flavourOf(wearing).glyph, name: worldFor(wearing).name };
+		}
+		const l = links[at];
+		const jp = l?.jp && hasJp(l.jp) ? l.jp.charAt(0) : jpOf(id).charAt(0);
+		return { glyph: jp, name: l?.label ?? w.name };
+	});
 	setContext<HereContext>(HERE, {
 		get flavour() {
-			return wearing;
+			return worn;
 		},
 		get name() {
 			return w.name;
@@ -129,6 +182,50 @@
 	let turns = $state(0);
 	let turnBack = $state(false);
 	const turnWay = $derived(f.turn);
+
+	// ---- The columns' hairlines (a flavour's `grid`) -----------------------
+	// Measured from the page's card grid (`.sol-columns`): each column's two
+	// edges across the pages' box, again whenever the pane or the page changes size.
+	let pages = $state<HTMLElement>();
+	let rules = $state<number[]>([]);
+	$effect(() => {
+		path;
+		const ruled = f.grid;
+		const el = pane;
+		const box = pages;
+		if (!ruled || !el || !box) {
+			rules = [];
+			return;
+		}
+		const measure = () => {
+			const g = el.querySelector<HTMLElement>('.sol-columns');
+			if (!g) {
+				if (untrack(() => rules).length) rules = [];
+				return;
+			}
+			const style = getComputedStyle(g);
+			const widths = style.gridTemplateColumns.split(' ').map(parseFloat).filter((n) => n > 0);
+			const gap = parseFloat(style.columnGap) || 0;
+			// Layout positions, not rects: the page may still be settling in, scaled a little.
+			let x = (parseFloat(style.paddingLeft) || 0) + el.offsetLeft;
+			for (let at: HTMLElement | null = g; at && at !== el; at = at.offsetParent as HTMLElement | null) x += at.offsetLeft;
+			const edges: number[] = [];
+			for (const wide of widths) {
+				edges.push(Math.round(x), Math.round(x + wide) - 1);
+				x += wide + gap;
+			}
+			if (edges.join() !== untrack(() => rules).join()) rules = edges;
+		};
+		const ro = new ResizeObserver(measure);
+		ro.observe(el);
+		tick().then(() => {
+			for (const child of el.children) ro.observe(child);
+			const g = el.querySelector('.sol-columns');
+			if (g) ro.observe(g);
+			measure();
+		});
+		return () => ro.disconnect();
+	});
 
 	// The Shell can open after the app has (behind a sign-in, say), so it
 	// starts from the entry it opens on, not from the app's first.
@@ -334,8 +431,39 @@
 
 <svelte:window onkeydown={shortcut} onmouseup={mouse} />
 
-<div class="shell" data-flavour={f.id} style:--world={w.color}>
-	<Ground world={wearing} {still} />
+{#snippet curtain(look: string, glyph: string, name: string, tear: string, back: boolean)}
+	<div class="turn" data-flavour={look} data-way="curtain" class:back aria-hidden="true">
+		<span class="dim"></span>
+		<span class="curtain">
+			<span class="catch"><span class="glyph" lang="ja">{glyph}</span><span class="name">{name}</span></span>
+		</span>
+		<span class="tear" data-tear={tear || 'glitch'}>
+			{#if tear === 'bars'}
+				<span class="shut top"></span><span class="shut bottom"></span>
+			{:else if tear === 'brush'}
+				<svg viewBox="0 0 100 100" preserveAspectRatio="none">
+					<path d="M-4 78 C 18 70, 30 66, 46 56 C 62 46, 80 36, 104 24 L 104 34 C 86 44, 70 52, 56 62 C 40 72, 22 82, -4 92 Z" />
+					<path class="dry" d="M70 40 C 82 34, 92 30, 104 26 M68 48 C 82 42, 94 36, 104 32" />
+					<ellipse cx="9" cy="70" rx="1.2" ry="2" /><ellipse cx="15" cy="96" rx="0.8" ry="1.3" /><ellipse cx="4" cy="64" rx="0.6" ry="1" />
+					<ellipse cx="22" cy="91" rx="1" ry="1.6" /><ellipse cx="2" cy="99" rx="0.9" ry="1.4" />
+				</svg>
+			{:else if tear === 'flare'}
+				<span class="flare"></span><span class="ring r1"></span><span class="ring r2"></span><span class="ring r3"></span>
+			{:else if tear === 'moon'}
+				<svg viewBox="0 0 100 100" preserveAspectRatio="none">
+					<polygon points="-2,40 6,37 12,41 19,36 27,39 33,34 41,38 48,33 56,36 63,31 70,35 78,30 85,33 92,28 102,31 102,38 93,41 86,45 78,42 71,47 63,44 56,49 48,46 41,51 33,48 26,53 19,49 11,54 4,50 -2,53" />
+					<polyline class="lit" points="-2,40 6,37 12,41 19,36 27,39 33,34 41,38 48,33 56,36 63,31 70,35 78,30 85,33 92,28 102,31" />
+					<polyline class="lit soft" points="102,38 93,41 86,45 78,42 71,47 63,44 56,49 48,46 41,51 33,48 26,53 19,49 11,54 4,50 -2,53" />
+				</svg>
+			{:else}
+				<span class="jump j1"></span><span class="jump j2"></span><span class="jump j3"></span>
+			{/if}
+		</span>
+	</div>
+{/snippet}
+
+<div class="shell" data-flavour={f.key} style:--world={w.color}>
+	<Ground world={worn} {still} />
 	<nav class="side sol-chrome" aria-label="Main" bind:this={nav}>
 		<span class="sol-glass rail-glass" aria-hidden="true"></span>
 		<a class="brand" href={home} title={w.tagline || undefined}>
@@ -403,7 +531,12 @@
 		{#if back && !claimed}
 			{#key back.label}<Back {...back} floating />{/key}
 		{/if}
-		<div class="pages">
+		<div class="pages" bind:this={pages}>
+			{#if rules.length}
+				<div class="rules" aria-hidden="true">
+					{#each rules as x, i (i)}<span style:left="{x}px"></span>{/each}
+				</div>
+			{/if}
 			<main bind:this={pane} class:scrolling class:backed={!!back && !claimed} class:turned={turns > 0} onscroll={scrolled}>
 				{#key path}
 					<div class="screen">
@@ -413,6 +546,9 @@
 			</main>
 			{#if turns > 0}
 				{#key turns}
+					{#if turnWay === 'curtain'}
+						{@render curtain(f.key, arriving.glyph, arriving.name, f.tear, turnBack)}
+					{:else}
 					<div class="turn" data-way={turnWay} class:back={turnBack} aria-hidden="true">
 						{#if turnWay === 'slice'}
 							{#each [0, 1, 2, 3, 4, 5, 6] as i (i)}<span class="band" style:--i={i} style:--n={[0.1, 0.7, 0.35, 0.9, 0.2, 0.55, 0.8][i]}></span>{/each}
@@ -424,11 +560,17 @@
 							<span class="sun"></span>
 						{/if}
 					</div>
+					{/if}
 				{/key}
 			{/if}
 		</div>
 		{#if footer}<footer class="foot">{@render footer()}</footer>{/if}
 	</div>
+	{#if crossing}
+		{#key crossing.n}
+			<div class="cross">{@render curtain(crossing.from, arriving.glyph, arriving.name, flavourOf(crossing.from).tear, turnBack)}</div>
+		{/key}
+	{/if}
 	{#if keys}
 		<Shortcuts {shortcuts} search={!!search} sections={links.length} onclose={() => (keys = false)} />
 	{/if}
@@ -462,8 +604,9 @@
 		clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%);
 		background:
 			linear-gradient(to right, transparent, var(--highlight) 50%, transparent) top / 100% 1px no-repeat,
-			linear-gradient(to bottom, rgb(255 255 255 / 0.04), transparent 30%),
+			linear-gradient(to bottom, var(--glass-sheen), transparent 30%),
 			var(--deep);
+		box-shadow: inset 0 0 0 1px var(--glass-line);
 	}
 
 	.rail-glass::after {
@@ -649,7 +792,7 @@
 	}
 
 	ul a[aria-current='page'] .number {
-		color: var(--accent);
+		color: var(--accent-text);
 	}
 
 	.jp {
@@ -972,6 +1115,296 @@
 		}
 	}
 
+	/*
+	 * The curtain (every flavour's, after SSS by applibot): a flat sheet of the
+	 * light. The pane dims for a --hit, the curtain sweeps in from the side the
+	 * turn runs from and covers the pane by --turn-cover, holds the arriving
+	 * page's kanji and name in the darkest ink until --turn-reveal, tears for
+	 * one --flicker in the flavour's way a flicker into the hold, then sweeps
+	 * off the far side. Over a crossing it covers the whole window.
+	 */
+	.turn[data-way='curtain'] {
+		--dir: 1;
+		container-type: size;
+		background: transparent;
+		color: var(--card-ink);
+	}
+
+	.turn.back[data-way='curtain'] {
+		--dir: -1;
+	}
+
+	.turn[data-way='curtain'] > * {
+		position: absolute;
+		inset: 0;
+	}
+
+	.dim {
+		background: var(--dim);
+		opacity: 0;
+		animation: curtain-dim var(--turn) linear both;
+	}
+
+	@keyframes curtain-dim {
+		0% {
+			opacity: 0;
+		}
+		19% {
+			opacity: 0.32;
+		}
+		66.9% {
+			opacity: 0.32;
+		}
+		67%,
+		100% {
+			opacity: 0;
+		}
+	}
+
+	.curtain {
+		background: var(--accent);
+		will-change: transform;
+		animation: curtain var(--turn) linear both;
+	}
+
+	@keyframes curtain {
+		0%,
+		19% {
+			transform: translateX(calc(var(--dir) * -101%));
+			animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+		}
+		43%,
+		67% {
+			transform: none;
+			animation-timing-function: cubic-bezier(0.55, 0.06, 0.68, 0.19);
+		}
+		100% {
+			transform: translateX(calc(var(--dir) * 101%));
+		}
+	}
+
+	/* The eyecatch, held: the page's kanji huge, its name beside it, both in the ink. */
+	.catch {
+		position: absolute;
+		inset: 0;
+		opacity: 0;
+		animation: tear-on calc(var(--turn-reveal) - var(--turn-cover)) linear var(--turn-cover);
+	}
+
+	.glyph {
+		position: absolute;
+		left: 8cqw;
+		top: 50%;
+		translate: 0 -50%;
+		font-family: var(--font-title);
+		font-feature-settings: var(--title-features);
+		font-weight: 800;
+		font-size: min(74cqh, 60cqw);
+		line-height: 1;
+	}
+
+	.name {
+		position: absolute;
+		left: max(55cqw, calc(16cqw + min(74cqh, 60cqw)));
+		top: 62cqh;
+		max-width: 40cqw;
+		font-family: var(--font-caps);
+		font-size: var(--text-xl);
+		font-weight: 700;
+		letter-spacing: var(--track-hud);
+		text-transform: uppercase;
+		line-height: 1;
+	}
+
+	.back .glyph {
+		left: auto;
+		right: 8cqw;
+	}
+
+	.back .name {
+		left: 12cqw;
+	}
+
+	@container (max-width: 600px) {
+		.name {
+			left: 8cqw;
+			top: auto;
+			bottom: 10cqh;
+			font-size: var(--text-l);
+		}
+	}
+
+	/* The torn frame: one --flicker, a flicker into the hold. */
+	.tear {
+		opacity: 0;
+		overflow: hidden;
+		animation: tear-on var(--flicker) linear calc(var(--turn-cover) + var(--flicker));
+	}
+
+	/* Shown only while it runs: before and after, its own opacity (none) holds. */
+	@keyframes tear-on {
+		0%,
+		100% {
+			opacity: 1;
+		}
+	}
+
+	.tear > * {
+		position: absolute;
+	}
+
+	/* A glitch (Neptune's): three bands of the curtain jump sideways, the dark in the gaps. */
+	.jump {
+		left: -60px;
+		width: calc(100% + 120px);
+		background: linear-gradient(
+			to right,
+			var(--accent) 0 22%,
+			var(--card-ink) 22% 24%,
+			var(--accent) 24% 61%,
+			var(--card-ink) 61% 62%,
+			var(--accent) 62%
+		);
+	}
+
+	.j1 {
+		top: 14%;
+		height: 34px;
+		transform: translateX(-40px);
+	}
+
+	.j2 {
+		top: 47%;
+		height: 12px;
+		transform: translateX(26px);
+	}
+
+	.j3 {
+		top: 70%;
+		height: 46px;
+		transform: translateX(-14px);
+	}
+
+	/* Saturn's: a film's black bars shut to a slit, a line of the light along each. */
+	.shut {
+		left: 0;
+		width: 100%;
+		height: 38%;
+		/* A film's black, whatever the flavour: not a token. */
+		background: #000;
+	}
+
+	.shut.top {
+		top: 0;
+		box-shadow: inset 0 -2px 0 var(--accent);
+	}
+
+	.shut.bottom {
+		bottom: 0;
+		box-shadow: inset 0 2px 0 var(--accent);
+	}
+
+	/* Mercury's: one stroke of ink slashed across, rising the way the turn runs, drops flung off where it began. */
+	.tear svg {
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		fill: var(--card-ink);
+	}
+
+	.back .tear svg {
+		transform: scaleX(-1);
+	}
+
+	.tear .dry {
+		fill: none;
+		stroke: var(--accent);
+		stroke-width: 0.6;
+	}
+
+	/* Terra's: a flare of sunlight across it on the diagonal, the lens's rings strung along it. */
+	.flare {
+		inset: -20% -10%;
+		background: linear-gradient(
+			160deg,
+			transparent 34%,
+			color-mix(in srgb, var(--paper) 50%, transparent) 44%,
+			var(--paper) 50%,
+			color-mix(in srgb, var(--paper) 50%, transparent) 56%,
+			transparent 66%
+		);
+	}
+
+	.ring {
+		border-radius: 50%;
+		border: 2px solid color-mix(in srgb, var(--paper) 70%, transparent);
+		background: color-mix(in srgb, var(--paper) 18%, transparent);
+	}
+
+	.r1 {
+		left: 18%;
+		top: 30%;
+		width: 9cqh;
+		height: 9cqh;
+	}
+
+	.r2 {
+		left: 46%;
+		top: 46%;
+		width: 15cqh;
+		height: 15cqh;
+	}
+
+	.r3 {
+		left: 72%;
+		top: 60%;
+		width: 6cqh;
+		height: 6cqh;
+	}
+
+	/* Luna's: a rip across it showing the night, its edges lit as by the moon. */
+	.tear .lit {
+		fill: none;
+		stroke: var(--impact);
+		stroke-width: 0.5;
+		vector-effect: non-scaling-stroke;
+		stroke-width: 3px;
+	}
+
+	.tear .lit.soft {
+		stroke-width: 1.5px;
+		opacity: 0.7;
+	}
+
+	/* A curtain crossing to another flavour covers the whole window. */
+	.cross {
+		position: absolute;
+		inset: 0;
+		z-index: 20;
+		pointer-events: none;
+	}
+
+	/* The columns' hairlines, under the page: they show between and beside its panels. */
+	.rules {
+		position: absolute;
+		inset: 0;
+		z-index: 0;
+		pointer-events: none;
+	}
+
+	.rules span {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		width: 1px;
+		background: var(--rule);
+	}
+
+	main {
+		position: relative;
+		z-index: 1;
+	}
+
 	/* Back runs the other way. */
 	.turn.back .band {
 		--from: 104%;
@@ -996,7 +1429,8 @@
 
 	/* With less motion, no wipe: the new screen fades in. */
 	@media (prefers-reduced-motion: reduce) {
-		.turn {
+		.turn,
+		.cross {
 			display: none;
 		}
 

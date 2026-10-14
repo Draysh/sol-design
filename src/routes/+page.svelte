@@ -97,7 +97,7 @@
 			world={current}
 			jp={titles[current][0]}
 			hud="Design · {f.film}"
-			callout={[titles[current][1]]}
+			lede={titles[current][1]}
 			figures={[
 				{ value: '05', label: 'Flavours', jp: '風味' },
 				{ value: '28', label: 'Components', jp: '部品' },
